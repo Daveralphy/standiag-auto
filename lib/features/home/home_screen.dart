@@ -3,8 +3,8 @@ import '../../core/theme/app_colors.dart';
 import '../history/scan_history_screen.dart';
 import '../maintenance/maintenance_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreenContent extends StatelessWidget {
+  const HomeScreenContent({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -643,6 +643,17 @@ class _RecentScanRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+// ── BACKWARD COMPATIBILITY ────────────────────────────────────
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: HomeScreenContent(),
     );
   }
 }

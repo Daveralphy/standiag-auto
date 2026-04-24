@@ -83,14 +83,19 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
   }
 
   Widget _buildHeader() {
-    return const Text(
-      'Diagnostic Scan',
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-        fontFamily: 'Inter',
-      ),
+    return Row(
+      children: [
+        const Text(
+          'Diagnostic Scan',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            fontFamily: 'Inter',
+          ),
+        ),
+        const Spacer(),
+      ],
     );
   }
 

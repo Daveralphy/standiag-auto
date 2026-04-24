@@ -14,7 +14,6 @@ class AppTheme {
       primary: AppColors.primary,
       secondary: AppColors.primary,
       surface: AppColors.surface,
-      background: AppColors.background,
       error: AppColors.critical,
     ),
     appBarTheme: const AppBarTheme(
@@ -49,12 +48,12 @@ class AppTheme {
       space: 0,
     ),
     switchTheme: SwitchThemeData(
-      thumbColor: MaterialStateProperty.resolveWith((states) =>
-          states.contains(MaterialState.selected)
+      thumbColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
               ? Colors.white
               : AppColors.textTertiary),
-      trackColor: MaterialStateProperty.resolveWith((states) =>
-          states.contains(MaterialState.selected)
+      trackColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
               ? AppColors.success
               : AppColors.border),
     ),

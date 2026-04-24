@@ -12,8 +12,8 @@ class BookMechanicScreen extends StatefulWidget {
 class _BookMechanicScreenState extends State<BookMechanicScreen> {
   int _selectedDay = 14;
   String _selectedTime = '8:00 AM';
-  int _currentMonth = 4;
-  int _currentYear = 2026;
+  final int _currentMonth = 4;
+  final int _currentYear = 2026;
 
   final List<String> _timeSlots = [
     '8:00 AM', '10:00 AM', '12:00 PM', '2:00 PM', '4:00 PM', '6:00 PM'

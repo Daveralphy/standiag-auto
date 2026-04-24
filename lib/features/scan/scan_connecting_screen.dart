@@ -2,7 +2,6 @@
 import 'dart:math' as math;
 import '../../core/theme/app_colors.dart';
 import 'scan_results_screen.dart';
-import 'scan_no_faults_screen.dart';
 
 class ScanConnectingScreen extends StatefulWidget {
   const ScanConnectingScreen({super.key});

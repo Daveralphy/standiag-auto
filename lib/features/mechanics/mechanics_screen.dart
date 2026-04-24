@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../../core/theme/app_colors.dart';
 import 'mechanic_profile_screen.dart';
 
@@ -13,6 +14,8 @@ class MechanicsScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildHeader(),
+            // Map Section
+            _buildMapSection(),
             _buildSearchRow(),
             _buildFilterChips(),
             Expanded(
@@ -88,6 +91,140 @@ class MechanicsScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMapSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          height: 280,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Stack(
+            children: [
+              // Canvas-based map background
+              CustomPaint(
+                size: const Size(double.infinity, 280),
+                painter: MapCanvasPainter(),
+              ),
+              // Mechanic location overlays
+              Positioned(
+                top: 100,
+                left: 80,
+                child: _buildMapMarker('AO', true, 'Ade'),
+              ),
+              Positioned(
+                top: 140,
+                right: 70,
+                child: _buildMapMarker('KA', false, 'Kayode'),
+              ),
+              Positioned(
+                bottom: 60,
+                left: 100,
+                child: _buildMapMarker('LW', false, 'Lanre'),
+              ),
+              // User location dot
+              Positioned(
+                top: 140,
+                left: 170,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4A9CD6),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.8),
+                      width: 3,
+                    ),
+                  ),
+                ),
+              ),
+              // Top banner
+              Positioned(
+                top: 12,
+                left: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.location_on, color: Colors.white, size: 14),
+                      SizedBox(width: 6),
+                      Text('Showing within 3.5 km',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            fontFamily: 'Inter',
+                          )),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapMarker(String initials, bool isFeatured, String name) {
+    return Column(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isFeatured ? AppColors.primary : const Color(0xFF2A2A2E),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isFeatured
+                  ? AppColors.primary.withOpacity(0.4)
+                  : const Color(0xFF3A3A3E),
+              width: 2,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              initials,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: isFeatured ? Colors.white : const Color(0xFF999999),
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppColors.surface.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Text(
+            name,
+            style: const TextStyle(
+              fontSize: 9,
+              color: AppColors.textSecondary,
+              fontFamily: 'Inter',
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -373,4 +510,77 @@ class _TappableMechanicCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── MAP CANVAS PAINTER ──────────────────────────────────
+class MapCanvasPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Background
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..color = const Color(0xFF0F1419),
+    );
+
+    // Streets/roads grid - subtle lines
+    final roadPaint = Paint()
+      ..color = const Color(0xFF1a2a3a).withOpacity(0.4)
+      ..strokeWidth = 0.5;
+
+    // Horizontal roads
+    for (int i = 0; i < 6; i++) {
+      final y = (size.height / 5) * i;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), roadPaint);
+    }
+
+    // Vertical roads
+    for (int i = 0; i < 5; i++) {
+      final x = (size.width / 4) * i;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), roadPaint);
+    }
+
+    // Water/park areas - circles for visual interest
+    final waterPaint = Paint()
+      ..color = const Color(0xFF0a4a7a).withOpacity(0.2);
+
+    canvas.drawCircle(Offset(size.width * 0.3, size.height * 0.4), 60, waterPaint);
+    canvas.drawCircle(Offset(size.width * 0.8, size.height * 0.6), 45, waterPaint);
+
+    // Building blocks
+    final buildingPaint = Paint()
+      ..color = const Color(0xFF1a3a4a).withOpacity(0.5);
+
+    // Random building shapes
+    canvas.drawRect(
+      Rect.fromLTWH(size.width * 0.1, size.height * 0.15, 35, 50),
+      buildingPaint,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(size.width * 0.7, size.height * 0.2, 45, 40),
+      buildingPaint,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(size.width * 0.15, size.height * 0.65, 50, 35),
+      buildingPaint,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(size.width * 0.65, size.height * 0.75, 40, 50),
+      buildingPaint,
+    );
+
+    // Search radius circle (subtle)
+    final radiusPaint = Paint()
+      ..color = const Color(0xFF4A9CD6).withOpacity(0.1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    canvas.drawCircle(
+      Offset(size.width * 0.5, size.height * 0.5),
+      100,
+      radiusPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(MapCanvasPainter oldDelegate) => false;
 }
