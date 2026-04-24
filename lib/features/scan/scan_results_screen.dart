@@ -3,7 +3,8 @@ import '../../core/theme/app_colors.dart';
 import 'full_report_screen.dart';
 
 class ScanResultsScreen extends StatelessWidget {
-  const ScanResultsScreen({super.key});
+  final List<String> dtcCodes;
+  const ScanResultsScreen({super.key, required this.dtcCodes});
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +213,7 @@ class ScanResultsScreen extends StatelessWidget {
               gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(14),
               boxShadow: [BoxShadow(
-                  color: AppColors.primary.withOpacity(0.38),
+                  color: AppColors.primary.withValues(alpha: 0.38),
                   blurRadius: 16, offset: const Offset(0, 6))],
             ),
             child: const Center(
@@ -363,3 +364,5 @@ class _DTCCard extends StatelessWidget {
     );
   }
 }
+
+

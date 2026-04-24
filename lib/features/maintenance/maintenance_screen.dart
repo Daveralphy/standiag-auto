@@ -1,89 +1,35 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/providers/vehicle_provider.dart';
 
-class MaintenanceScreen extends StatelessWidget {
+class MaintenanceScreen extends ConsumerWidget {
   const MaintenanceScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeVehicleAsync = ref.watch(activeVehicleProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(context),
+            activeVehicleAsync.when(
+              data: (v) => _buildHeader(context, v),
+              loading: () => _buildHeader(context, null),
+              error: (_, __) => _buildHeader(context, null),
+            ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    _buildSummaryStrip(),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel('OVERDUE', AppColors.critical),
-                    const SizedBox(height: 10),
-                    _MaintenanceItem(
-                      icon: Icons.oil_barrel_outlined,
-                      title: 'Engine Oil Change',
-                      status: 'Overdue by 12 days',
-                      interval: 'Every 90 days  •  Last done: 3 Jan 2026',
-                      urgencyColor: AppColors.critical,
-                      urgencyBg: AppColors.criticalBg,
-                      urgencyBorder: AppColors.criticalBorder,
-                      showMarkDone: true,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel('DUE SOON', AppColors.moderate),
-                    const SizedBox(height: 10),
-                    _MaintenanceItem(
-                      icon: Icons.tire_repair_outlined,
-                      title: 'Tyre Pressure Check',
-                      status: 'Due in 5 days',
-                      interval: 'Every 30 days  •  Last done: 14 Mar 2026',
-                      urgencyColor: AppColors.moderate,
-                      urgencyBg: AppColors.moderateBg,
-                      urgencyBorder: AppColors.moderateBorder,
-                      showMarkDone: true,
-                    ),
-                    const SizedBox(height: 10),
-                    _MaintenanceItem(
-                      icon: Icons.air_outlined,
-                      title: 'Air Filter Inspection',
-                      status: 'Due in 18 days',
-                      interval: 'Every 6 months  •  Last done: 11 Oct 2025',
-                      urgencyColor: AppColors.moderate,
-                      urgencyBg: AppColors.moderateBg,
-                      urgencyBorder: AppColors.moderateBorder,
-                      showMarkDone: true,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel('UP TO DATE', AppColors.advisory),
-                    const SizedBox(height: 10),
-                    _MaintenanceItem(
-                      icon: Icons.water_drop_outlined,
-                      title: 'Brake Fluid Top-Up',
-                      status: 'Done  •  Next in 48 days',
-                      interval: 'Every 6 months  •  Done: 28 Mar 2026',
-                      urgencyColor: AppColors.advisory,
-                      urgencyBg: AppColors.advisoryBg,
-                      urgencyBorder: AppColors.advisoryBorder,
-                      showMarkDone: false,
-                    ),
-                    const SizedBox(height: 10),
-                    _MaintenanceItem(
-                      icon: Icons.electric_bolt_outlined,
-                      title: 'Spark Plug Check',
-                      status: 'Done  •  Next in 65 days',
-                      interval: 'Every 2 years  •  Done: 11 Mar 2026',
-                      urgencyColor: AppColors.advisory,
-                      urgencyBg: AppColors.advisoryBg,
-                      urgencyBorder: AppColors.advisoryBorder,
-                      showMarkDone: false,
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+              child: activeVehicleAsync.when(
+                data: (v) => v != null
+                    ? _buildComingSoon(context, v)
+                    : _buildNoVehicle(context),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(
+                      color: AppColors.primary),
                 ),
+                error: (_, __) => _buildNoVehicle(context),
               ),
             ),
           ],
@@ -92,7 +38,12 @@ class MaintenanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(
+      BuildContext context, Map<String, dynamic>? vehicle) {
+    final vehicleLabel = vehicle != null
+        ? '${vehicle['make']} ${vehicle['model']} ${vehicle['year']}'
+        : 'No vehicle selected';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -103,180 +54,321 @@ class MaintenanceScreen extends StatelessWidget {
                 color: AppColors.textPrimary, size: 20),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Maintenance',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary, fontFamily: 'Inter')),
-                Text('Toyota Corolla 2016  •  Keep your car healthy',
-                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary,
+                const Text('Maintenance',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
                         fontFamily: 'Inter')),
+                Text(
+                  '$vehicleLabel  •  Keep your car healthy',
+                  style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                      fontFamily: 'Inter'),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(10),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoVehicle(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.directions_car_outlined,
+                color: AppColors.textTertiary, size: 52),
+            const SizedBox(height: 20),
+            const Text('No vehicle added',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    fontFamily: 'Inter')),
+            const SizedBox(height: 8),
+            const Text(
+              'Add your vehicle first to get personalised maintenance reminders based on your car type and usage.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.6,
+                  fontFamily: 'Inter'),
             ),
-            child: const Text('+ Add',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
-                    color: Colors.white, fontFamily: 'Inter')),
-          ),
-        ],
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text('Add a Vehicle',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        fontFamily: 'Inter')),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSummaryStrip() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          _SummaryItem(value: '1', label: 'OVERDUE',
-              color: AppColors.critical),
-          Container(width: 1, height: 36, color: AppColors.borderSubtle),
-          _SummaryItem(value: '2', label: 'DUE SOON',
-              color: AppColors.moderate),
-          Container(width: 1, height: 36, color: AppColors.borderSubtle),
-          _SummaryItem(value: '4', label: 'UP TO DATE',
-              color: AppColors.advisory),
-        ],
-      ),
-    );
-  }
+  Widget _buildComingSoon(
+      BuildContext context, Map<String, dynamic> vehicle) {
+    final vehicleName =
+        '${vehicle['make']} ${vehicle['model']} ${vehicle['year']}';
 
-  Widget _buildSectionLabel(String label, Color color) {
-    return Text(label,
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-            color: color, letterSpacing: 1.5, fontFamily: 'Inter'));
-  }
-}
-
-class _SummaryItem extends StatelessWidget {
-  final String value, label;
-  final Color color;
-  const _SummaryItem({required this.value, required this.label,
-      required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          Text(value,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800,
-                  color: color, fontFamily: 'Inter')),
-          const SizedBox(height: 4),
-          Text(label,
-              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600,
-                  color: color, letterSpacing: 1, fontFamily: 'Inter')),
+          const SizedBox(height: 24),
+          // Vehicle context card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.vehicleCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primaryBorder),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySubtle,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: AppColors.primaryBorder),
+                  ),
+                  child: const Icon(
+                      Icons.directions_car_outlined,
+                      color: AppColors.primary,
+                      size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(vehicleName,
+                          style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              fontFamily: 'Inter')),
+                      const SizedBox(height: 2),
+                      Text(
+                        vehicle['engine_type'] ?? '',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontFamily: 'Inter'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+          // Coming soon illustration
+          Container(
+            width: 80, height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primarySubtle,
+              shape: BoxShape.circle,
+              border: Border.all(
+                  color: AppColors.primaryBorder, width: 2),
+            ),
+            child: const Icon(Icons.build_circle_outlined,
+                color: AppColors.primary, size: 40),
+          ),
+          const SizedBox(height: 20),
+          const Text('Maintenance Reminders',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Inter')),
+          const SizedBox(height: 12),
+          const Text(
+            'After your first diagnostic scan, StanDiag will automatically suggest maintenance tasks based on your vehicle type, mileage, and scan results.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.6,
+                fontFamily: 'Inter'),
+          ),
+          const SizedBox(height: 28),
+          // What to expect
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('WHAT TO EXPECT',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textTertiary,
+                        letterSpacing: 1.5,
+                        fontFamily: 'Inter')),
+                const SizedBox(height: 12),
+                _ExpectRow(
+                  icon: Icons.oil_barrel_outlined,
+                  color: AppColors.moderate,
+                  title: 'Oil & Filter Reminders',
+                  subtitle:
+                      'Based on your engine type and usage',
+                ),
+                const SizedBox(height: 10),
+                _ExpectRow(
+                  icon: Icons.tire_repair_outlined,
+                  color: AppColors.primary,
+                  title: 'Tyre & Brake Checks',
+                  subtitle: 'Scheduled based on mileage',
+                ),
+                const SizedBox(height: 10),
+                _ExpectRow(
+                  icon: Icons.electric_bolt_outlined,
+                  color: AppColors.advisory,
+                  title: 'Battery & Spark Plugs',
+                  subtitle:
+                      'Time-based reminders per manufacturer specs',
+                ),
+                const SizedBox(height: 10),
+                _ExpectRow(
+                  icon: Icons.check_circle_outline_rounded,
+                  color: AppColors.advisory,
+                  title: 'Mark as Done',
+                  subtitle:
+                      'Log completed tasks to reset timers',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // CTA
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primarySubtle,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primaryBorder),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'Run your first scan to unlock\npersonalised maintenance reminders.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                      height: 1.5,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Inter'),
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius:
+                          BorderRadius.circular(10),
+                    ),
+                    child: const Text('Go to Scan →',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            fontFamily: 'Inter')),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 }
 
-class _MaintenanceItem extends StatelessWidget {
+class _ExpectRow extends StatelessWidget {
   final IconData icon;
-  final String title, status, interval;
-  final Color urgencyColor, urgencyBg, urgencyBorder;
-  final bool showMarkDone;
+  final Color color;
+  final String title, subtitle;
 
-  const _MaintenanceItem({
-    required this.icon, required this.title, required this.status,
-    required this.interval, required this.urgencyColor,
-    required this.urgencyBg, required this.urgencyBorder,
-    required this.showMarkDone,
+  const _ExpectRow({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: urgencyBorder),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 3,
-              decoration: BoxDecoration(
-                  color: urgencyColor,
-                  borderRadius: BorderRadius.circular(2)),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                  color: urgencyBg, borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: urgencyColor, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary, fontFamily: 'Inter')),
-                  const SizedBox(height: 3),
-                  Text(status,
-                      style: TextStyle(fontSize: 12, color: urgencyColor,
-                          fontFamily: 'Inter')),
-                  const SizedBox(height: 3),
-                  Text(interval,
-                      style: const TextStyle(fontSize: 11,
-                          color: AppColors.textTertiary, fontFamily: 'Inter')),
-                ],
-              ),
-            ),
-            if (showMarkDone)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: urgencyBg,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: urgencyBorder),
-                  ),
-                  child: Text('Mark done',
-                      style: TextStyle(fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: urgencyColor, fontFamily: 'Inter')),
-                ),
-              )
-            else
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  width: 28, height: 28,
-                  decoration: BoxDecoration(
-                    color: urgencyBg, shape: BoxShape.circle,
-                    border: Border.all(color: urgencyBorder),
-                  ),
-                  child: Icon(Icons.check_rounded,
-                      color: urgencyColor, size: 15),
-                ),
-              ),
-          ],
+    return Row(
+      children: [
+        Container(
+          width: 36, height: 36,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 18),
         ),
-      ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                      fontFamily: 'Inter')),
+              const SizedBox(height: 2),
+              Text(subtitle,
+                  style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                      fontFamily: 'Inter')),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

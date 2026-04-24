@@ -1,5 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import 'add_vehicle_screen.dart';
+import '../navigation/main_navigation.dart';
 
 class FirstVehicleScreen extends StatelessWidget {
   const FirstVehicleScreen({super.key});
@@ -29,10 +31,16 @@ class FirstVehicleScreen extends StatelessWidget {
               const SizedBox(height: 14),
               Center(
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () => Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                        builder: (_) => MainNavigation()),
+                    (route) => false,
+                  ),
                   child: const Text("I'll add a vehicle later →",
-                      style: TextStyle(fontSize: 13,
-                          color: AppColors.textTertiary, fontFamily: 'Inter')),
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textTertiary,
+                          fontFamily: 'Inter')),
                 ),
               ),
               const SizedBox(height: 32),
@@ -53,8 +61,11 @@ class FirstVehicleScreen extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         const Text('Account created!',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                color: AppColors.advisory, fontFamily: 'Inter')),
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.advisory,
+                fontFamily: 'Inter')),
       ],
     );
   }
@@ -68,22 +79,21 @@ class FirstVehicleScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.primaryBorder),
           boxShadow: [BoxShadow(
-              color: AppColors.primary.withOpacity(0.18), blurRadius: 28)],
+              color: AppColors.primary.withValues(alpha: 0.18),
+              blurRadius: 28)],
         ),
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Glow
             Container(
               width: 200, height: 100,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(100),
                 boxShadow: [BoxShadow(
-                    color: AppColors.primary.withOpacity(0.22),
+                    color: AppColors.primary.withValues(alpha: 0.22),
                     blurRadius: 40, spreadRadius: 10)],
               ),
             ),
-            // Car body
             CustomPaint(
               size: const Size(280, 120),
               painter: _CarPainter(),
@@ -99,22 +109,34 @@ class FirstVehicleScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
         Text('ONE MORE STEP',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-                color: AppColors.primary, letterSpacing: 2, fontFamily: 'Inter')),
+            style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+                letterSpacing: 2,
+                fontFamily: 'Inter')),
         SizedBox(height: 10),
         Text('Add your first',
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary, fontFamily: 'Inter',
+            style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                fontFamily: 'Inter',
                 letterSpacing: -0.5)),
         Text.rich(
           TextSpan(children: [
-            TextSpan(text: 'vehicle ',
+            TextSpan(
+                text: 'vehicle ',
                 style: TextStyle(color: AppColors.primary)),
-            TextSpan(text: 'to begin.',
+            TextSpan(
+                text: 'to begin.',
                 style: TextStyle(color: AppColors.textPrimary)),
           ]),
-          style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800,
-              fontFamily: 'Inter', letterSpacing: -0.5),
+          style: TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Inter',
+              letterSpacing: -0.5),
         ),
       ],
     );
@@ -123,8 +145,11 @@ class FirstVehicleScreen extends StatelessWidget {
   Widget _buildSubtext() {
     return const Text(
       'StanDiag needs to know your car to give you accurate diagnostics and smart results.',
-      style: TextStyle(fontSize: 14, color: AppColors.textSecondary,
-          height: 1.5, fontFamily: 'Inter'),
+      style: TextStyle(
+          fontSize: 14,
+          color: AppColors.textSecondary,
+          height: 1.5,
+          fontFamily: 'Inter'),
     );
   }
 
@@ -142,46 +167,60 @@ class FirstVehicleScreen extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
-        children: features.map((f) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              Container(
-                width: 8, height: 8,
-                decoration: const BoxDecoration(
-                    color: AppColors.primary, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 12),
-              Text(f,
-                  style: const TextStyle(fontSize: 14,
-                      color: AppColors.textPrimary, fontFamily: 'Inter')),
-            ],
-          ),
-        )).toList(),
+        children: features
+            .map((f) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8, height: 8,
+                        decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(f,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textPrimary,
+                              fontFamily: 'Inter')),
+                    ],
+                  ),
+                ))
+            .toList(),
       ),
     );
   }
 
   Widget _buildCTAButton(BuildContext context) {
-    return Container(
-      width: double.infinity, height: 56,
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(
-            color: AppColors.primary.withOpacity(0.40),
-            blurRadius: 20, offset: const Offset(0, 8))],
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const AddVehicleScreen()),
       ),
-      child: const Center(
-        child: Text('ADD MY VEHICLE',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,
-                color: Colors.white, letterSpacing: 0.8, fontFamily: 'Inter')),
+      child: Container(
+        width: double.infinity, height: 56,
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.40),
+              blurRadius: 20,
+              offset: const Offset(0, 8))],
+        ),
+        child: const Center(
+          child: Text('ADD MY VEHICLE',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.8,
+                  fontFamily: 'Inter')),
+        ),
       ),
     );
   }
 }
 
-// ── CAR PAINTER ─────────────────────────────────────────────
 class _CarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -196,7 +235,6 @@ class _CarPainter extends CustomPainter {
     final cx = size.width / 2;
     final cy = size.height / 2 + 10;
 
-    // Car body
     final bodyPath = Path();
     bodyPath.moveTo(cx - 110, cy + 10);
     bodyPath.lineTo(cx - 110, cy - 10);
@@ -211,7 +249,6 @@ class _CarPainter extends CustomPainter {
     canvas.drawPath(bodyPath, paint);
     canvas.drawPath(bodyPath, borderPaint);
 
-    // Window
     final windowPaint = Paint()
       ..color = const Color(0xFF0A0A0B)
       ..style = PaintingStyle.fill;
@@ -225,7 +262,6 @@ class _CarPainter extends CustomPainter {
     windowPath.close();
     canvas.drawPath(windowPath, windowPaint);
 
-    // Wheels
     final wheelPaint = Paint()
       ..color = const Color(0xFF111118)
       ..style = PaintingStyle.fill;
@@ -234,26 +270,31 @@ class _CarPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
-    // Left wheel
     canvas.drawCircle(Offset(cx - 65, cy + 24), 22, wheelPaint);
     canvas.drawCircle(Offset(cx - 65, cy + 24), 22, wheelBorder);
     canvas.drawCircle(Offset(cx - 65, cy + 24), 10,
-        Paint()..color = const Color(0xFF1E1E24)..style = PaintingStyle.fill);
-    // Right wheel
+        Paint()
+          ..color = const Color(0xFF1E1E24)
+          ..style = PaintingStyle.fill);
     canvas.drawCircle(Offset(cx + 65, cy + 24), 22, wheelPaint);
     canvas.drawCircle(Offset(cx + 65, cy + 24), 22, wheelBorder);
     canvas.drawCircle(Offset(cx + 65, cy + 24), 10,
-        Paint()..color = const Color(0xFF1E1E24)..style = PaintingStyle.fill);
+        Paint()
+          ..color = const Color(0xFF1E1E24)
+          ..style = PaintingStyle.fill);
 
-    // Ground shadow
     final shadowPaint = Paint()
-      ..color = AppColors.primary.withOpacity(0.08)
+      ..color = AppColors.primary.withValues(alpha: 0.08)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
     canvas.drawOval(
-        Rect.fromCenter(center: Offset(cx, cy + 42), width: 220, height: 14),
+        Rect.fromCenter(
+            center: Offset(cx, cy + 42), width: 220, height: 14),
         shadowPaint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+
+

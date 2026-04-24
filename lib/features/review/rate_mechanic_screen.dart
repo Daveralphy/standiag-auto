@@ -105,7 +105,7 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
                 color: AppColors.vehicleCard, shape: BoxShape.circle,
                 border: Border.all(color: AppColors.primaryBorder, width: 2),
                 boxShadow: [BoxShadow(
-                    color: AppColors.primary.withOpacity(0.20), blurRadius: 16)],
+                    color: AppColors.primary.withValues(alpha: 0.20), blurRadius: 16)],
               ),
               child: const Center(
                 child: Text('AO',
@@ -262,7 +262,7 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
           gradient: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [BoxShadow(
-              color: AppColors.primary.withOpacity(0.40),
+              color: AppColors.primary.withValues(alpha: 0.40),
               blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: const Center(
@@ -274,3 +274,4 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
     );
   }
 }
+

@@ -281,7 +281,7 @@ class _FullReportScreenState extends State<FullReportScreen> {
                         const SizedBox(height: 6),
                         Text('Tap to expand full analysis →',
                             style: TextStyle(fontSize: 12,
-                                color: urg.color.withOpacity(0.7),
+                                color: urg.color.withValues(alpha: 0.7),
                                 fontFamily: 'Inter')),
                       ],
                     ],
@@ -317,7 +317,7 @@ class _FullReportScreenState extends State<FullReportScreen> {
               gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(14),
               boxShadow: [BoxShadow(
-                  color: AppColors.primary.withOpacity(0.38),
+                  color: AppColors.primary.withValues(alpha: 0.38),
                   blurRadius: 16, offset: const Offset(0, 6))],
             ),
             child: const Center(child: Text('Find Mechanic →',
@@ -369,3 +369,4 @@ extension _UrgStyle on _Urg {
     }
   }
 }
+

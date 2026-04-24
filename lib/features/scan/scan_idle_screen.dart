@@ -1,31 +1,115 @@
 ﻿import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../core/theme/app_colors.dart';
-import 'scan_connecting_screen.dart';
+import '../../core/providers/vehicle_provider.dart';
 import '../onboarding/obd_guide_screen.dart';
+import 'scan_connecting_screen.dart';
 
-class ScanIdleScreen extends StatefulWidget {
+class ScanIdleScreen extends ConsumerStatefulWidget {
   const ScanIdleScreen({super.key});
 
   @override
-  State<ScanIdleScreen> createState() => _ScanIdleScreenState();
+  ConsumerState<ScanIdleScreen> createState() =>
+      _ScanIdleScreenState();
 }
 
-class _ScanIdleScreenState extends State<ScanIdleScreen>
+class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  bool _btEnabled = false;
+  bool _checkingBt = true;
 
   @override
   void initState() {
     super.initState();
+    // Only the outer ring pulses — needle is completely static
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    _pulseAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
+      CurvedAnimation(
+          parent: _pulseController, curve: Curves.easeInOut),
     );
+    _checkBluetooth();
+  }
+
+  Future<void> _checkBluetooth() async {
+    try {
+      final state = await FlutterBluePlus.adapterState.first;
+      if (mounted) {
+        setState(() {
+          _btEnabled = state == BluetoothAdapterState.on;
+          _checkingBt = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _checkingBt = false);
+    }
+    FlutterBluePlus.adapterState.listen((state) {
+      if (mounted) {
+        setState(
+            () => _btEnabled = state == BluetoothAdapterState.on);
+      }
+    });
+  }
+
+  Future<void> _onTapScan() async {
+    // Request BT + location permissions
+    final results = await [
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.location,
+    ].request();
+
+    final permanentlyDenied = results.values
+        .any((s) => s == PermissionStatus.permanentlyDenied);
+
+    if (permanentlyDenied) {
+      if (!mounted) return;
+      _showSnack(
+          'Bluetooth permissions denied. Please enable in Settings.');
+      await openAppSettings();
+      return;
+    }
+
+    final anyDenied = results.values
+        .any((s) => s == PermissionStatus.denied);
+
+    if (anyDenied) {
+      if (!mounted) return;
+      _showSnack('Bluetooth and location permissions are required.');
+      return;
+    }
+
+    if (!_btEnabled) {
+      if (!mounted) return;
+      _showSnack('Please enable Bluetooth to scan.');
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+          builder: (_) => const ScanConnectingScreen()),
+    );
+  }
+
+
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg,
+          style: const TextStyle(
+              fontFamily: 'Inter', fontSize: 13)),
+      backgroundColor: AppColors.surface,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12)),
+    ));
   }
 
   @override
@@ -36,6 +120,8 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
 
   @override
   Widget build(BuildContext context) {
+    final activeVehicleAsync = ref.watch(activeVehicleProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -46,34 +132,37 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
               const SizedBox(height: 16),
               _buildHeader(),
               const SizedBox(height: 8),
-              _buildVehiclePill(),
-              const SizedBox(height: 32),
-              _buildGauge(context),
-              const SizedBox(height: 16),
-              const Text(
-                'Ready to diagnose.',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Inter',
-                ),
+              activeVehicleAsync.when(
+                data: (v) => _buildVehiclePill(v != null
+                    ? '${v['make']} ${v['model']} ${v['year']}'
+                    : 'No vehicle — add one first'),
+                loading: () => _buildVehiclePill('Loading...'),
+                error: (_, __) =>
+                    _buildVehiclePill('No vehicle'),
               ),
+              const SizedBox(height: 32),
+              _buildGauge(),
+              const SizedBox(height: 16),
+              const Text('Ready to diagnose.',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      fontFamily: 'Inter')),
               const SizedBox(height: 6),
               const Text(
-                "Plug in your OBD-II adapter, make sure\nBluetooth is on, then tap the button above.",
+                'Plug in your OBD-II adapter, make sure\nBluetooth is on, then tap the gauge.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                  fontFamily: 'Inter',
-                ),
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                    fontFamily: 'Inter'),
               ),
               const SizedBox(height: 24),
               _buildStatusCards(),
               const SizedBox(height: 20),
-              _buildHelperCard(context),
+              _buildHelperCard(),
               const SizedBox(height: 24),
             ],
           ),
@@ -83,56 +172,49 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
   }
 
   Widget _buildHeader() {
-    return Row(
+    return const Row(
       children: [
-        const Text(
-          'Diagnostic Scan',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            fontFamily: 'Inter',
-          ),
-        ),
-        const Spacer(),
+        Text('Diagnostic Scan',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                fontFamily: 'Inter')),
+        Spacer(),
       ],
     );
   }
 
-  Widget _buildVehiclePill() {
+  Widget _buildVehiclePill(String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(100),
         border: Border.all(color: AppColors.border),
       ),
-      child: const Text(
-        'Toyota Corolla 2016',
-        style: TextStyle(
-          fontSize: 12,
-          color: AppColors.textSecondary,
-          fontFamily: 'Inter',
-        ),
-      ),
+      child: Text(label,
+          style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+              fontFamily: 'Inter')),
     );
   }
 
-  Widget _buildGauge(BuildContext context) {
+  Widget _buildGauge() {
     return AnimatedBuilder(
       animation: _pulseAnimation,
-      builder: (context, child) {
+      builder: (context, _) {
         return GestureDetector(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (_) => const ScanConnectingScreen()),
-          ),
+          onTap: _onTapScan,
           child: SizedBox(
             width: 260,
             height: 260,
             child: Stack(
               alignment: Alignment.center,
               children: [
+                // Pulsing outer ring only
                 Transform.scale(
                   scale: _pulseAnimation.value,
                   child: Container(
@@ -140,7 +222,8 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: AppColors.primary.withOpacity(0.08),
+                          color: AppColors.primary
+                              .withValues(alpha: 0.08),
                           width: 1),
                     ),
                   ),
@@ -150,13 +233,16 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: AppColors.primary.withOpacity(0.12),
+                        color: AppColors.primary
+                            .withValues(alpha: 0.12),
                         width: 1),
                   ),
                 ),
+                // STATIC gauge — needle at 0, no animation
                 CustomPaint(
                   size: const Size(200, 200),
-                  painter: _GaugePainter(),
+                  painter:
+                      _StaticGaugePainter(needlePosition: 0.0),
                 ),
                 Column(
                   mainAxisSize: MainAxisSize.min,
@@ -167,7 +253,8 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primary.withOpacity(0.85),
+                        color: AppColors.primary
+                            .withValues(alpha: 0.85),
                         letterSpacing: 2,
                         fontFamily: 'Inter',
                       ),
@@ -188,25 +275,33 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
         _StatusRow(
           icon: Icons.bluetooth,
           iconColor: AppColors.bluetooth,
-          iconBg: AppColors.bluetooth.withOpacity(0.12),
+          iconBg: AppColors.bluetooth.withValues(alpha: 0.12),
           title: 'Bluetooth',
-          subtitle: 'Enabled  •  Ready',
-          dotColor: AppColors.advisory,
+          subtitle: _checkingBt
+              ? 'Checking...'
+              : _btEnabled
+                  ? 'Enabled  •  Ready'
+                  : 'Disabled  •  Tap to enable',
+          dotColor:
+              _btEnabled ? AppColors.advisory : AppColors.moderate,
+          onTap: _btEnabled
+              ? null
+              : () async => await FlutterBluePlus.turnOn(),
         ),
         const SizedBox(height: 10),
-        _StatusRow(
+        const _StatusRow(
           icon: Icons.power_outlined,
           iconColor: AppColors.textSecondary,
           iconBg: AppColors.surface,
           title: 'OBD-II Adapter',
-          subtitle: 'Not detected  •  Plug in to begin',
+          subtitle: 'Not connected  •  Plug in to begin',
           dotColor: AppColors.moderate,
         ),
       ],
     );
   }
 
-  Widget _buildHelperCard(BuildContext context) {
+  Widget _buildHelperCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -231,40 +326,34 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'First time scanning?',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontFamily: 'Inter',
-                  ),
-                ),
+                const Text('First time scanning?',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        fontFamily: 'Inter')),
                 const SizedBox(height: 4),
                 const Text(
                   'You need an ELM327 Bluetooth adapter. They cost under ₦5,000 and work on any car with an OBD-II port (most cars after 2000).',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.5,
-                    fontFamily: 'Inter',
-                  ),
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                      fontFamily: 'Inter'),
                 ),
                 const SizedBox(height: 8),
                 GestureDetector(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                        builder: (_) => const OBDGuideScreen()),
+                        builder: (_) =>
+                            const OBDGuideScreen()),
                   ),
-                  child: const Text(
-                    'Where to buy one →',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
+                  child: const Text('Where to buy one →',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                          fontFamily: 'Inter')),
                 ),
               ],
             ),
@@ -275,7 +364,13 @@ class _ScanIdleScreenState extends State<ScanIdleScreen>
   }
 }
 
-class _GaugePainter extends CustomPainter {
+// ── STATIC GAUGE PAINTER ─────────────────────────────────────
+// Needle is fixed at position 0 — never moves on idle screen
+class _StaticGaugePainter extends CustomPainter {
+  final double needlePosition; // Always 0.0 on idle
+
+  const _StaticGaugePainter({required this.needlePosition});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -283,107 +378,160 @@ class _GaugePainter extends CustomPainter {
     const startAngle = math.pi * 0.65;
     const sweepAngle = math.pi * 1.22;
 
-    final trackPaint = Paint()
-      ..color = const Color(0xFF1E1E24)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10
-      ..strokeCap = StrokeCap.round;
-    canvas.drawArc(Rect.fromCircle(center: center, radius: radius),
-        startAngle, sweepAngle, false, trackPaint);
+    // Track
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle, sweepAngle, false,
+      Paint()
+        ..color = const Color(0xFF1E1E24)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 10
+        ..strokeCap = StrokeCap.round,
+    );
 
+    // Tick marks + labels (0–10)
     final tickPaint = Paint()
       ..color = const Color(0xFF5E5E6A)
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 
-    final labels = ['0', '20', '40', '60', '80', '100', '110'];
-    for (int i = 0; i < labels.length; i++) {
-      final angle = startAngle + (sweepAngle / (labels.length - 1)) * i;
-      final outerPoint = Offset(center.dx + (radius + 2) * math.cos(angle),
+    for (int i = 0; i <= 10; i++) {
+      final angle = startAngle + (sweepAngle / 10) * i;
+      final isMajor = i % 2 == 0;
+      final outer = Offset(
+          center.dx + (radius + 2) * math.cos(angle),
           center.dy + (radius + 2) * math.sin(angle));
-      final innerPoint = Offset(center.dx + (radius - 10) * math.cos(angle),
-          center.dy + (radius - 10) * math.sin(angle));
-      canvas.drawLine(innerPoint, outerPoint, tickPaint);
+      final inner = Offset(
+          center.dx +
+              (radius - (isMajor ? 12 : 7)) * math.cos(angle),
+          center.dy +
+              (radius - (isMajor ? 12 : 7)) * math.sin(angle));
+      canvas.drawLine(inner, outer, tickPaint);
 
-      final tp = TextPainter(
-        text: TextSpan(text: labels[i],
-            style: const TextStyle(color: Color(0xFF5E5E6A), fontSize: 9,
-                fontWeight: FontWeight.w500)),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(
-          center.dx + (radius - 24) * math.cos(angle) - tp.width / 2,
-          center.dy + (radius - 24) * math.sin(angle) - tp.height / 2));
+      if (isMajor) {
+        final tp = TextPainter(
+          text: TextSpan(
+              text: '$i',
+              style: const TextStyle(
+                  color: Color(0xFF5E5E6A),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500)),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        tp.paint(
+            canvas,
+            Offset(
+                center.dx +
+                    (radius - 26) * math.cos(angle) -
+                    tp.width / 2,
+                center.dy +
+                    (radius - 26) * math.sin(angle) -
+                    tp.height / 2));
+      }
     }
 
-    final needlePaint = Paint()
-      ..color = AppColors.primary
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
+    // Needle — fixed at startAngle (position 0)
+    final needleAngle =
+        startAngle + sweepAngle * needlePosition;
     final needleEnd = Offset(
-        center.dx + (radius - 30) * math.cos(startAngle),
-        center.dy + (radius - 30) * math.sin(startAngle));
-    canvas.drawLine(center, needleEnd, needlePaint);
-    canvas.drawCircle(center, 6, Paint()..color = AppColors.primary);
-    canvas.drawCircle(center, 3, Paint()..color = const Color(0xFF0A0A0B));
+        center.dx + (radius - 30) * math.cos(needleAngle),
+        center.dy + (radius - 30) * math.sin(needleAngle));
+
+    canvas.drawLine(
+        center,
+        needleEnd,
+        Paint()
+          ..color = AppColors.primary
+          ..strokeWidth = 2.5
+          ..strokeCap = StrokeCap.round);
+
+    canvas.drawCircle(
+        center, 6, Paint()..color = AppColors.primary);
+    canvas.drawCircle(center, 3,
+        Paint()..color = const Color(0xFF0A0A0B));
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(_StaticGaugePainter old) => false;
 }
 
+// ── STATUS ROW ───────────────────────────────────────────────
 class _StatusRow extends StatelessWidget {
   final IconData icon;
   final Color iconColor, iconBg, dotColor;
   final String title, subtitle;
+  final VoidCallback? onTap;
 
-  const _StatusRow({required this.icon, required this.iconColor,
-      required this.iconBg, required this.title, required this.subtitle,
-      required this.dotColor});
+  const _StatusRow({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.title,
+    required this.subtitle,
+    required this.dotColor,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-                color: iconBg, borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary, fontFamily: 'Inter')),
-                const SizedBox(height: 2),
-                Text(subtitle,
-                    style: const TextStyle(fontSize: 11,
-                        color: AppColors.textSecondary, fontFamily: 'Inter')),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
-          ),
-          Container(
-            width: 10, height: 10,
-            decoration: BoxDecoration(
-              color: dotColor, shape: BoxShape.circle,
-              boxShadow: [BoxShadow(
-                  color: dotColor.withOpacity(0.5), blurRadius: 6)],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                          fontFamily: 'Inter')),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                          fontFamily: 'Inter')),
+                ],
+              ),
             ),
-          ),
-        ],
+            Container(
+              width: 10, height: 10,
+              decoration: BoxDecoration(
+                color: dotColor,
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(
+                    color: dotColor.withValues(alpha: 0.5),
+                    blurRadius: 6)],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+
+
+
+
+

@@ -129,7 +129,7 @@ class _SlideDiagnose extends StatelessWidget {
                 border: Border.all(color: AppColors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.15),
+                    color: AppColors.primary.withValues(alpha: 0.15),
                     blurRadius: 28,
                     offset: const Offset(0, 4),
                   ),
@@ -185,7 +185,7 @@ class _SlideDiagnose extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: 6.5 * s,
                                         fontWeight: FontWeight.w500,
-                                        color: Colors.white.withOpacity(0.86),
+                                        color: Colors.white.withValues(alpha: 0.86),
                                         letterSpacing: 0.8,
                                         fontFamily: 'Inter',
                                       )),
@@ -277,7 +277,7 @@ class _SlideDiagnose extends StatelessWidget {
                                   width: 16 * s,
                                   height: 16 * s,
                                   decoration: BoxDecoration(
-                                    color: AppColors.bluetooth.withOpacity(0.15),
+                                    color: AppColors.bluetooth.withValues(alpha: 0.15),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(Icons.bluetooth, color: AppColors.bluetooth, size: 10 * s),
@@ -344,7 +344,7 @@ class _SlideUnderstand extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16 * s),
                 border: Border.all(color: AppColors.primaryBorder),
                 boxShadow: [
-                  BoxShadow(color: AppColors.primary.withOpacity(0.15), blurRadius: 28, offset: const Offset(0, 4)),
+                  BoxShadow(color: AppColors.primary.withValues(alpha: 0.15), blurRadius: 28, offset: const Offset(0, 4)),
                 ],
               ),
               child: ClipRRect(
@@ -592,7 +592,7 @@ class _BottomGroup extends StatelessWidget {
             height: 1,
             margin: EdgeInsets.symmetric(horizontal: 4 * s),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.transparent, Colors.white.withOpacity(0.08), Colors.transparent]),
+              gradient: LinearGradient(colors: [Colors.transparent, Colors.white.withValues(alpha: 0.08), Colors.transparent]),
             ),
           ),
           SizedBox(height: 16 * s),
@@ -608,7 +608,7 @@ class _BottomGroup extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.circular(12 * s),
-                boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.35), blurRadius: 18, offset: const Offset(0, 5))],
+                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, 5))],
               ),
               child: Center(
                 child: Text(isLast ? 'GET STARTED' : 'NEXT',
@@ -759,9 +759,9 @@ class _MechCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 11 * s, vertical: 7 * s),
             decoration: BoxDecoration(
-              color: btnPrimary ? AppColors.primary : AppColors.whatsApp.withOpacity(0.12),
+              color: btnPrimary ? AppColors.primary : AppColors.whatsApp.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10 * s),
-              border: btnPrimary ? null : Border.all(color: AppColors.whatsApp.withOpacity(0.4)),
+              border: btnPrimary ? null : Border.all(color: AppColors.whatsApp.withValues(alpha: 0.4)),
             ),
             child: Text(btnLabel, style: TextStyle(fontSize: 11 * s, fontWeight: FontWeight.w700, color: btnPrimary ? Colors.white : AppColors.whatsApp, fontFamily: 'Inter')),
           ),
@@ -800,8 +800,8 @@ class _DtcRow extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 6 * s),
       padding: EdgeInsets.symmetric(horizontal: 7 * s),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
-        border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05), width: 0.5)),
+        color: Colors.white.withValues(alpha: 0.04),
+        border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.05), width: 0.5)),
       ),
       child: Row(
         children: [
@@ -865,7 +865,7 @@ class _UserDot extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(alignment: Alignment.center, children: [
       Container(width: 44, height: 44,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.bluetooth.withOpacity(0.08), border: Border.all(color: AppColors.bluetooth.withOpacity(0.22), width: 1))),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.bluetooth.withValues(alpha: 0.08), border: Border.all(color: AppColors.bluetooth.withValues(alpha: 0.22), width: 1))),
       Container(width: 12, height: 12,
           decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.bluetooth, border: Border.all(color: Colors.white, width: 2))),
     ]);
@@ -887,7 +887,7 @@ class _Pin extends StatelessWidget {
           color: primary ? AppColors.primary : AppColors.surface,
           borderRadius: BorderRadius.circular(6 * s),
           border: primary ? null : Border.all(color: AppColors.border),
-          boxShadow: primary ? [BoxShadow(color: AppColors.primary.withOpacity(0.45), blurRadius: 7)] : null,
+          boxShadow: primary ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.45), blurRadius: 7)] : null,
         ),
         child: Text(label, style: TextStyle(fontSize: primary ? 9 * s : 8 * s, fontWeight: FontWeight.w600, color: primary ? Colors.white : AppColors.textSecondary, fontFamily: 'Inter')),
       ),
@@ -902,14 +902,14 @@ class _MapGrid extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final g = Paint()..color = Colors.white.withOpacity(0.04)..strokeWidth = 0.8;
+    final g = Paint()..color = Colors.white.withValues(alpha: 0.04)..strokeWidth = 0.8;
     for (double x = 0; x < size.width; x += 50) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), g);
     }
     for (double y = 0; y < size.height; y += 40) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), g);
     }
-    final r = Paint()..color = Colors.white.withOpacity(0.07)..strokeWidth = 8;
+    final r = Paint()..color = Colors.white.withValues(alpha: 0.07)..strokeWidth = 8;
     canvas.drawLine(Offset(0, size.height * 0.5), Offset(size.width, size.height * 0.5), r);
     canvas.drawLine(Offset(size.width * 0.45, 0), Offset(size.width * 0.45, size.height), r);
   }
@@ -918,25 +918,6 @@ class _MapGrid extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter o) => false;
 }
 
-class _MiniStat extends StatelessWidget {
-  final double s;
-  final String label, value;
-  final Color color;
-  const _MiniStat({required this.s, required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 7 * s),
-      decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(8 * s), border: Border.all(color: color.withOpacity(0.22))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: TextStyle(fontSize: 6.5 * s, color: AppColors.textTertiary, fontWeight: FontWeight.w600, letterSpacing: 0.6, fontFamily: 'Inter')),
-        SizedBox(height: 2 * s),
-        Text(value, style: TextStyle(fontSize: 9 * s, color: AppColors.textPrimary, fontWeight: FontWeight.w800, fontFamily: 'Inter')),
-      ]),
-    );
-  }
-}
 
 class _ActionChip extends StatelessWidget {
   final double s;
@@ -948,7 +929,8 @@ class _ActionChip extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 7 * s),
       decoration: BoxDecoration(color: AppColors.surfaceDeep, borderRadius: BorderRadius.circular(999), border: Border.all(color: AppColors.border)),
-      child: Center(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 6.5 * s, color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontFamily: 'Inter'))),
+       child: Center(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 6.5 * s, color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontFamily: 'Inter'))),
     );
   }
 }
+

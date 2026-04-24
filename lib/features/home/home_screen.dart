@@ -1,13 +1,42 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/providers/profile_provider.dart';
+import '../../core/providers/vehicle_provider.dart';
 import '../history/scan_history_screen.dart';
 import '../maintenance/maintenance_screen.dart';
+import '../notifications/notifications_screen.dart';
+import '../navigation/main_navigation.dart';
 
-class HomeScreenContent extends StatelessWidget {
+class HomeScreenContent extends ConsumerWidget {
   const HomeScreenContent({super.key});
 
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  String _formattedDate() {
+    final now = DateTime.now();
+    const days = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+      'Friday', 'Saturday', 'Sunday'
+    ];
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]} ${now.year}';
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileProvider);
+    final activeVehicleAsync = ref.watch(activeVehicleProvider);
+    final lastScanAsync = ref.watch(lastScanProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -17,17 +46,45 @@ class HomeScreenContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              _buildHeader(context),
+              // ── Header ──────────────────────────────────
+              profileAsync.when(
+                data: (profile) => _buildHeader(
+                  context,
+                  username: profile?['username'] ?? '',
+                ),
+                loading: () => _buildHeader(context, username: ''),
+                error: (_, __) => _buildHeader(context, username: ''),
+              ),
               const SizedBox(height: 20),
-              _buildVehicleCard(),
+              // ── Vehicle Card ─────────────────────────────
+              activeVehicleAsync.when(
+                data: (vehicle) => vehicle != null
+                    ? _buildVehicleCard(vehicle)
+                    : _buildNoVehicleCard(context),
+                loading: () => _buildVehicleCardSkeleton(),
+                error: (_, __) => _buildNoVehicleCard(context),
+              ),
               const SizedBox(height: 16),
+              // ── Live Stats ───────────────────────────────
               _buildLiveStatsSection(),
               const SizedBox(height: 16),
+              // ── Scan Button ──────────────────────────────
               _buildScanButton(context),
               const SizedBox(height: 24),
-              _buildMaintenanceSection(context),
+              // ── Maintenance ──────────────────────────────
+              activeVehicleAsync.when(
+                data: (vehicle) =>
+                    _buildMaintenanceSection(context, hasVehicle: vehicle != null),
+                loading: () => _buildMaintenanceSection(context, hasVehicle: false),
+                error: (_, __) => _buildMaintenanceSection(context, hasVehicle: false),
+              ),
               const SizedBox(height: 24),
-              _buildRecentScansSection(context),
+              // ── Recent Scans ─────────────────────────────
+              lastScanAsync.when(
+                data: (scan) => _buildRecentScansSection(context, scan),
+                loading: () => _buildRecentScansSection(context, null),
+                error: (_, __) => _buildRecentScansSection(context, null),
+              ),
               const SizedBox(height: 24),
             ],
           ),
@@ -36,34 +93,34 @@ class HomeScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, {required String username}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text.rich(
               TextSpan(
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                   fontFamily: 'Inter',
                 ),
                 children: [
-                  TextSpan(text: 'Good morning, '),
+                  TextSpan(text: '${_greeting()}, '),
                   TextSpan(
-                    text: 'Raphael.',
-                    style: TextStyle(color: AppColors.primary),
+                    text: username.isNotEmpty ? '$username.' : 'there.',
+                    style: const TextStyle(color: AppColors.primary),
                   ),
                 ],
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
-              'Saturday, 11 April 2026',
-              style: TextStyle(
+              _formattedDate(),
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.textTertiary,
                 fontFamily: 'Inter',
@@ -72,7 +129,10 @@ class HomeScreenContent extends StatelessWidget {
           ],
         ),
         GestureDetector(
-          onTap: () {},
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (_) => const NotificationsScreen()),
+          ),
           child: Container(
             width: 40,
             height: 40,
@@ -84,11 +144,8 @@ class HomeScreenContent extends StatelessWidget {
             child: Stack(
               children: [
                 const Center(
-                  child: Icon(
-                    Icons.notifications_outlined,
-                    color: AppColors.textSecondary,
-                    size: 20,
-                  ),
+                  child: Icon(Icons.notifications_outlined,
+                      color: AppColors.textSecondary, size: 20),
                 ),
                 Positioned(
                   top: 8,
@@ -110,7 +167,13 @@ class HomeScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildVehicleCard() {
+  Widget _buildVehicleCard(Map<String, dynamic> vehicle) {
+    final make = vehicle['make'] ?? '';
+    final model = vehicle['model'] ?? '';
+    final year = vehicle['year'] ?? '';
+    final engineType = vehicle['engine_type'] ?? '';
+    final nickname = vehicle['nickname'];
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -120,7 +183,7 @@ class HomeScreenContent extends StatelessWidget {
         border: Border.all(color: AppColors.primaryBorder),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.10),
+            color: AppColors.primary.withValues(alpha: 0.10),
             blurRadius: 20,
             offset: const Offset(0, 6),
           ),
@@ -129,34 +192,29 @@ class HomeScreenContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'ACTIVE VEHICLE',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-              letterSpacing: 1.5,
-              fontFamily: 'Inter',
-            ),
-          ),
+          const Text('ACTIVE VEHICLE',
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 1.5,
+                  fontFamily: 'Inter')),
           const SizedBox(height: 8),
-          const Text(
-            'Toyota Corolla',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              fontFamily: 'Inter',
-            ),
+          Text(
+            nickname ?? '$make $model',
+            style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                fontFamily: 'Inter'),
           ),
           const SizedBox(height: 4),
-          const Text(
-            '2016  •  1.8L Petrol  •  Lagos',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              fontFamily: 'Inter',
-            ),
+          Text(
+            '$year  •  $engineType',
+            style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                fontFamily: 'Inter'),
           ),
           const SizedBox(height: 12),
           Row(
@@ -176,29 +234,97 @@ class HomeScreenContent extends StatelessWidget {
                     Icon(Icons.check_circle,
                         size: 12, color: AppColors.advisory),
                     SizedBox(width: 4),
-                    Text(
-                      'All clear',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.advisory,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
+                    Text('All clear',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.advisory,
+                            fontFamily: 'Inter')),
                   ],
                 ),
               ),
-              const Text(
-                'Last scan: 2 days ago',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textTertiary,
-                  fontFamily: 'Inter',
-                ),
-              ),
+              const Text('No recent scan',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textTertiary,
+                      fontFamily: 'Inter')),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNoVehicleCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pushNamed('/add-vehicle'),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primarySubtle,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.primaryBorder),
+              ),
+              child: const Icon(Icons.add_rounded,
+                  color: AppColors.primary, size: 24),
+            ),
+            const SizedBox(height: 12),
+            const Text('No vehicle added yet',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    fontFamily: 'Inter')),
+            const SizedBox(height: 4),
+            const Text(
+                'Add your vehicle to start scanning\nand get accurate diagnostics',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                    fontFamily: 'Inter')),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text('Add Vehicle',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      fontFamily: 'Inter')),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVehicleCardSkeleton() {
+    return Container(
+      width: double.infinity,
+      height: 120,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
       ),
     );
   }
@@ -207,45 +333,30 @@ class HomeScreenContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'LIVE STATS',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textTertiary,
-            letterSpacing: 1.5,
-            fontFamily: 'Inter',
-          ),
-        ),
+        const Text('LIVE STATS',
+            style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textTertiary,
+                letterSpacing: 1.5,
+                fontFamily: 'Inter')),
         const SizedBox(height: 10),
         Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                label: 'RPM',
-                value: '820',
-                status: 'Idle',
-                statusColor: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _StatCard(
-                label: 'COOLANT TEMP',
-                value: '88°C',
-                status: 'Normal',
-                statusColor: AppColors.advisory,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _StatCard(
-                label: 'BATTERY',
-                value: '13.8V',
-                status: 'Good charge',
-                statusColor: AppColors.advisory,
-              ),
-            ),
+          children: const [
+            Expanded(child: _StatCard(
+                label: 'RPM', value: '--',
+                status: 'Not connected',
+                statusColor: AppColors.textSecondary)),
+            SizedBox(width: 10),
+            Expanded(child: _StatCard(
+                label: 'COOLANT', value: '--',
+                status: 'Not connected',
+                statusColor: AppColors.textSecondary)),
+            SizedBox(width: 10),
+            Expanded(child: _StatCard(
+                label: 'BATTERY', value: '--',
+                status: 'Not connected',
+                statusColor: AppColors.textSecondary)),
           ],
         ),
       ],
@@ -261,7 +372,7 @@ class HomeScreenContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.40),
+            color: AppColors.primary.withValues(alpha: 0.40),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -271,29 +382,26 @@ class HomeScreenContent extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {},
+          onTap: () {
+            // Switch to Scan tab (index 1) in MainNavigation
+            mainNavKey.currentState?.switchToTab(1);
+          },
           child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'RUN A DIAGNOSTIC SCAN',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: 0.8,
-                  fontFamily: 'Inter',
-                ),
-              ),
+              Text('RUN A DIAGNOSTIC SCAN',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: 0.8,
+                      fontFamily: 'Inter')),
               SizedBox(height: 2),
-              Text(
-                'Connect OBD adapter and tap to begin',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.white70,
-                  fontFamily: 'Inter',
-                ),
-              ),
+              Text('Connect OBD adapter and tap to begin',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white70,
+                      fontFamily: 'Inter')),
             ],
           ),
         ),
@@ -301,111 +409,305 @@ class HomeScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildMaintenanceSection(BuildContext context) {
+  Widget _buildMaintenanceSection(BuildContext context,
+      {required bool hasVehicle}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'MAINTENANCE REMINDERS',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textTertiary,
-                letterSpacing: 1.5,
-                fontFamily: 'Inter',
-              ),
-            ),
-            GestureDetector(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) => const MaintenanceScreen()),
-              ),
-              child: const Text(
-                'See all',
+            const Text('MAINTENANCE REMINDERS',
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.primary,
-                  fontFamily: 'Inter',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textTertiary,
+                    letterSpacing: 1.5,
+                    fontFamily: 'Inter')),
+            if (hasVehicle)
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const MaintenanceScreen()),
                 ),
+                child: const Text('See all',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary,
+                        fontFamily: 'Inter')),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 10),
-        _MaintenanceRow(
-          icon: Icons.oil_barrel_outlined,
-          title: 'Engine Oil Change',
-          subtitle: 'Overdue by 12 days',
-          badgeText: 'OVERDUE',
-          urgencyColor: AppColors.critical,
-          urgencyBg: AppColors.criticalBg,
-          urgencyBorder: AppColors.criticalBorder,
-        ),
-        const SizedBox(height: 8),
-        _MaintenanceRow(
-          icon: Icons.tire_repair_outlined,
-          title: 'Tyre Pressure Check',
-          subtitle: 'Due in 5 days',
-          badgeText: 'SOON',
-          urgencyColor: AppColors.moderate,
-          urgencyBg: AppColors.moderateBg,
-          urgencyBorder: AppColors.moderateBorder,
-        ),
+        if (!hasVehicle)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+                vertical: 24, horizontal: 20),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Column(
+              children: [
+                Icon(Icons.build_circle_outlined,
+                    color: AppColors.textTertiary, size: 32),
+                SizedBox(height: 10),
+                Text('No vehicle added yet',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Inter')),
+                SizedBox(height: 4),
+                Text(
+                    'Add your vehicle to get personalised\nmaintenance reminders',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textTertiary,
+                        height: 1.5,
+                        fontFamily: 'Inter')),
+              ],
+            ),
+          )
+        else
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+                vertical: 24, horizontal: 20),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Column(
+              children: [
+                Icon(Icons.build_circle_outlined,
+                    color: AppColors.textTertiary, size: 32),
+                SizedBox(height: 10),
+                Text('Maintenance reminders coming soon',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Inter')),
+                SizedBox(height: 4),
+                Text(
+                    'After your first scan, StanDiag will suggest\nmaintenance based on your vehicle and results.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textTertiary,
+                        height: 1.5,
+                        fontFamily: 'Inter')),
+              ],
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildRecentScansSection(BuildContext context) {
+  Widget _buildRecentScansSection(
+      BuildContext context, Map<String, dynamic>? lastScan) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'RECENT SCANS',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textTertiary,
-                letterSpacing: 1.5,
-                fontFamily: 'Inter',
-              ),
-            ),
+            const Text('RECENT SCANS',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textTertiary,
+                    letterSpacing: 1.5,
+                    fontFamily: 'Inter')),
             GestureDetector(
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                     builder: (_) => const ScanHistoryScreen()),
               ),
-              child: const Text(
-                'See all',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.primary,
-                  fontFamily: 'Inter',
-                ),
-              ),
+              child: const Text('See all',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primary,
+                      fontFamily: 'Inter')),
             ),
           ],
         ),
         const SizedBox(height: 10),
-        GestureDetector(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ScanHistoryScreen()),
+        if (lastScan == null)
+          _buildNoScansCard()
+        else
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (_) => const ScanHistoryScreen()),
+            ),
+            child: _buildScanRow(lastScan),
           ),
-          child: const _RecentScanRow(),
-        ),
       ],
     );
   }
+
+  Widget _buildNoScansCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Column(
+        children: [
+          Icon(Icons.wifi_tethering_outlined,
+              color: AppColors.textTertiary, size: 32),
+          SizedBox(height: 10),
+          Text('No scans yet',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                  fontFamily: 'Inter')),
+          SizedBox(height: 4),
+          Text('Run your first diagnostic scan\nto see results here',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textTertiary,
+                  height: 1.5,
+                  fontFamily: 'Inter')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScanRow(Map<String, dynamic> scan) {
+    final codes = scan['dtc_codes'] as List? ?? [];
+    final severity = scan['severity'] ?? 'clear';
+    final scannedAt = scan['scanned_at'] != null
+        ? DateTime.parse(scan['scanned_at'])
+        : null;
+    final isClean = codes.isEmpty || severity == 'clear';
+
+    Color color;
+    Color bg;
+    Color border;
+    String badge;
+    IconData icon;
+
+    if (isClean) {
+      color = AppColors.advisory;
+      bg = AppColors.advisoryBg;
+      border = AppColors.advisoryBorder;
+      badge = 'ALL CLEAR';
+      icon = Icons.check_circle_outline_rounded;
+    } else if (severity == 'critical') {
+      color = AppColors.critical;
+      bg = AppColors.criticalBg;
+      border = AppColors.criticalBorder;
+      badge = 'CRITICAL';
+      icon = Icons.warning_amber_rounded;
+    } else {
+      color = AppColors.moderate;
+      bg = AppColors.moderateBg;
+      border = AppColors.moderateBorder;
+      badge = 'MODERATE';
+      icon = Icons.bolt_rounded;
+    }
+
+    final dateStr = scannedAt != null
+        ? '${scannedAt.day} ${_monthName(scannedAt.month)} ${scannedAt.year}'
+        : '';
+    final codesStr = codes.isNotEmpty
+        ? codes.take(3).join(', ')
+        : 'All systems normal';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        children: [
+          Container(
+              width: 3,
+              height: 40,
+              decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(2))),
+          const SizedBox(width: 12),
+          Container(
+            width: 38, height: 38,
+            decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isClean
+                      ? 'No faults detected'
+                      : '${codes.length} fault code${codes.length > 1 ? 's' : ''} detected',
+                  style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      fontFamily: 'Inter'),
+                ),
+                const SizedBox(height: 3),
+                Text('$dateStr  •  $codesStr',
+                    style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Inter')),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: border)),
+            child: Text(badge,
+                style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                    letterSpacing: 0.5,
+                    fontFamily: 'Inter')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _monthName(int month) {
+    const months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month];
+  }
 }
 
-// ── STAT CARD ────────────────────────────────────────────────
+// ── STAT CARD ─────────────────────────────────────────────────
 class _StatCard extends StatelessWidget {
   final String label, value, status;
   final Color statusColor;
@@ -429,231 +731,42 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-              letterSpacing: 0.8,
-              fontFamily: 'Inter',
-            ),
-          ),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 0.8,
+                  fontFamily: 'Inter')),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              fontFamily: 'Inter',
-            ),
-          ),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Inter')),
           const SizedBox(height: 4),
-          Text(
-            status,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: statusColor,
-              fontFamily: 'Inter',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── MAINTENANCE ROW ──────────────────────────────────────────
-class _MaintenanceRow extends StatelessWidget {
-  final IconData icon;
-  final String title, subtitle, badgeText;
-  final Color urgencyColor, urgencyBg, urgencyBorder;
-
-  const _MaintenanceRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.badgeText,
-    required this.urgencyColor,
-    required this.urgencyBg,
-    required this.urgencyBorder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: urgencyBorder),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 3,
-            height: 40,
-            decoration: BoxDecoration(
-              color: urgencyColor,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: urgencyBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: urgencyColor, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: urgencyColor,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: urgencyBg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: urgencyBorder),
-            ),
-            child: Text(
-              badgeText,
+          Text(status,
               style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                color: urgencyColor,
-                letterSpacing: 0.5,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: statusColor,
+                  fontFamily: 'Inter')),
         ],
       ),
     );
   }
 }
 
-// ── RECENT SCAN ROW ──────────────────────────────────────────
-class _RecentScanRow extends StatelessWidget {
-  const _RecentScanRow();
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.criticalBorder),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 3,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.critical,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.criticalBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.warning_amber_rounded,
-              color: AppColors.critical,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '⚠ 2 fault codes detected',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  '9 April 2026  •  P0301, P0420',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.criticalBg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.criticalBorder),
-            ),
-            child: const Text(
-              'CRITICAL',
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primaryLight,
-                letterSpacing: 0.5,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 // ── BACKWARD COMPATIBILITY ────────────────────────────────────
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: HomeScreenContent(),
-    );
+    return const Scaffold(body: HomeScreenContent());
   }
 }
+
+

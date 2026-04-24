@@ -3,7 +3,8 @@ import '../../core/theme/app_colors.dart';
 import 'booking_confirmed_screen.dart';
 
 class BookMechanicScreen extends StatefulWidget {
-  const BookMechanicScreen({super.key});
+  final Map<String, dynamic> mechanic;
+  const BookMechanicScreen({super.key, required this.mechanic});
 
   @override
   State<BookMechanicScreen> createState() => _BookMechanicScreenState();
@@ -12,8 +13,6 @@ class BookMechanicScreen extends StatefulWidget {
 class _BookMechanicScreenState extends State<BookMechanicScreen> {
   int _selectedDay = 14;
   String _selectedTime = '8:00 AM';
-  final int _currentMonth = 4;
-  final int _currentYear = 2026;
 
   final List<String> _timeSlots = [
     '8:00 AM', '10:00 AM', '12:00 PM', '2:00 PM', '4:00 PM', '6:00 PM'
@@ -421,7 +420,7 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
           gradient: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [BoxShadow(
-              color: AppColors.primary.withOpacity(0.40),
+              color: AppColors.primary.withValues(alpha: 0.40),
               blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: const Center(
@@ -433,3 +432,7 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
     );
   }
 }
+
+
+
+

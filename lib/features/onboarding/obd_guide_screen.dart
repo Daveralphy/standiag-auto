@@ -86,7 +86,7 @@ class OBDGuideScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.primaryBorder),
               boxShadow: [BoxShadow(
-                  color: AppColors.primary.withOpacity(0.20), blurRadius: 24)],
+                  color: AppColors.primary.withValues(alpha: 0.20), blurRadius: 24)],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -150,9 +150,9 @@ class OBDGuideScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.bluetooth.withOpacity(0.06),
+        color: AppColors.bluetooth.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.bluetooth.withOpacity(0.18)),
+        border: Border.all(color: AppColors.bluetooth.withValues(alpha: 0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +240,7 @@ class OBDGuideScreen extends StatelessWidget {
           gradient: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [BoxShadow(
-              color: AppColors.primary.withOpacity(0.40),
+              color: AppColors.primary.withValues(alpha: 0.40),
               blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: const Center(
@@ -277,7 +277,7 @@ class _StoreCard extends StatelessWidget {
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: emojiColor.withOpacity(0.10),
+              color: emojiColor.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(child: Text(emoji,
@@ -310,3 +310,4 @@ class _StoreCard extends StatelessWidget {
     );
   }
 }
+

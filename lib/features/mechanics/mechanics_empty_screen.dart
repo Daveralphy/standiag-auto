@@ -145,10 +145,10 @@ class MechanicsEmptyScreen extends StatelessWidget {
           Container(
             width: 88, height: 88,
             decoration: BoxDecoration(
-              color: AppColors.bluetooth.withOpacity(0.08),
+              color: AppColors.bluetooth.withValues(alpha: 0.08),
               shape: BoxShape.circle,
               border: Border.all(
-                  color: AppColors.bluetooth.withOpacity(0.18), width: 1.5),
+                  color: AppColors.bluetooth.withValues(alpha: 0.18), width: 1.5),
             ),
             child: const Center(
               child: Icon(Icons.location_off_outlined,
@@ -188,7 +188,7 @@ class MechanicsEmptyScreen extends StatelessWidget {
               gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(14),
               boxShadow: [BoxShadow(
-                  color: AppColors.primary.withOpacity(0.38),
+                  color: AppColors.primary.withValues(alpha: 0.38),
                   blurRadius: 16, offset: const Offset(0, 6))],
             ),
             child: const Center(
@@ -209,3 +209,4 @@ class MechanicsEmptyScreen extends StatelessWidget {
     );
   }
 }
+

@@ -83,23 +83,23 @@ class _BookingConfirmedScreenState extends State<BookingConfirmedScreen>
               Container(width: 160, height: 160,
                   decoration: BoxDecoration(shape: BoxShape.circle,
                       border: Border.all(
-                          color: AppColors.advisory.withOpacity(0.08), width: 1))),
+                          color: AppColors.advisory.withValues(alpha: 0.08), width: 1))),
               Container(width: 128, height: 128,
                   decoration: BoxDecoration(shape: BoxShape.circle,
                       border: Border.all(
-                          color: AppColors.advisory.withOpacity(0.12), width: 1))),
+                          color: AppColors.advisory.withValues(alpha: 0.12), width: 1))),
               Container(width: 98, height: 98,
                   decoration: BoxDecoration(shape: BoxShape.circle,
                       border: Border.all(
-                          color: AppColors.advisory.withOpacity(0.20), width: 1.5))),
+                          color: AppColors.advisory.withValues(alpha: 0.20), width: 1.5))),
               Container(
                 width: 72, height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.advisory.withOpacity(0.12),
+                  color: AppColors.advisory.withValues(alpha: 0.12),
                   border: Border.all(color: AppColors.advisory, width: 2.5),
                   boxShadow: [BoxShadow(
-                      color: AppColors.advisory.withOpacity(0.35),
+                      color: AppColors.advisory.withValues(alpha: 0.35),
                       blurRadius: 24)],
                 ),
                 child: const Icon(Icons.check_rounded,
@@ -276,7 +276,7 @@ class _BookingConfirmedScreenState extends State<BookingConfirmedScreen>
                 gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [BoxShadow(
-                    color: AppColors.primary.withOpacity(0.38),
+                    color: AppColors.primary.withValues(alpha: 0.38),
                     blurRadius: 16, offset: const Offset(0, 6))],
               ),
               child: const Center(
@@ -291,3 +291,4 @@ class _BookingConfirmedScreenState extends State<BookingConfirmedScreen>
     );
   }
 }
+

@@ -1,59 +1,58 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../home/home_screen.dart';
 import '../scan/scan_idle_screen.dart';
 import '../mechanics/mechanics_screen.dart';
 import '../profile/profile_screen.dart';
 
+// Global key so any screen can switch tabs
+final mainNavKey = GlobalKey<MainNavigationState>();
+
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  MainNavigation({Key? key}) : super(key: key ?? mainNavKey);
 
   @override
-  State<MainNavigation> createState() => _MainNavigationState();
+  State<MainNavigation> createState() => MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  late List<Widget> _pages;
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _pages = [
-      const HomeScreenContent(),
-      const ScanIdleScreen(),
-      const MechanicsScreen(),
-      const ProfileScreen(),
+    _pages = const [
+      HomeScreenContent(),
+      ScanIdleScreen(),
+      MechanicsScreen(),
+      ProfileScreen(),
     ];
   }
 
-  void _onNavigationTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  void switchToTab(int index) {
+    setState(() => _selectedIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: AppColors.border,
-              width: 1,
-            ),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -65,37 +64,42 @@ class _MainNavigationState extends State<MainNavigation> {
               backgroundColor: AppColors.surface,
               elevation: 0,
               currentIndex: _selectedIndex,
-              onTap: _onNavigationTapped,
+              onTap: (i) => setState(() => _selectedIndex = i),
               type: BottomNavigationBarType.fixed,
               selectedItemColor: AppColors.primary,
               unselectedItemColor: AppColors.textSecondary,
+              selectedLabelStyle: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 11,
+                fontFamily: 'Inter',
+              ),
               items: [
                 BottomNavigationBarItem(
-                  icon: Icon(
-                    _selectedIndex == 0 ? Icons.home : Icons.home_outlined,
-                    size: 24,
-                  ),
+                  icon: Icon(_selectedIndex == 0
+                      ? Icons.home
+                      : Icons.home_outlined),
                   label: 'Home',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(
-                    _selectedIndex == 1 ? Icons.search : Icons.search_outlined,
-                    size: 24,
-                  ),
+                  icon: Icon(_selectedIndex == 1
+                      ? Icons.bluetooth
+                      : Icons.bluetooth_outlined),
                   label: 'Scan',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(
-                    _selectedIndex == 2 ? Icons.person : Icons.person_outline,
-                    size: 24,
-                  ),
+                  icon: Icon(_selectedIndex == 2
+                      ? Icons.build
+                      : Icons.build_outlined),
                   label: 'Mechanics',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(
-                    _selectedIndex == 3 ? Icons.person : Icons.person_outline,
-                    size: 24,
-                  ),
+                  icon: Icon(_selectedIndex == 3
+                      ? Icons.person
+                      : Icons.person_outline),
                   label: 'Profile',
                 ),
               ],
@@ -106,3 +110,7 @@ class _MainNavigationState extends State<MainNavigation> {
     );
   }
 }
+
+
+
+

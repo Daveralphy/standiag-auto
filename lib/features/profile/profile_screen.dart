@@ -1,16 +1,26 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/providers/profile_provider.dart';
+import '../../core/providers/vehicle_provider.dart';
+import '../../core/services/auth_service.dart';
 import '../history/scan_history_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../settings/settings_screen.dart';
 import '../subscription/upgrade_screen.dart';
 import '../vehicle/add_vehicle_screen.dart';
+import '../vehicle/vehicle_detail_screen.dart';
+import '../auth/login_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileProvider);
+    final vehiclesAsync = ref.watch(userVehiclesProvider);
+    final scanCountAsync = ref.watch(scanCountProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -22,15 +32,28 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 20),
               _buildHeader(context),
               const SizedBox(height: 24),
-              _buildAvatar(),
+              profileAsync.when(
+                data: (profile) => _buildAvatar(profile),
+                loading: () => _buildAvatarSkeleton(),
+                error: (_, __) => _buildAvatar(null),
+              ),
               const SizedBox(height: 20),
-              _buildStatsRow(context),
-              const SizedBox(height: 16),
-              _buildProCard(context),
+_buildProCard(context),
               const SizedBox(height: 24),
-              _buildVehiclesSection(context),
+              vehiclesAsync.when(
+                data: (vehicles) =>
+                    _buildVehiclesSection(context, ref, vehicles),
+                loading: () =>
+                    _buildVehiclesSection(context, ref, null),
+                error: (_, __) =>
+                    _buildVehiclesSection(context, ref, []),
+              ),
               const SizedBox(height: 24),
-              _buildAccountSection(context),
+              _buildAccountSection(
+                context,
+                ref,
+                scanCount: scanCountAsync.value ?? 0,
+              ),
               const SizedBox(height: 32),
             ],
           ),
@@ -43,203 +66,120 @@ class ProfileScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          'My Profile',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            fontFamily: 'Inter',
-          ),
-        ),
+        const Text('My Profile',
+            style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                fontFamily: 'Inter')),
         GestureDetector(
           onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SettingsScreen())),
           child: Container(
-            width: 40,
-            height: 40,
+            width: 40, height: 40,
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Icon(
-              Icons.settings_outlined,
-              color: AppColors.textSecondary,
-              size: 20,
-            ),
+            child: const Icon(Icons.settings_outlined,
+                color: AppColors.textSecondary, size: 20),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(Map<String, dynamic>? profile) {
+    final firstName = profile?['first_name'] ?? '';
+    final lastName = profile?['last_name'] ?? '';
+    final username = profile?['username'] ?? '';
+    final createdAt = profile?['created_at'] != null
+        ? DateTime.parse(profile!['created_at'])
+        : null;
+
+    final initials = _initials(firstName, lastName);
+    final joinStr = createdAt != null
+        ? 'Member since ${_monthName(createdAt.month)} ${createdAt.year}'
+        : 'Member since recently';
+    final fullName = firstName.isNotEmpty || lastName.isNotEmpty
+        ? '$firstName $lastName'.trim()
+        : 'StanDiag User';
+
     return Center(
       child: Column(
         children: [
           Container(
-            width: 80,
-            height: 80,
+            width: 80, height: 80,
             decoration: BoxDecoration(
               color: AppColors.vehicleCard,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primaryBorder, width: 2),
+              border: Border.all(
+                  color: AppColors.primaryBorder, width: 2),
             ),
-            child: const Center(
-              child: Text(
-                'RD',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
-                  fontFamily: 'Inter',
-                ),
-              ),
+            child: Center(
+              child: Text(initials,
+                  style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                      fontFamily: 'Inter')),
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Raphael Daveal',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              fontFamily: 'Inter',
-            ),
-          ),
+          Text(fullName,
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Inter')),
           const SizedBox(height: 4),
-          const Text(
-            '@daveralphy',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              fontFamily: 'Inter',
-            ),
-          ),
+          if (username.isNotEmpty)
+            Text('@$username',
+                style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    fontFamily: 'Inter')),
           const SizedBox(height: 4),
-          const Text(
-            'Member since April 2026  •  Lagos Island',
-            style: TextStyle(
-              fontSize: 11,
-              color: AppColors.textTertiary,
-              fontFamily: 'Inter',
-            ),
-          ),
+          Text(joinStr,
+              style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textTertiary,
+                  fontFamily: 'Inter')),
         ],
       ),
     );
   }
 
-  Widget _buildStatsRow(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      '14',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Total Scans',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+  Widget _buildAvatarSkeleton() {
+    return Center(
+      child: Column(
+        children: [
+          Container(
+            width: 80, height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border),
             ),
-            Container(width: 1, color: AppColors.borderSubtle),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      '2',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Vehicles',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(width: 1, color: AppColors.borderSubtle),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const UpgradeScreen())),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
-                        'FREE',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Current plan',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+              width: 140, height: 18,
+              decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(4))),
+          const SizedBox(height: 8),
+          Container(
+              width: 80, height: 13,
+              decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(4))),
+        ],
       ),
     );
   }
+
 
   Widget _buildProCard(BuildContext context) {
     return GestureDetector(
@@ -254,52 +194,41 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.workspace_premium_rounded,
-              color: AppColors.primary,
-              size: 22,
-            ),
+            const Icon(Icons.workspace_premium_rounded,
+                color: AppColors.primary, size: 22),
             const SizedBox(width: 10),
             const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Upgrade to StanDiag Pro',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
+                  Text('Upgrade to StanDiag Pro',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          fontFamily: 'Inter')),
                   SizedBox(height: 4),
-                  Wrap(
-                    spacing: 6,
-                    children: [
-                      _ProChip(label: 'Unlimited scans'),
-                      _ProChip(label: 'Full AI reports'),
-                    ],
-                  ),
+                  Wrap(spacing: 6, children: [
+                    _ProChip(label: 'Unlimited scans'),
+                    _ProChip(label: 'Full AI reports'),
+                  ]),
                 ],
               ),
             ),
             const SizedBox(width: 10),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
                 gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                'Upgrade →',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontFamily: 'Inter',
-                ),
-              ),
+              child: const Text('Upgrade →',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      fontFamily: 'Inter')),
             ),
           ],
         ),
@@ -307,27 +236,29 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVehiclesSection(BuildContext context) {
+  Widget _buildVehiclesSection(BuildContext context, WidgetRef ref,
+      List<Map<String, dynamic>>? vehicles) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'MY VEHICLES',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textTertiary,
-                letterSpacing: 1.5,
-                fontFamily: 'Inter',
-              ),
-            ),
+            const Text('MY VEHICLES',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textTertiary,
+                    letterSpacing: 1.5,
+                    fontFamily: 'Inter')),
             GestureDetector(
-              onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const AddVehicleScreen())),
+              onTap: () => Navigator.of(context)
+                  .push(MaterialPageRoute(
+                      builder: (_) => const AddVehicleScreen()))
+                  .then((_) {
+                ref.invalidate(userVehiclesProvider);
+                ref.invalidate(activeVehicleProvider);
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 4),
@@ -336,54 +267,95 @@ class ProfileScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: AppColors.primaryBorder),
                 ),
-                child: const Text(
-                  '+ Add',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                    fontFamily: 'Inter',
-                  ),
-                ),
+                child: const Text('+ Add',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                        fontFamily: 'Inter')),
               ),
             ),
           ],
         ),
         const SizedBox(height: 10),
-        _VehicleRow(
-          name: 'Toyota Corolla 2016',
-          detail: '1.8L Petrol  •  Lagos plate  •  ELM paired',
-          isActive: true,
-        ),
-        const SizedBox(height: 8),
-        _VehicleRow(
-          name: 'Honda Civic 2019',
-          detail: '1.5L Turbo  •  Abuja plate',
-          isActive: false,
-        ),
+        if (vehicles == null)
+          Column(children: [
+            _skeleton(), const SizedBox(height: 8), _skeleton(),
+          ])
+        else if (vehicles.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Center(
+              child: Text('No vehicles added yet.',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontFamily: 'Inter')),
+            ),
+          )
+        else
+          ...vehicles.asMap().entries.map((e) {
+            final v = e.value;
+            final isLast = e.key == vehicles.length - 1;
+            return Column(children: [
+              GestureDetector(
+                onTap: () => Navigator.of(context)
+                    .push(MaterialPageRoute(
+                        builder: (_) =>
+                            VehicleDetailScreen(vehicle: v)))
+                    .then((_) {
+                  ref.invalidate(userVehiclesProvider);
+                  ref.invalidate(activeVehicleProvider);
+                }),
+                child: _VehicleRow(
+                  name:
+                      '${v['make']} ${v['model']}  •  ${v['year']}',
+                  detail:
+                      '${v['engine_type']}${v['nickname'] != null ? '  •  ${v['nickname']}' : ''}',
+                  isActive: v['is_active'] == true,
+                ),
+              ),
+              if (!isLast) const SizedBox(height: 8),
+            ]);
+          }),
       ],
     );
   }
 
-  Widget _buildAccountSection(BuildContext context) {
+  Widget _skeleton() {
+    return Container(
+      height: 64,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+    );
+  }
+
+  Widget _buildAccountSection(BuildContext context, WidgetRef ref,
+      {required int scanCount}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'ACCOUNT SETTINGS',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textTertiary,
-            letterSpacing: 1.5,
-            fontFamily: 'Inter',
-          ),
-        ),
+        const Text('ACCOUNT SETTINGS',
+            style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textTertiary,
+                letterSpacing: 1.5,
+                fontFamily: 'Inter')),
         const SizedBox(height: 10),
         _SettingsRow(
           icon: Icons.history_rounded,
           label: 'Scan History',
-          trailing: '14 records',
+          trailing:
+              scanCount > 0 ? '$scanCount records' : '',
           onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                   builder: (_) => const ScanHistoryScreen())),
@@ -393,7 +365,6 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.notifications_outlined,
           label: 'Notifications',
           trailing: '',
-          trailingBadge: 2,
           onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                   builder: (_) => const NotificationsScreen())),
@@ -404,14 +375,40 @@ class ProfileScreen extends StatelessWidget {
           label: 'Sign Out',
           trailing: '',
           isDestructive: true,
-          onTap: () {},
+          onTap: () async {
+            await AuthService().signOut();
+            if (context.mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                    builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            }
+          },
         ),
       ],
     );
   }
+
+  String _initials(String firstName, String lastName) {
+    final f =
+        firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
+    final l =
+        lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
+    return '$f$l'.isNotEmpty ? '$f$l' : 'SD';
+  }
+
+  String _monthName(int month) {
+    const months = [
+      '', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November',
+      'December'
+    ];
+    return months[month];
+  }
 }
 
-// ── SUPPORTING WIDGETS ───────────────────────────────────────
+// ── SUPPORTING WIDGETS ────────────────────────────────────────
 
 class _ProChip extends StatelessWidget {
   final String label;
@@ -425,14 +422,11 @@ class _ProChip extends StatelessWidget {
         color: AppColors.primarySubtle,
         borderRadius: BorderRadius.circular(100),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 10,
-          color: AppColors.primary,
-          fontFamily: 'Inter',
-        ),
-      ),
+      child: Text(label,
+          style: const TextStyle(
+              fontSize: 10,
+              color: AppColors.primary,
+              fontFamily: 'Inter')),
     );
   }
 }
@@ -455,67 +449,54 @@ class _VehicleRow extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: isActive ? AppColors.primaryBorder : AppColors.border),
+            color: isActive
+                ? AppColors.primaryBorder
+                : AppColors.border),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.directions_car_outlined,
-            color: AppColors.textSecondary,
-            size: 20,
-          ),
+          const Icon(Icons.directions_car_outlined,
+              color: AppColors.textSecondary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    fontFamily: 'Inter',
-                  ),
-                ),
+                Text(name,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        fontFamily: 'Inter')),
                 const SizedBox(height: 3),
-                Text(
-                  detail,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                    fontFamily: 'Inter',
-                  ),
-                ),
+                Text(detail,
+                    style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Inter')),
               ],
             ),
           ),
           if (isActive)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.advisoryBg,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: AppColors.advisoryBorder),
               ),
-              child: const Text(
-                'ACTIVE',
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.advisory,
-                  letterSpacing: 0.5,
-                  fontFamily: 'Inter',
-                ),
-              ),
+              child: const Text('ACTIVE',
+                  style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.advisory,
+                      letterSpacing: 0.5,
+                      fontFamily: 'Inter')),
             )
           else
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textTertiary,
-              size: 18,
-            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textTertiary, size: 18),
         ],
       ),
     );
@@ -526,7 +507,6 @@ class _SettingsRow extends StatelessWidget {
   final IconData icon;
   final String label, trailing;
   final VoidCallback onTap;
-  final int? trailingBadge;
   final bool isDestructive;
 
   const _SettingsRow({
@@ -534,7 +514,6 @@ class _SettingsRow extends StatelessWidget {
     required this.label,
     required this.trailing,
     required this.onTap,
-    this.trailingBadge,
     this.isDestructive = false,
   });
 
@@ -560,53 +539,29 @@ class _SettingsRow extends StatelessWidget {
             Icon(icon, color: color, size: 20),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                  fontFamily: 'Inter',
-                ),
-              ),
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                      fontFamily: 'Inter')),
             ),
             if (trailing.isNotEmpty)
-              Text(
-                trailing,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            if (trailingBadge != null)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Text(
-                  '$trailingBadge',
+              Text(trailing,
                   style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ),
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      fontFamily: 'Inter')),
             const SizedBox(width: 6),
             if (!isDestructive)
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textTertiary,
-                size: 18,
-              ),
+              const Icon(Icons.chevron_right_rounded,
+                  color: AppColors.textTertiary, size: 18),
           ],
         ),
       ),
     );
   }
 }
+
+
+
