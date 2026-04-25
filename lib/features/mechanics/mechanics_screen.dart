@@ -224,6 +224,7 @@ class _MechanicsScreenState extends State<MechanicsScreen> {
         width: 40,
         height: 48,
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) =>
@@ -330,6 +331,7 @@ class _MechanicsScreenState extends State<MechanicsScreen> {
         itemBuilder: (_, i) {
           final selected = _filters[i] == _activeFilter;
           return GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () =>
                 setState(() => _activeFilter = _filters[i]),
             child: Container(
@@ -387,6 +389,7 @@ class _MechanicCard extends StatelessWidget {
         int.parse('FF${mechanic['avatar_color']}', radix: 16));
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -595,6 +598,7 @@ class _MechanicCard extends StatelessWidget {
     );
   }
 }
+
 
 
 

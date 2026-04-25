@@ -180,6 +180,7 @@ class _GenderBtn extends StatelessWidget {
     final isSelected = selected == value;
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => onTap(value),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -216,4 +217,5 @@ class _GenderBtn extends StatelessWidget {
     );
   }
 }
+
 

@@ -82,6 +82,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -159,6 +160,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
             children: [
               Expanded(
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => setState(() => _isYearly = false),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -181,6 +183,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
               ),
               Expanded(
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => setState(() => _isYearly = true),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -320,4 +323,5 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     );
   }
 }
+
 

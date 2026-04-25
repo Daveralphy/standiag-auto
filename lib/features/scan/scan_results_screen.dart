@@ -62,6 +62,7 @@ class ScanResultsScreen extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -146,6 +147,7 @@ class ScanResultsScreen extends StatelessWidget {
 
   Widget _buildAISummary(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const FullReportScreen())),
       child: Container(
@@ -364,5 +366,6 @@ class _DTCCard extends StatelessWidget {
     );
   }
 }
+
 
 

@@ -193,6 +193,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -345,6 +346,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
   Widget _buildAddButton() {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: _isLoading ? null : _addVehicle,
       child: Container(
         width: double.infinity, height: 56,
@@ -386,6 +388,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     );
   }
 }
+
 
 
 

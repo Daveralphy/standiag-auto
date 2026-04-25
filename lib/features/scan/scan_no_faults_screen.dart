@@ -114,6 +114,7 @@ class _ScanNoFaultsScreenState extends State<ScanNoFaultsScreen>
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -223,6 +224,7 @@ class _ScanNoFaultsScreenState extends State<ScanNoFaultsScreen>
         const SizedBox(width: 12),
         Expanded(
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: Container(
               height: 52,
@@ -277,4 +279,5 @@ class _LiveCard extends StatelessWidget {
     );
   }
 }
+
 

@@ -76,6 +76,7 @@ class _FullReportScreenState extends State<FullReportScreen> {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -170,6 +171,7 @@ class _FullReportScreenState extends State<FullReportScreen> {
       List<String> causes, List<String> chips) {
     final open = _expanded.contains(code);
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => _toggle(code),
       child: Container(
         decoration: BoxDecoration(
@@ -369,4 +371,5 @@ extension _UrgStyle on _Urg {
     }
   }
 }
+
 

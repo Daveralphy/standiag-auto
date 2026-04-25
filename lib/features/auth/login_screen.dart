@@ -122,6 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () {},
                     child: const Text('Forgot your password?',
                         style: TextStyle(
@@ -181,6 +182,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Row(children: [
                   Expanded(
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {},
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -213,6 +215,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {},
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -252,6 +255,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             fontSize: 13,
                             color: const Color(0xFF999999))),
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                             builder: (_) =>
@@ -282,4 +286,5 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
+
 

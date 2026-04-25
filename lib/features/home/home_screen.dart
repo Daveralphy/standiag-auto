@@ -130,6 +130,7 @@ class HomeScreenContent extends ConsumerWidget {
           ],
         ),
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
                 builder: (_) => const NotificationsScreen()),
@@ -258,6 +259,7 @@ class HomeScreenContent extends ConsumerWidget {
 
   Widget _buildNoVehicleCard(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const AddVehicleScreen())),
       child: Container(
@@ -428,6 +430,7 @@ class HomeScreenContent extends ConsumerWidget {
                     fontFamily: 'Inter')),
             if (hasVehicle)
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                       builder: (_) => const MaintenanceScreen()),
@@ -530,6 +533,7 @@ class HomeScreenContent extends ConsumerWidget {
                     letterSpacing: 1.5,
                     fontFamily: 'Inter')),
             GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                     builder: (_) => const ScanHistoryScreen()),
@@ -548,6 +552,7 @@ class HomeScreenContent extends ConsumerWidget {
           _buildNoScansCard()
         else
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                   builder: (_) => const ScanHistoryScreen()),
@@ -770,6 +775,7 @@ class HomeScreen extends StatelessWidget {
     return const Scaffold(body: HomeScreenContent());
   }
 }
+
 
 
 

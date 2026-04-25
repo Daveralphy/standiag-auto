@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
@@ -48,7 +48,7 @@ class _AppFieldState extends State<AppField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label — always smaller than input
+        // Label â€” always smaller than input
         Text(widget.label.toUpperCase(),
             style: AppTextStyles.fieldLabel),
         const SizedBox(height: 8),
@@ -86,6 +86,7 @@ class _AppFieldState extends State<AppField> {
                 const BoxConstraints(minWidth: 0, minHeight: 0),
             suffixIcon: widget.obscure
                 ? GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () =>
                         setState(() => _obscure = !_obscure),
                     child: Padding(

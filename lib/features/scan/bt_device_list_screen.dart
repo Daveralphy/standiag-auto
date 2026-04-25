@@ -82,6 +82,7 @@ class _BtDeviceListScreenState extends State<BtDeviceListScreen> {
               child: Row(
                 children: [
                   GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.of(context).pop(),
                     child: const Icon(
                         Icons.arrow_back_ios_new_rounded,
@@ -106,6 +107,7 @@ class _BtDeviceListScreenState extends State<BtDeviceListScreen> {
                     )
                   else
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: _startScan,
                       child: const Text('Rescan',
                           style: TextStyle(
@@ -233,6 +235,7 @@ class _DeviceTile extends StatelessWidget {
     final rssi = result.rssi;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -322,4 +325,5 @@ class _DeviceTile extends StatelessWidget {
     );
   }
 }
+
 

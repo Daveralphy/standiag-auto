@@ -31,6 +31,7 @@ class FirstVehicleScreen extends StatelessWidget {
               const SizedBox(height: 14),
               Center(
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                         builder: (_) => MainNavigation()),
@@ -194,6 +195,7 @@ class FirstVehicleScreen extends StatelessWidget {
 
   Widget _buildCTAButton(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const AddVehicleScreen()),
       ),
@@ -295,6 +297,7 @@ class _CarPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
 
 
 

@@ -76,6 +76,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
                         onTap: _skip,
                         child: Text('Skip',
                             style: TextStyle(
@@ -420,6 +421,7 @@ class _BottomGroup extends StatelessWidget {
                   fontFamily: 'Inter')),
           SizedBox(height: 24 * s),
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => state?._next(),
             child: Container(
               width: double.infinity,
@@ -452,6 +454,7 @@ class _BottomGroup extends StatelessWidget {
             SizedBox(height: 14 * s),
             Center(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () => state?._skip(),
                 child: RichText(
                   text: TextSpan(
@@ -699,6 +702,7 @@ class _MapGrid extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter o) => false;
 }
+
 
 
 

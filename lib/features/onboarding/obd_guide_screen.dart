@@ -62,6 +62,7 @@ class OBDGuideScreen extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -233,6 +234,7 @@ class OBDGuideScreen extends StatelessWidget {
 
   Widget _buildCTAButton(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => Navigator.of(context).pop(),
       child: Container(
         width: double.infinity, height: 56,
@@ -310,4 +312,5 @@ class _StoreCard extends StatelessWidget {
     );
   }
 }
+
 

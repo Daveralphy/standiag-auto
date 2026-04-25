@@ -153,6 +153,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -753,6 +754,7 @@ class _NavRow extends StatelessWidget {
     final color =
         isDestructive ? AppColors.primary : AppColors.textPrimary;
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -888,6 +890,7 @@ class _SheetFieldState extends State<_SheetField> {
             ),
             suffixIcon: widget.obscure
                 ? GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () =>
                         setState(() => _obscure = !_obscure),
                     child: Icon(
@@ -905,4 +908,5 @@ class _SheetFieldState extends State<_SheetField> {
     );
   }
 }
+
 

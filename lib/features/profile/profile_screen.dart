@@ -73,6 +73,7 @@ _buildProCard(context),
                 color: AppColors.textPrimary,
                 fontFamily: 'Inter')),
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SettingsScreen())),
           child: Container(
@@ -183,6 +184,7 @@ _buildProCard(context),
 
   Widget _buildProCard(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const UpgradeScreen())),
       child: Container(
@@ -252,6 +254,7 @@ _buildProCard(context),
                     letterSpacing: 1.5,
                     fontFamily: 'Inter')),
             GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => Navigator.of(context)
                   .push(MaterialPageRoute(
                       builder: (_) => const AddVehicleScreen()))
@@ -304,6 +307,7 @@ _buildProCard(context),
             final isLast = e.key == vehicles.length - 1;
             return Column(children: [
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () => Navigator.of(context)
                     .push(MaterialPageRoute(
                         builder: (_) =>
@@ -522,6 +526,7 @@ class _SettingsRow extends StatelessWidget {
     final color =
         isDestructive ? AppColors.primary : AppColors.textPrimary;
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -562,6 +567,7 @@ class _SettingsRow extends StatelessWidget {
     );
   }
 }
+
 
 
 

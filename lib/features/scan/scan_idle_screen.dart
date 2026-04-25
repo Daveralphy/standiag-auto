@@ -207,6 +207,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
       animation: _pulseAnimation,
       builder: (context, _) {
         return GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: _onTapScan,
           child: SizedBox(
             width: 260,
@@ -343,6 +344,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
                 ),
                 const SizedBox(height: 8),
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                         builder: (_) =>
@@ -475,6 +477,7 @@ class _StatusRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -529,6 +532,7 @@ class _StatusRow extends StatelessWidget {
     );
   }
 }
+
 
 
 

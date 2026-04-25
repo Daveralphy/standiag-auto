@@ -100,6 +100,7 @@ class _ScanHistoryScreenState
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -127,6 +128,7 @@ class _ScanHistoryScreenState
         itemBuilder: (_, i) {
           final selected = _filters[i] == _activeFilter;
           return GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () =>
                 setState(() => _activeFilter = _filters[i]),
             child: Container(
@@ -361,4 +363,5 @@ class _ScanRow extends StatelessWidget {
     return '$h:$m';
   }
 }
+
 

@@ -59,6 +59,7 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
                     _buildSubmitButton(context),
                     const SizedBox(height: 12),
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () => Navigator.of(context).pop(),
                       child: const Text('Skip for now',
                           style: TextStyle(fontSize: 13,
@@ -81,6 +82,7 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -156,6 +158,7 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
           children: List.generate(5, (i) {
             final filled = i < _rating;
             return GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => setState(() => _rating = i + 1),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -190,6 +193,7 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
           children: _tags.map((tag) {
             final selected = _selectedTags.contains(tag);
             return GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => setState(() => selected
                   ? _selectedTags.remove(tag)
                   : _selectedTags.add(tag)),
@@ -255,6 +259,7 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
 
   Widget _buildSubmitButton(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => Navigator.of(context).popUntil((r) => r.isFirst),
       child: Container(
         width: double.infinity, height: 56,
@@ -274,4 +279,5 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
     );
   }
 }
+
 

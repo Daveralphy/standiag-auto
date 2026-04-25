@@ -120,8 +120,8 @@ class _NavItem extends StatelessWidget {
     final isActive = index == currentIndex;
     return Expanded(
       child: GestureDetector(
-        onTap: () => onTap(index),
         behavior: HitTestBehavior.opaque,
+        onTap: () => onTap(index),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -158,4 +158,6 @@ class _NavItem extends StatelessWidget {
     );
   }
 }
+
+
 

@@ -396,6 +396,7 @@ class _ScanConnectingScreenState
               ),
               const SizedBox(height: 16),
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () => Navigator.of(context).pop(),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -430,6 +431,7 @@ class _ScanConnectingScreenState
             if (_phase != _Phase.done &&
                 _phase != _Phase.error)
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   _cancelled = true;
                   Navigator.of(context).pop();
@@ -886,6 +888,7 @@ class _DeviceTile extends StatelessWidget {
         : 'Unknown Device';
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -969,3 +972,4 @@ class _DeviceTile extends StatelessWidget {
     );
   }
 }
+

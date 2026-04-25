@@ -48,6 +48,7 @@ class _BookingConfirmedScreenState extends State<BookingConfirmedScreen>
               _buildButtons(context),
               const SizedBox(height: 16),
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {},
                 child: RichText(
                   text: const TextSpan(
@@ -243,6 +244,7 @@ class _BookingConfirmedScreenState extends State<BookingConfirmedScreen>
       children: [
         Expanded(
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () {},
             child: Container(
               height: 52,
@@ -266,6 +268,7 @@ class _BookingConfirmedScreenState extends State<BookingConfirmedScreen>
         const SizedBox(width: 12),
         Expanded(
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () {
               // Pop back to home shell
               Navigator.of(context).popUntil((r) => r.isFirst);
@@ -291,4 +294,5 @@ class _BookingConfirmedScreenState extends State<BookingConfirmedScreen>
     );
   }
 }
+
 

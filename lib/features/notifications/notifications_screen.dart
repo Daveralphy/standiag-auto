@@ -41,6 +41,7 @@ class NotificationsScreen extends ConsumerWidget {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -55,6 +56,7 @@ class NotificationsScreen extends ConsumerWidget {
                     fontFamily: 'Inter')),
           ),
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () async {
               await NotificationService().markAllRead();
               ref.invalidate(notificationsProvider);
@@ -288,3 +290,4 @@ class _NotifRow extends StatelessWidget {
   String _capitalise(String s) =>
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }
+

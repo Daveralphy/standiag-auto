@@ -66,6 +66,7 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -171,6 +172,7 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () {},
                     child: const Icon(Icons.chevron_left_rounded,
                         color: AppColors.textSecondary, size: 24),
@@ -179,6 +181,7 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary, fontFamily: 'Inter')),
                   GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () {},
                     child: const Icon(Icons.chevron_right_rounded,
                         color: AppColors.textSecondary, size: 24),
@@ -224,6 +227,7 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
       final isPast = d < 11;
       cells.add(
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: isPast ? null : () => setState(() => _selectedDay = d),
           child: Container(
             height: 36,
@@ -280,6 +284,7 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
             final isBooked = _bookedSlots.contains(slot);
             final isSelected = _selectedTime == slot && !isBooked;
             return GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: isBooked ? null : () => setState(() => _selectedTime = slot),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -412,6 +417,7 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
 
   Widget _buildConfirmButton(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const BookingConfirmedScreen())),
       child: Container(
@@ -432,6 +438,7 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
     );
   }
 }
+
 
 
 

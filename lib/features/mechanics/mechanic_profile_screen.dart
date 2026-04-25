@@ -55,6 +55,7 @@ class MechanicProfileScreen extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -366,6 +367,7 @@ class MechanicProfileScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) =>
@@ -461,6 +463,7 @@ class _ContactBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -486,3 +489,4 @@ class _ContactBtn extends StatelessWidget {
     );
   }
 }
+

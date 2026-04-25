@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/vehicle_service.dart';
@@ -37,7 +37,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    // ── Hero card ────────────────────────
+                    // â”€â”€ Hero card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -87,7 +87,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '$make $model  •  $year',
+                                  '$make $model  â€¢  $year',
                                   style: const TextStyle(
                                       fontSize: 13,
                                       color: AppColors.textSecondary,
@@ -119,7 +119,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // ── Details ──────────────────────────
+                    // â”€â”€ Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     const Text('VEHICLE DETAILS',
                         style: TextStyle(
                             fontSize: 10,
@@ -155,7 +155,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // ── Set Active ───────────────────────
+                    // â”€â”€ Set Active â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     if (!isActive) ...[
                       _actionBtn(
                         context: context,
@@ -176,7 +176,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    // ── Delete ───────────────────────────
+                    // â”€â”€ Delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     _actionBtn(
                       context: context,
                       label: 'Delete Vehicle',
@@ -205,6 +205,7 @@ class VehicleDetailScreen extends ConsumerWidget {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -260,6 +261,7 @@ class VehicleDetailScreen extends ConsumerWidget {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         width: double.infinity,

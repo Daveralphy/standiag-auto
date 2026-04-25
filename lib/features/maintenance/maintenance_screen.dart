@@ -49,6 +49,7 @@ class MaintenanceScreen extends ConsumerWidget {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop(),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.textPrimary, size: 20),
@@ -109,6 +110,7 @@ class MaintenanceScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => Navigator.of(context).pop(),
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -297,6 +299,7 @@ class MaintenanceScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => Navigator.of(context).pop(),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -372,3 +375,4 @@ class _ExpectRow extends StatelessWidget {
     );
   }
 }
+
