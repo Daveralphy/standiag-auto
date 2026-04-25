@@ -47,14 +47,19 @@ class MainNavigationState extends State<MainNavigation> {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.navBg,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderSubtle.withValues(alpha: 0.8), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Colors.black.withValues(alpha: 0.6),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.08),
                 blurRadius: 12,
-                offset: const Offset(0, 4),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -108,6 +113,7 @@ class MainNavigationState extends State<MainNavigation> {
     );
   }
 }
+
 
 
 
