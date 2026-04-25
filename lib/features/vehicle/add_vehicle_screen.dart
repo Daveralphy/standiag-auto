@@ -4,7 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/services/vehicle_service.dart';
 import '../../core/providers/vehicle_provider.dart';
 import '../../core/providers/profile_provider.dart';
-import '../navigation/main_navigation.dart';
 
 class AddVehicleScreen extends ConsumerStatefulWidget {
   const AddVehicleScreen({super.key});
@@ -47,20 +46,17 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         vin: _vinController.text,
       );
 
-      // Invalidate providers so home/profile refresh
       ref.invalidate(activeVehicleProvider);
       ref.invalidate(userVehiclesProvider);
       ref.invalidate(hasVehiclesProvider);
       ref.invalidate(scanCountProvider);
 
       if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => MainNavigation()),
-          (route) => false,
-        );
+        Navigator.of(context).pop();
       }
     } catch (e) {
-      setState(() => _errorMessage = e.toString().replaceAll('Exception: ', ''));
+      setState(() =>
+          _errorMessage = e.toString().replaceAll('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -77,8 +73,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
             _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -94,7 +89,6 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     const SizedBox(height: 20),
                     _buildPreviewCard(),
                     const SizedBox(height: 20),
-
                     if (_errorMessage != null) ...[
                       Container(
                         width: double.infinity,
@@ -102,19 +96,17 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         decoration: BoxDecoration(
                           color: AppColors.criticalBg,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: AppColors.criticalBorder),
+                          border:
+                              Border.all(color: AppColors.criticalBorder),
                         ),
                         child: Text(_errorMessage!,
                             style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.primaryLight,
-                              fontFamily: 'Inter',
-                            )),
+                                fontSize: 13,
+                                color: AppColors.primaryLight,
+                                fontFamily: 'Inter')),
                       ),
                       const SizedBox(height: 16),
                     ],
-
                     Row(
                       children: [
                         Expanded(
@@ -124,8 +116,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                                 ['Toyota', 'Honda', 'Hyundai', 'Ford',
                                   'Kia', 'Nissan', 'Mazda', 'Suzuki',
                                   'Mercedes', 'BMW', 'Lexus', 'Volkswagen'],
-                                (v) =>
-                                    setState(() => _make = v!))),
+                                (v) => setState(() => _make = v!))),
                         const SizedBox(width: 12),
                         Expanded(
                             child: _buildDropdown(
@@ -134,8 +125,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                                 ['Corolla', 'Camry', 'Civic', 'Accord',
                                   'Accent', 'Elantra', 'Sportage', 'Tucson',
                                   'Hilux', 'Prado', 'Sienna', 'Pathfinder'],
-                                (v) =>
-                                    setState(() => _model = v!))),
+                                (v) => setState(() => _model = v!))),
                       ],
                     ),
                     const SizedBox(height: 14),
@@ -150,16 +140,14 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                                   '2015', '2014', '2013', '2012', '2010',
                                   '2008', '2006', '2005', '2004', '2003',
                                   '2002', '2001', '2000'],
-                                (v) =>
-                                    setState(() => _year = v!))),
+                                (v) => setState(() => _year = v!))),
                         const SizedBox(width: 12),
                         Expanded(
                             child: _buildDropdown(
                                 'ENGINE TYPE',
                                 _engineType,
                                 ['Petrol', 'Diesel', 'Hybrid', 'Electric'],
-                                (v) => setState(
-                                    () => _engineType = v!))),
+                                (v) => setState(() => _engineType = v!))),
                       ],
                     ),
                     const SizedBox(height: 14),
@@ -284,8 +272,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   color: AppColors.textPrimary,
                   fontFamily: 'Inter'),
               items: items
-                  .map((item) => DropdownMenuItem(
-                      value: item, child: Text(item)))
+                  .map((item) =>
+                      DropdownMenuItem(value: item, child: Text(item)))
                   .toList(),
               onChanged: onChanged,
             ),
@@ -326,17 +314,16 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 fontFamily: 'Inter'),
             filled: true,
             fillColor: AppColors.surface,
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: AppColors.border),
+              borderSide: const BorderSide(color: AppColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                  color: AppColors.primary, width: 1.5),
+              borderSide:
+                  const BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
         ),
@@ -349,7 +336,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       behavior: HitTestBehavior.opaque,
       onTap: _isLoading ? null : _addVehicle,
       child: Container(
-        width: double.infinity, height: 56,
+        width: double.infinity,
+        height: 56,
         decoration: BoxDecoration(
           gradient: _isLoading
               ? LinearGradient(colors: [
@@ -362,8 +350,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               ? []
               : [
                   BoxShadow(
-                      color:
-                          AppColors.primary.withValues(alpha: 0.40),
+                      color: AppColors.primary.withValues(alpha: 0.40),
                       blurRadius: 20,
                       offset: const Offset(0, 8))
                 ],
@@ -388,11 +375,3 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-
