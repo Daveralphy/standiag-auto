@@ -34,7 +34,21 @@ class StanDiagApp extends StatelessWidget {
       title: 'StanDiag Auto',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
+      builder: (context, child) {
+        // Apply responsive text scaling across all screens
+        final mediaQuery = MediaQuery.of(context);
+        final screenWidth = mediaQuery.size.width;
+        // Scale: 390px base. Phones get 1.0-1.1x, tablets get up to 1.2x
+        final textScale = (screenWidth / 390).clamp(0.9, 1.2);
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: child!,
+        );
+      },
       home: const SplashScreen(),
     );
   }
 }
+

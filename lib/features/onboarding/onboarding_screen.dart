@@ -51,9 +51,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(20 * s, 12 * s, 20 * s, 0),
+              padding: EdgeInsets.fromLTRB(20 * s, 48 * s, 20 * s, 0),
               child: SizedBox(
-                height: 20 * s,
+                height: 28 * s,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -101,7 +101,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 14 * s),
           ],
         ),
       ),
@@ -115,211 +114,100 @@ class _SlideDiagnose extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sh = MediaQuery.of(context).size.height;
     return Column(
       children: [
-        Expanded(
-          flex: 2,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20 * s, 18 * s, 20 * s, 10 * s),
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16 * s),
-                border: Border.all(color: AppColors.border),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    blurRadius: 28,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16 * s),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12 * s, vertical: 12 * s),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            height: 40 * s,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(12 * s),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 10 * s),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 14 * s,
-                                        height: 14 * s,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.black26,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(Icons.wifi_tethering_rounded, color: Colors.white, size: 9 * s),
-                                      ),
-                                      SizedBox(width: 6 * s),
-                                      Text('OBD SCAN',
-                                          style: TextStyle(
-                                            fontSize: 10 * s,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
-                                            letterSpacing: 1.4,
-                                            fontFamily: 'Inter',
-                                          )),
-                                    ],
-                                  ),
-                                  SizedBox(height: 2 * s),
-                                  Text('REALTIME DIAGNOSTICS',
-                                      style: TextStyle(
-                                        fontSize: 6.5 * s,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white.withValues(alpha: 0.86),
-                                        letterSpacing: 0.8,
-                                        fontFamily: 'Inter',
-                                      )),
-                                ],
-                              ),
-                            ),
+        SizedBox(height: sh * 0.11),
+        // ── Illustration ─────────────────────────────────
+        SizedBox(
+          height: sh * 0.30,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 28 * s),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20 * s),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: [BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    blurRadius: 20, offset: const Offset(0, 4),
+                  )],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20 * s),
+                  child: Padding(
+                    padding: EdgeInsets.all(16 * s),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12 * s, vertical: 8 * s),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(10 * s),
                           ),
-                          SizedBox(height: 10 * s),
-                          _DtcRow(s: s, code: 'P0301', label: 'Cylinder 1 Misfire', color: AppColors.critical),
-                          _DtcRow(s: s, code: 'P0420', label: 'Catalyst Efficiency Low', color: AppColors.critical),
-                          _DtcRow(s: s, code: 'P0171', label: 'System Too Lean B1', color: AppColors.moderate),
-                          _DtcRow(s: s, code: 'B1234', label: 'Battery Voltage Low', color: AppColors.advisory),
-                          _DtcRow(s: s, code: 'P0455', label: 'Evap Leak Detected', color: AppColors.moderate),
-                          _DtcRow(s: s, code: 'P0128', label: 'Coolant Temp Low', color: AppColors.advisory),
-                          _DtcRow(s: s, code: 'P0174', label: 'System Too Lean B2', color: AppColors.moderate),
-                          _DtcRow(s: s, code: 'P0300', label: 'Random Misfire Detected', color: AppColors.critical),
-                          _DtcRow(s: s, code: 'U0100', label: 'Lost ECM Communication', color: AppColors.critical),
-                          _DtcRow(s: s, code: 'P0507', label: 'Idle RPM Too High', color: AppColors.advisory),
-                          SizedBox(height: 10 * s),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 9 * s, vertical: 4 * s),
-                            decoration: BoxDecoration(
-                              color: AppColors.criticalBg,
-                              borderRadius: BorderRadius.circular(5 * s),
-                              border: Border.all(color: AppColors.criticalBorder),
-                            ),
-                            child: Text('4 CODES FOUND',
-                                style: TextStyle(
-                                  fontSize: 9 * s,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primaryLight,
-                                  letterSpacing: 0.8,
-                                  fontFamily: 'Inter',
-                                )),
+                          child: Row(
+                            children: [
+                              Icon(Icons.wifi_tethering_rounded, color: Colors.white, size: 13 * s),
+                              SizedBox(width: 6 * s),
+                              Text('OBD SCAN  •  REALTIME',
+                                  style: TextStyle(fontSize: 9 * s, fontWeight: FontWeight.w700,
+                                      color: Colors.white, letterSpacing: 0.6, fontFamily: 'Inter')),
+                            ],
                           ),
-                          SizedBox(height: 8 * s),
-                          Container(
-                            padding: EdgeInsets.symmetric(vertical: 8 * s),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0E0F13),
-                              borderRadius: BorderRadius.circular(10 * s),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    _PulseBar(s: s, height: 13 * s),
-                                    SizedBox(width: 4 * s),
-                                    _PulseBar(s: s, height: 10 * s),
-                                    SizedBox(width: 4 * s),
-                                    _PulseBar(s: s, height: 16 * s),
-                                    SizedBox(width: 4 * s),
-                                    _PulseBar(s: s, height: 11 * s),
-                                    SizedBox(width: 4 * s),
-                                    _PulseBar(s: s, height: 8 * s),
-                                  ],
-                                ),
-                                SizedBox(height: 6 * s),
-                                Text('DIAGNOSTIC ACTIVE',
-                                    style: TextStyle(
-                                      fontSize: 7 * s,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textTertiary,
-                                      letterSpacing: 0.9,
-                                      fontFamily: 'Inter',
-                                    )),
-                              ],
-                            ),
+                        ),
+                        SizedBox(height: 12 * s),
+                        _DtcRow(s: s, code: 'P0301', label: 'Cylinder 1 Misfire', color: AppColors.critical),
+                        _DtcRow(s: s, code: 'P0420', label: 'Catalyst Efficiency Low', color: AppColors.critical),
+                        _DtcRow(s: s, code: 'P0171', label: 'System Too Lean B1', color: AppColors.moderate),
+                        _DtcRow(s: s, code: 'B1234', label: 'Battery Voltage Low', color: AppColors.advisory),
+                        SizedBox(height: 12 * s),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12 * s, vertical: 7 * s),
+                          decoration: BoxDecoration(
+                            color: AppColors.criticalBg,
+                            borderRadius: BorderRadius.circular(8 * s),
+                            border: Border.all(color: AppColors.criticalBorder),
                           ),
-                        ],
-                      ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            height: 30 * s,
-                            margin: EdgeInsets.symmetric(horizontal: 6 * s),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF16161C),
-                              borderRadius: BorderRadius.circular(7 * s),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 16 * s,
-                                  height: 16 * s,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.bluetooth.withValues(alpha: 0.15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(Icons.bluetooth, color: AppColors.bluetooth, size: 10 * s),
-                                ),
-                                SizedBox(width: 5 * s),
-                                Text('BLUETOOTH ACTIVE',
-                                    style: TextStyle(
-                                      fontSize: 9 * s,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.bluetooth,
-                                      letterSpacing: 0.6,
-                                      fontFamily: 'Inter',
-                                    )),
-                              ],
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.warning_amber_rounded, color: AppColors.primary, size: 13 * s),
+                              SizedBox(width: 6 * s),
+                              Text('4 FAULT CODES DETECTED',
+                                  style: TextStyle(fontSize: 9 * s, fontWeight: FontWeight.w700,
+                                      color: AppColors.primaryLight, letterSpacing: 0.6, fontFamily: 'Inter')),
+                            ],
                           ),
-                          SizedBox(height: 4 * s),
-                          Text('ELM327 Adapter  •  OBD-II port',
-                              style: TextStyle(fontSize: 8 * s, color: AppColors.textTertiary, fontFamily: 'Inter')),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
         ),
+        SizedBox(height: sh * 0.11),
+        // ── Text section ──────────────────────────────────
         _BottomGroup(
-          s: s,
-          isLast: false,
+          s: s, isLast: false,
           title: RichText(
             text: TextSpan(
-              style: TextStyle(fontSize: 40 * s, fontWeight: FontWeight.w800, fontFamily: 'Inter', letterSpacing: -0.4, height: 1.2, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 32 * s, fontWeight: FontWeight.w900,
+                  fontFamily: 'Inter', letterSpacing: -0.3, height: 1.2,
+                  color: AppColors.textPrimary),
               children: const [
                 TextSpan(text: 'Diagnose your\ncar '),
                 TextSpan(text: 'instantly', style: TextStyle(color: AppColors.primary)),
               ],
             ),
           ),
-          body: 'Connect via Bluetooth to your OBD-II adapter. Read fault codes and live sensor data in seconds.',
+          body: 'Connect via Bluetooth to your OBD-II adapter. Read fault codes and live data in seconds.',
         ),
+        const Spacer(),
       ],
     );
   }
@@ -331,177 +219,101 @@ class _SlideUnderstand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sh = MediaQuery.of(context).size.height;
     return Column(
       children: [
-        Expanded(
-          flex: 2,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20 * s, 18 * s, 20 * s, 10 * s),
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.vehicleCard,
-                borderRadius: BorderRadius.circular(16 * s),
-                border: Border.all(color: AppColors.primaryBorder),
-                boxShadow: [
-                  BoxShadow(color: AppColors.primary.withValues(alpha: 0.15), blurRadius: 28, offset: const Offset(0, 4)),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16 * s),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12 * s, vertical: 12 * s),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── TOP SECTION ──
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // AI header
-                          Row(
-                            children: [
-                              Container(
-                                width: 20 * s, height: 20 * s,
-                                decoration: BoxDecoration(color: AppColors.primarySubtle, borderRadius: BorderRadius.circular(5 * s)),
-                                child: Center(child: Text('🤖', style: TextStyle(fontSize: 11 * s))),
+        SizedBox(height: sh * 0.11),
+        // ── Illustration ─────────────────────────────────
+        SizedBox(
+          height: sh * 0.30,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 28 * s),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.vehicleCard,
+                  borderRadius: BorderRadius.circular(20 * s),
+                  border: Border.all(color: AppColors.primaryBorder),
+                  boxShadow: [BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    blurRadius: 20, offset: const Offset(0, 4),
+                  )],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20 * s),
+                  child: Padding(
+                    padding: EdgeInsets.all(16 * s),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 22 * s, height: 22 * s,
+                              decoration: BoxDecoration(
+                                color: AppColors.primarySubtle,
+                                borderRadius: BorderRadius.circular(6 * s),
                               ),
-                              SizedBox(width: 6 * s),
-                              Expanded(
-                                child: Text('AI ANALYSIS',
-                                    style: TextStyle(fontSize: 9 * s, fontWeight: FontWeight.w700, color: AppColors.textPrimary, letterSpacing: 0.7, fontFamily: 'Inter')),
+                              child: Center(child: Text('🤖', style: TextStyle(fontSize: 12 * s))),
+                            ),
+                            SizedBox(width: 8 * s),
+                            Text('AI ANALYSIS',
+                                style: TextStyle(fontSize: 10 * s, fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary, letterSpacing: 0.7, fontFamily: 'Inter')),
+                            const Spacer(),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 6 * s, vertical: 2 * s),
+                              decoration: BoxDecoration(
+                                color: AppColors.primarySubtle,
+                                borderRadius: BorderRadius.circular(4 * s),
+                                border: Border.all(color: AppColors.primaryBorder),
                               ),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 5 * s, vertical: 2 * s),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primarySubtle,
-                                  borderRadius: BorderRadius.circular(4 * s),
-                                  border: Border.all(color: AppColors.primaryBorder),
-                                ),
-                                child: Text('GPT-4o',
-                                    style: TextStyle(fontSize: 7 * s, fontWeight: FontWeight.w600, color: AppColors.primary, fontFamily: 'Inter')),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8 * s),
-                          // ── FAULT CARD 1: P0301 ──
-                          _FaultAnalysisCard(
-                            s: s,
-                            code: 'P0301',
-                            severity: '⚠ CRITICAL',
-                            severityColor: AppColors.primary,
-                            severityBg: AppColors.criticalBg,
+                              child: Text('GPT-4o',
+                                  style: TextStyle(fontSize: 8 * s, fontWeight: FontWeight.w600,
+                                      color: AppColors.primary, fontFamily: 'Inter')),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10 * s),
+                        _FaultAnalysisCard(s: s, code: 'P0301', severity: '⚠ CRITICAL',
+                            severityColor: AppColors.primary, severityBg: AppColors.criticalBg,
                             severityBorder: AppColors.criticalBorder,
-                            description: "Your engine's cylinder 1 is misfiring. Fuel not burning fully, causing rough idle and power loss.",
-                            tags: const ['Engine', 'Workshop', 'Ignition'],
-                          ),
-                          SizedBox(height: 5 * s),
-                          // ── FAULT CARD 2: P0420 ──
-                          _FaultAnalysisCard(
-                            s: s,
-                            code: 'P0420',
-                            severity: '⚠ CRITICAL',
-                            severityColor: AppColors.primary,
-                            severityBg: AppColors.criticalBg,
+                            description: "Cylinder 1 misfiring. Fuel not burning fully — rough idle and power loss.",
+                            tags: const ['Engine', 'Ignition']),
+                        SizedBox(height: 6 * s),
+                        _FaultAnalysisCard(s: s, code: 'P0420', severity: '⚠ CRITICAL',
+                            severityColor: AppColors.primary, severityBg: AppColors.criticalBg,
                             severityBorder: AppColors.criticalBorder,
-                            description: 'Catalytic converter efficiency is below threshold. Exhaust emissions elevated.',
-                            tags: const ['Exhaust', 'Emissions', 'Catalyst'],
-                          ),
-                          SizedBox(height: 5 * s),
-                          // ── FAULT CARD 3: P0171 ──
-                          _FaultAnalysisCard(
-                            s: s,
-                            code: 'P0171',
-                            severity: '● MODERATE',
-                            severityColor: AppColors.moderate,
-                            severityBg: AppColors.moderateBg,
-                            severityBorder: AppColors.moderateBorder,
-                            description: 'Air-fuel mixture too lean on Bank 1. Check MAF sensor and vacuum lines.',
-                            tags: const ['Fuel', 'MAF', 'Vacuum'],
-                          ),
-                          SizedBox(height: 5 * s),
-                          // ── FAULT CARD 4: P0128 ──
-                          _FaultAnalysisCard(
-                            s: s,
-                            code: 'P0128',
-                            severity: '○ ADVISORY',
-                            severityColor: AppColors.advisory,
-                            severityBg: AppColors.advisoryBg,
-                            severityBorder: AppColors.advisoryBorder,
-                            description: 'Engine coolant temperature below thermostat regulating temperature.',
-                            tags: const ['Cooling', 'Thermostat'],
-                          ),
-                          SizedBox(height: 5 * s),
-                          // ── FAULT CARD 5: P0455 ──
-                          _FaultAnalysisCard(
-                            s: s,
-                            code: 'P0455',
-                            severity: '● MODERATE',
-                            severityColor: AppColors.moderate,
-                            severityBg: AppColors.moderateBg,
-                            severityBorder: AppColors.moderateBorder,
-                            description: 'Large leak detected in evaporative emission control system. Check fuel cap.',
-                            tags: const ['EVAP', 'Fuel Cap', 'Emissions'],
-                          ),
-                        ],
-                      ),
-                      // ── BOTTOM SECTION ──
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('PROBABLE CAUSES',
-                              style: TextStyle(fontSize: 7 * s, fontWeight: FontWeight.w600, color: AppColors.textTertiary, letterSpacing: 1, fontFamily: 'Inter')),
-                          SizedBox(height: 5 * s),
-                          _Cause(s: s, n: '01', text: 'Faulty spark plug or ignition coil'),
-                          SizedBox(height: 3 * s),
-                          _Cause(s: s, n: '02', text: 'Fuel injector clog or failure'),
-                          SizedBox(height: 3 * s),
-                          _Cause(s: s, n: '03', text: 'Low compression — worn valve seats'),
-                          SizedBox(height: 8 * s),
-                          Text('URGENCY ASSESSMENT',
-                              style: TextStyle(fontSize: 6 * s, fontWeight: FontWeight.w600, color: AppColors.textTertiary, letterSpacing: 1, fontFamily: 'Inter')),
-                          SizedBox(height: 5 * s),
-                          _Bar(s: s, label: 'Critical', value: 0.85, color: AppColors.critical),
-                          SizedBox(height: 4 * s),
-                          _Bar(s: s, label: 'Moderate', value: 0.50, color: AppColors.moderate),
-                          SizedBox(height: 4 * s),
-                          _Bar(s: s, label: 'Advisory', value: 0.20, color: AppColors.advisory),
-                          SizedBox(height: 8 * s),
-                          Row(
-                            children: [
-                              Expanded(child: _ActionChip(s: s, label: 'Scan coils')),
-                              SizedBox(width: 6 * s),
-                              Expanded(child: _ActionChip(s: s, label: 'Check injectors')),
-                              SizedBox(width: 6 * s),
-                              Expanded(child: _ActionChip(s: s, label: 'Book service')),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
+                            description: 'Catalytic converter efficiency below threshold.',
+                            tags: const ['Exhaust', 'Emissions']),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
         ),
+        SizedBox(height: sh * 0.11),
+        // ── Text section ──────────────────────────────────
         _BottomGroup(
-          s: s,
-          isLast: false,
+          s: s, isLast: false,
           title: RichText(
             text: TextSpan(
-              style: TextStyle(fontSize: 40 * s, fontWeight: FontWeight.w800, fontFamily: 'Inter', letterSpacing: -0.4, height: 1.2, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 32 * s, fontWeight: FontWeight.w900,
+                  fontFamily: 'Inter', letterSpacing: -0.3, height: 1.2,
+                  color: AppColors.textPrimary),
               children: const [
                 TextSpan(text: 'Understand\nevery '),
                 TextSpan(text: 'fault', style: TextStyle(color: AppColors.primary)),
               ],
             ),
           ),
-          body: 'AI turns raw codes into plain language. Know the cause, urgency, and what to do.',
+          body: 'AI turns raw fault codes into plain language. Know the cause, urgency, and exactly what to do.',
         ),
+        const Spacer(),
       ],
     );
   }
@@ -513,50 +325,58 @@ class _SlideFind extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sh = MediaQuery.of(context).size.height;
     return Column(
       children: [
-        Expanded(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20 * s, 12 * s, 20 * s, 8 * s),
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0C1420),
-                      borderRadius: BorderRadius.circular(14 * s),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14 * s),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(child: CustomPaint(painter: _MapGrid(s: s))),
-                          const Center(child: _UserDot()),
-                          Positioned(left: 20 * s, top: 16 * s, child: _Pin(label: 'Ade Mech · 0.8km', primary: true, s: s)),
-                          Positioned(right: 20 * s, top: 12 * s, child: _Pin(label: 'Kayode Auto', primary: false, s: s)),
-                          Positioned(right: 18 * s, bottom: 20 * s, child: _Pin(label: 'Lanre Workshop', primary: false, s: s)),
-                        ],
+        SizedBox(height: sh * 0.11),
+        // ── Illustration ─────────────────────────────────
+        SizedBox(
+          height: sh * 0.30,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 28 * s),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0C1420),
+                        borderRadius: BorderRadius.circular(14 * s),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14 * s),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(child: CustomPaint(painter: _MapGrid(s: s))),
+                            const Center(child: _UserDot()),
+                            Positioned(left: 20 * s, top: 14 * s, child: _Pin(label: 'Ade Mech · 0.8km', primary: true, s: s)),
+                            Positioned(right: 16 * s, top: 10 * s, child: _Pin(label: 'Kayode Auto', primary: false, s: s)),
+                            Positioned(right: 14 * s, bottom: 16 * s, child: _Pin(label: 'Lanre Workshop', primary: false, s: s)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: 8 * s),
-                _MechCard(s: s, initials: 'AO', name: 'Ade Okonkwo Auto', detail: 'Toyota specialist  •  0.8 km  •  Lagos Island', stars: 5, btnLabel: 'Call', btnPrimary: true),
-                SizedBox(height: 7 * s),
-                _MechCard(s: s, initials: 'KA', name: 'Kayode Auto Workshop', detail: 'General Repairs  •  1.4 km', stars: 4, btnLabel: 'WA', btnPrimary: false),
-              ],
+                  SizedBox(height: 8 * s),
+                  _MechCard(s: s, initials: 'AO', name: 'Ade Okonkwo Auto',
+                      detail: 'Toyota specialist  •  0.8 km', stars: 5, btnLabel: 'Call', btnPrimary: true),
+                ],
+              ),
             ),
           ),
         ),
+        SizedBox(height: sh * 0.11),
+        // ── Text section ──────────────────────────────────
         _BottomGroup(
-          s: s,
-          isLast: true,
+          s: s, isLast: true,
           title: RichText(
             text: TextSpan(
-              style: TextStyle(fontSize: 40 * s, fontWeight: FontWeight.w800, fontFamily: 'Inter', letterSpacing: -0.4, height: 1.2, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 32 * s, fontWeight: FontWeight.w900,
+                  fontFamily: 'Inter', letterSpacing: -0.3, height: 1.2,
+                  color: AppColors.textPrimary),
               children: const [
                 TextSpan(text: 'Find your\n'),
                 TextSpan(text: 'mechanic', style: TextStyle(color: AppColors.primary)),
@@ -564,8 +384,9 @@ class _SlideFind extends StatelessWidget {
               ],
             ),
           ),
-          body: 'See verified mechanics nearby. Call or WhatsApp with your fault pre-filled.',
+          body: 'See verified mechanics nearby. Call or WhatsApp them with your fault codes pre-filled.',
         ),
+        const Spacer(),
       ],
     );
   }
@@ -583,64 +404,79 @@ class _BottomGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.findAncestorStateOfType<_OnboardingScreenState>();
     return Padding(
-      padding: EdgeInsets.fromLTRB(20 * s, 6 * s, 20 * s, 38 * s),
+      padding: EdgeInsets.fromLTRB(24 * s, 0, 24 * s, 16 * s),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            height: 1,
-            margin: EdgeInsets.symmetric(horizontal: 4 * s),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.transparent, Colors.white.withValues(alpha: 0.08), Colors.transparent]),
-            ),
-          ),
-          SizedBox(height: 16 * s),
           title,
-          SizedBox(height: 10 * s),
-          Text(body, style: TextStyle(fontSize: 15 * s, color: AppColors.textSecondary, height: 1.5, fontFamily: 'Inter')),
-          SizedBox(height: 18 * s),
+          SizedBox(height: 12 * s),
+          Text(body,
+              style: TextStyle(
+                  fontSize: 18 * s,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                  height: 1.55,
+                  fontFamily: 'Inter')),
+          SizedBox(height: 24 * s),
           GestureDetector(
             onTap: () => state?._next(),
             child: Container(
               width: double.infinity,
-              height: 50 * s,
+              height: 56 * s,
               decoration: BoxDecoration(
                 gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(12 * s),
-                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, 5))],
+                borderRadius: BorderRadius.circular(14 * s),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 18,
+                    offset: const Offset(0, 5),
+                  )
+                ],
               ),
               child: Center(
-                child: Text(isLast ? 'GET STARTED' : 'NEXT',
-                    style: TextStyle(fontSize: 13 * s, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1.6, fontFamily: 'Inter')),
+                child: Text(
+                  isLast ? 'GET STARTED' : 'NEXT',
+                  style: TextStyle(
+                      fontSize: 16 * s,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                      fontFamily: 'Inter'),
+                ),
               ),
             ),
           ),
           if (isLast) ...[
-            SizedBox(height: 10 * s),
+            SizedBox(height: 14 * s),
             Center(
               child: GestureDetector(
                 onTap: () => state?._skip(),
                 child: RichText(
                   text: TextSpan(
-                    style: TextStyle(fontSize: 11 * s, color: AppColors.textSecondary, fontFamily: 'Inter'),
+                    style: TextStyle(
+                        fontSize: 13 * s,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Inter'),
                     children: const [
                       TextSpan(text: 'Already have an account?  '),
-                      TextSpan(text: 'Sign in', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                      TextSpan(
+                          text: 'Sign in',
+                          style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
               ),
             ),
-          ] else
-            SizedBox(height: 18 * s),
+          ],
         ],
       ),
     );
   }
 }
-
-// ── NEW: Full fault analysis card (used 5x in slide 2) ───────
 class _FaultAnalysisCard extends StatelessWidget {
   final double s;
   final String code, severity, description;
@@ -771,21 +607,6 @@ class _MechCard extends StatelessWidget {
   }
 }
 
-class _PulseBar extends StatelessWidget {
-  final double s, height;
-  const _PulseBar({required this.s, required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 4 * s, height: height,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topCenter, end: Alignment.bottomCenter),
-        borderRadius: BorderRadius.circular(999),
-      ),
-    );
-  }
-}
 
 class _DtcRow extends StatelessWidget {
   final double s;
@@ -817,46 +638,7 @@ class _DtcRow extends StatelessWidget {
   }
 }
 
-class _Cause extends StatelessWidget {
-  final double s;
-  final String n, text;
-  const _Cause({required this.s, required this.n, required this.text});
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('$n  ', style: TextStyle(fontSize: 6 * s, fontWeight: FontWeight.w700, color: AppColors.primary, fontFamily: 'monospace')),
-        Expanded(child: Text(text, style: TextStyle(fontSize: 6 * s, color: AppColors.textSecondary, fontFamily: 'Inter'))),
-      ],
-    );
-  }
-}
-
-class _Bar extends StatelessWidget {
-  final double s, value;
-  final String label;
-  final Color color;
-  const _Bar({required this.s, required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(width: 36 * s, child: Text(label, style: TextStyle(fontSize: 6.5 * s, color: AppColors.textSecondary, fontFamily: 'Inter'))),
-        Expanded(
-          child: Stack(children: [
-            Container(height: 3.5 * s, decoration: BoxDecoration(color: AppColors.borderSubtle, borderRadius: BorderRadius.circular(2))),
-            FractionallySizedBox(widthFactor: value, child: Container(height: 3.5 * s, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)))),
-          ]),
-        ),
-        SizedBox(width: 6 * s),
-        Text('${(value * 100).toInt()}%', style: TextStyle(fontSize: 6.5 * s, fontWeight: FontWeight.w600, color: color, fontFamily: 'Inter')),
-      ],
-    );
-  }
-}
 
 class _UserDot extends StatelessWidget {
   const _UserDot();
@@ -919,18 +701,10 @@ class _MapGrid extends CustomPainter {
 }
 
 
-class _ActionChip extends StatelessWidget {
-  final double s;
-  final String label;
-  const _ActionChip({required this.s, required this.label});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 7 * s),
-      decoration: BoxDecoration(color: AppColors.surfaceDeep, borderRadius: BorderRadius.circular(999), border: Border.all(color: AppColors.border)),
-       child: Center(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 6.5 * s, color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontFamily: 'Inter'))),
-    );
-  }
-}
+
+
+
+
+
 

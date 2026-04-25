@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../onboarding/onboarding_screen.dart';
+import '../auth/login_screen.dart';
 import '../navigation/main_navigation.dart';
 import '../vehicle/first_vehicle_screen.dart';
 import '../../core/services/vehicle_service.dart';
@@ -38,21 +40,29 @@ class _SplashScreenState extends State<SplashScreen>
 
       final session = Supabase.instance.client.auth.currentSession;
 
-      if (session == null) {
-        // Not logged in → onboarding
-        _navigate(const OnboardingScreen());
+      if (session != null) {
+        // Already logged in — check vehicles
+        final hasVehicles = await VehicleService().hasVehicles();
+        if (!mounted) return;
+        _navigate(hasVehicles
+            ? MainNavigation()
+            : const FirstVehicleScreen());
         return;
       }
 
-      // Logged in → check if they have vehicles
-      final hasVehicles = await VehicleService().hasVehicles();
+      // Not logged in — check if onboarding has been seen before
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding =
+          prefs.getBool('has_seen_onboarding') ?? false;
 
       if (!mounted) return;
 
-      if (hasVehicles) {
-        _navigate(MainNavigation());
+      if (hasSeenOnboarding) {
+        // Skip onboarding — go straight to login
+        _navigate(const LoginScreen());
       } else {
-        _navigate(const FirstVehicleScreen());
+        // First time ever — show onboarding
+        _navigate(const OnboardingScreen());
       }
     });
   }
@@ -89,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen>
                 Image.asset(
                   'assets/images/standiag-namelogo.png',
                   width: 240,
-                  errorBuilder: (_, __, ___) => _DrawnLogo(),
+                  errorBuilder: (_, __, ___) => const _DrawnLogo(),
                 ),
               ],
             ),
@@ -115,23 +125,16 @@ class _DrawnLogo extends StatelessWidget {
           children: const [
             Text('Stan',
                 style: TextStyle(
-                  fontSize: 64,
-                  fontWeight: FontWeight.w900,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.white,
-                  letterSpacing: -2,
-                  height: 1,
-                  fontFamily: 'Inter',
+                  fontSize: 64, fontWeight: FontWeight.w900,
+                  fontStyle: FontStyle.italic, color: Colors.white,
+                  letterSpacing: -2, height: 1, fontFamily: 'Inter',
                 )),
             Text('Diag',
                 style: TextStyle(
-                  fontSize: 64,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 64, fontWeight: FontWeight.w900,
                   fontStyle: FontStyle.italic,
                   color: Color(0xFFC0272D),
-                  letterSpacing: -2,
-                  height: 1,
-                  fontFamily: 'Inter',
+                  letterSpacing: -2, height: 1, fontFamily: 'Inter',
                 )),
           ],
         ),
@@ -143,11 +146,9 @@ class _DrawnLogo extends StatelessWidget {
             const SizedBox(width: 10),
             const Text('AUTO',
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 13, fontWeight: FontWeight.w700,
                   color: Color(0xFFC0272D),
-                  letterSpacing: 6,
-                  fontFamily: 'Inter',
+                  letterSpacing: 6, fontFamily: 'Inter',
                 )),
             const SizedBox(width: 10),
             _Wing(left: false),
@@ -168,18 +169,12 @@ class _Wing extends StatelessWidget {
       width: 72, height: 1.5,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: left
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
-          end: left
-              ? Alignment.centerLeft
-              : Alignment.centerRight,
+          begin: left ? Alignment.centerRight : Alignment.centerLeft,
+          end: left ? Alignment.centerLeft : Alignment.centerRight,
           colors: const [Color(0xFFC0272D), Colors.transparent],
         ),
       ),
     );
   }
 }
-
-
 

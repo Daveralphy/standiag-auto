@@ -1,9 +1,11 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../core/providers/auth_provider.dart';
 import 'register_screen_step2.dart';
 import 'register_screen_step4.dart';
+import 'register_helpers.dart';
 
 class RegisterScreenStep3 extends ConsumerStatefulWidget {
   const RegisterScreenStep3({super.key});
@@ -15,15 +17,9 @@ class RegisterScreenStep3 extends ConsumerStatefulWidget {
 
 class _RegisterScreenStep3State
     extends ConsumerState<RegisterScreenStep3> {
-  late TextEditingController _ageController;
+  final _ageController = TextEditingController();
   String? _selectedGender;
   String? _errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    _ageController = TextEditingController();
-  }
 
   @override
   void dispose() {
@@ -33,7 +29,8 @@ class _RegisterScreenStep3State
 
   void _next() {
     if (_selectedGender == null) {
-      setState(() => _errorMessage = 'Please select your gender.');
+      setState(
+          () => _errorMessage = 'Please select your gender.');
       return;
     }
     final ageText = _ageController.text.trim();
@@ -43,236 +40,117 @@ class _RegisterScreenStep3State
     }
     final age = int.tryParse(ageText);
     if (age == null || age < 18) {
-      setState(() =>
-          _errorMessage = 'You must be at least 18 years old to use StanDiag.');
+      setState(() => _errorMessage =
+          'You must be at least 18 years old to use StanDiag.');
       return;
     }
-
     ref
         .read(registrationProvider.notifier)
         .setStep3(_selectedGender!, age);
-
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RegisterScreenStep4()),
+      MaterialPageRoute(
+          builder: (_) => const RegisterScreenStep4()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.of(context).size.width;
-    final s = sw / 430;
-
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: Padding(
-          padding: EdgeInsets.only(left: 16 * s),
-          child: IconButton(
-            icon: Icon(Icons.arrow_back,
-                color: Colors.white, size: 22 * s),
-            onPressed: () => Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                  builder: (_) => const RegisterScreenStep2()),
-            ),
-            padding: EdgeInsets.zero,
-            constraints:
-                BoxConstraints(minWidth: 32 * s, minHeight: 32 * s),
-          ),
-        ),
-        leadingWidth: 56 * s,
-      ),
+      appBar: buildAppBar(context, () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+              builder: (_) => const RegisterScreenStep2()),
+        );
+      }),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding:
-              EdgeInsets.fromLTRB(20 * s, 12 * s, 20 * s, 24 * s),
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 4 * s,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(2 * s),
-                  child: LinearProgressIndicator(
-                    value: 0.75,
-                    backgroundColor: const Color(0xFF2A2A2E),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.primary),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20 * s),
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Tell us a bit\n',
-                      style: TextStyle(
-                        fontSize: 40 * s,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        fontFamily: 'Inter',
-                        height: 1.2,
-                        letterSpacing: -0.4,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'more about you.',
-                      style: TextStyle(
-                        fontSize: 40 * s,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                        fontFamily: 'Inter',
-                        height: 1.2,
-                        letterSpacing: -0.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 8 * s),
-              Text('This helps us personalise your experience.',
-                  style: TextStyle(
-                    fontSize: 17 * s,
-                    color: const Color(0xFF999999),
-                    fontFamily: 'Inter',
-                  )),
-              SizedBox(height: 28 * s),
-
+              buildProgress(0.75),
+              const SizedBox(height: 24),
+              buildHeading('Tell us a bit', 'more about you.'),
+              const SizedBox(height: 6),
+              const Text(
+                  'This helps us personalise your experience.',
+                  style: AppTextStyles.authSubheading),
+              const SizedBox(height: 28),
               if (_errorMessage != null) ...[
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(12 * s),
-                  decoration: BoxDecoration(
-                    color: AppColors.criticalBg,
-                    borderRadius: BorderRadius.circular(8 * s),
-                    border: Border.all(color: AppColors.criticalBorder),
-                  ),
-                  child: Text(_errorMessage!,
-                      style: TextStyle(
-                        fontSize: 13 * s,
-                        color: AppColors.primaryLight,
-                        fontFamily: 'Inter',
-                      )),
-                ),
-                SizedBox(height: 16 * s),
+                errorBanner(_errorMessage!),
+                const SizedBox(height: 16),
               ],
-
-              Text('GENDER',
-                  style: TextStyle(
-                    fontSize: 11 * s,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF999999),
-                    letterSpacing: 1.5,
-                    fontFamily: 'Inter',
-                  )),
-              SizedBox(height: 12 * s),
-              Row(
-                children: [
-                  _GenderButton(
-                    s: s,
-                    label: 'Male',
-                    icon: Icons.male,
-                    value: 'male',
-                    selected: _selectedGender,
-                    onTap: (v) =>
-                        setState(() => _selectedGender = v),
-                  ),
-                  SizedBox(width: 12 * s),
-                  _GenderButton(
-                    s: s,
-                    label: 'Female',
-                    icon: Icons.female,
-                    value: 'female',
-                    selected: _selectedGender,
-                    onTap: (v) =>
-                        setState(() => _selectedGender = v),
-                  ),
-                  SizedBox(width: 12 * s),
-                  _GenderButton(
-                    s: s,
-                    label: 'Other',
-                    icon: Icons.more_horiz,
-                    value: 'other',
-                    selected: _selectedGender,
-                    onTap: (v) =>
-                        setState(() => _selectedGender = v),
-                  ),
-                ],
-              ),
-              SizedBox(height: 24 * s),
-              Text('AGE',
-                  style: TextStyle(
-                    fontSize: 11 * s,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF999999),
-                    letterSpacing: 1.5,
-                    fontFamily: 'Inter',
-                  )),
-              SizedBox(height: 8 * s),
+              // Gender label
+              const Text('GENDER',
+                  style: AppTextStyles.fieldLabel),
+              const SizedBox(height: 10),
+              Row(children: [
+                _GenderBtn(
+                  s: 1.0,
+                  label: 'Male',
+                  icon: Icons.male,
+                  value: 'male',
+                  selected: _selectedGender,
+                  onTap: (v) =>
+                      setState(() => _selectedGender = v),
+                ),
+                const SizedBox(width: 10),
+                _GenderBtn(
+                  s: 1.0,
+                  label: 'Female',
+                  icon: Icons.female,
+                  value: 'female',
+                  selected: _selectedGender,
+                  onTap: (v) =>
+                      setState(() => _selectedGender = v),
+                ),
+                const SizedBox(width: 10),
+                _GenderBtn(
+                  s: 1.0,
+                  label: 'Other',
+                  icon: Icons.more_horiz,
+                  value: 'other',
+                  selected: _selectedGender,
+                  onTap: (v) =>
+                      setState(() => _selectedGender = v),
+                ),
+              ]),
+              const SizedBox(height: 20),
+              // Age
+              const Text('AGE', style: AppTextStyles.fieldLabel),
+              const SizedBox(height: 8),
               TextField(
                 controller: _ageController,
                 keyboardType: TextInputType.number,
-                style: TextStyle(
-                    fontSize: 16 * s,
-                    color: Colors.white,
-                    fontFamily: 'Inter'),
+                style: AppTextStyles.inputText,
                 decoration: InputDecoration(
                   hintText: 'Enter your age',
-                  hintStyle: TextStyle(
-                      fontSize: 16 * s,
-                      color: const Color(0xFF555555),
-                      fontFamily: 'Inter'),
+                  hintStyle: AppTextStyles.hintText,
                   filled: true,
-                  fillColor: const Color(0xFF161619),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8 * s),
-                    borderSide: BorderSide.none,
+                  fillColor: AppColors.surface,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 16),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: AppColors.border),
                   ),
-                  contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16 * s, vertical: 16 * s),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                        color: AppColors.primary, width: 1.5),
+                  ),
                   suffixText: 'years old',
-                  suffixStyle: TextStyle(
-                    fontSize: 14 * s,
-                    color: const Color(0xFF666666),
-                    fontFamily: 'Inter',
-                  ),
+                  suffixStyle: AppTextStyles.caption,
                 ),
               ),
-              SizedBox(height: 10 * s),
-              Text(
-                'You must be at least 18 years old to use StanDiag.',
-                style: TextStyle(
-                  fontSize: 13 * s,
-                  color: const Color(0xFF666666),
-                  fontFamily: 'Inter',
-                  height: 1.4,
-                ),
-              ),
-              SizedBox(height: 32 * s),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _next,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: EdgeInsets.symmetric(vertical: 16 * s),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8 * s),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text('CONTINUE',
-                      style: TextStyle(
-                        fontSize: 17 * s,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                        fontFamily: 'Inter',
-                      )),
-                ),
-              ),
+              const SizedBox(height: 6),
+              const Text(
+                  'You must be at least 18 years old to use StanDiag.',
+                  style: AppTextStyles.caption),
+              const SizedBox(height: 32),
+              primaryButton('CONTINUE', _next),
             ],
           ),
         ),
@@ -281,14 +159,14 @@ class _RegisterScreenStep3State
   }
 }
 
-class _GenderButton extends StatelessWidget {
+class _GenderBtn extends StatelessWidget {
   final double s;
   final String label, value;
   final IconData icon;
   final String? selected;
   final ValueChanged<String> onTap;
 
-  const _GenderButton({
+  const _GenderBtn({
     required this.s,
     required this.label,
     required this.icon,
@@ -304,36 +182,33 @@ class _GenderButton extends StatelessWidget {
       child: GestureDetector(
         onTap: () => onTap(value),
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 12 * s),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.primary
-                : const Color(0xFF161619),
-            borderRadius: BorderRadius.circular(8 * s),
+                : AppColors.surface,
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSelected
-                  ? AppColors.primary
-                  : const Color(0xFF2A2A2E),
-            ),
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.border),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
             children: [
               Icon(icon,
                   color: isSelected
                       ? Colors.white
-                      : const Color(0xFF666666),
-                  size: 18 * s),
-              SizedBox(width: 8 * s),
+                      : AppColors.textSecondary,
+                  size: 20),
+              const SizedBox(height: 4),
               Text(label,
                   style: TextStyle(
-                    fontSize: 14 * s,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected
-                        ? Colors.white
-                        : const Color(0xFF999999),
-                    fontFamily: 'Inter',
-                  )),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected
+                          ? Colors.white
+                          : AppColors.textSecondary,
+                      fontFamily: 'Inter')),
             ],
           ),
         ),
@@ -341,3 +216,4 @@ class _GenderButton extends StatelessWidget {
     );
   }
 }
+

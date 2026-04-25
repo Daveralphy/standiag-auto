@@ -7,6 +7,7 @@ import '../history/scan_history_screen.dart';
 import '../maintenance/maintenance_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../navigation/main_navigation.dart';
+import '../vehicle/add_vehicle_screen.dart';
 
 class HomeScreenContent extends ConsumerWidget {
   const HomeScreenContent({super.key});
@@ -257,7 +258,8 @@ class HomeScreenContent extends ConsumerWidget {
 
   Widget _buildNoVehicleCard(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.of(context).pushNamed('/add-vehicle'),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const AddVehicleScreen())),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
@@ -768,5 +770,7 @@ class HomeScreen extends StatelessWidget {
     return const Scaffold(body: HomeScreenContent());
   }
 }
+
+
 
 
