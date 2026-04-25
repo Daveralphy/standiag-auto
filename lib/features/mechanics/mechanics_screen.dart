@@ -44,6 +44,12 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
   Map<String, dynamic>? _selectedVehicle;
   final _problemController = TextEditingController();
 
+  // Search
+  bool _showSearch = false;
+  final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+  List<Map<String, dynamic>> _searchResults = [];
+
   // Animation controllers
   late AnimationController _rippleController;
   late AnimationController _slideController;
@@ -611,6 +617,8 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
     _rippleController.dispose();
     _slideController.dispose();
     _problemController.dispose();
+    _searchController.dispose();
+    _searchFocus.dispose();
     _channel?.unsubscribe();
     _searchTimer?.cancel();
     super.dispose();
@@ -674,6 +682,12 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
               child: _buildHeader(),
             ),
 
+            // ── Search bar + results ──────────────────
+            if (_showSearch)
+              Positioned(
+                top: 70, left: 16, right: 16,
+                child: _buildSearchOverlay(),
+              ),
             // ── Bottom: idle state ────────────────────────
             if (_state == _SearchState.idle)
               Positioned(
@@ -704,19 +718,199 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
     );
   }
 
+  void _onSearchChanged(String query) {
+    if (query.isEmpty) {
+      setState(() => _searchResults = []);
+      return;
+    }
+    final q = query.toLowerCase();
+    setState(() {
+      _searchResults = _allMechanics.where((m) {
+        final name = (m['name'] ?? '').toString().toLowerCase();
+        final location =
+            (m['location'] ?? '').toString().toLowerCase();
+        final specs = (m['specialisations'] as List?)
+                ?.map((s) => s.toString().toLowerCase())
+                .join(' ') ??
+            '';
+        return name.contains(q) ||
+            location.contains(q) ||
+            specs.contains(q);
+      }).toList();
+    });
+  }
+
+  Widget _buildSearchOverlay() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Search input
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface.withValues(alpha: 0.98),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primaryBorder),
+            boxShadow: [BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 16)],
+          ),
+          child: Row(children: [
+            const SizedBox(width: 14),
+            const Icon(Icons.search_rounded,
+                color: AppColors.primary, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocus,
+                onChanged: _onSearchChanged,
+                style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                    fontFamily: 'Inter'),
+                decoration: const InputDecoration(
+                  hintText: 'Search mechanics by name, location...',
+                  hintStyle: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textDisabled,
+                      fontFamily: 'Inter'),
+                  border: InputBorder.none,
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+
+          ]),
+        ),
+        // Results
+        if (_searchResults.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            constraints: const BoxConstraints(maxHeight: 300),
+            decoration: BoxDecoration(
+              color: AppColors.surface.withValues(alpha: 0.98),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 16)],
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _searchResults.length,
+              separatorBuilder: (_, __) => const Divider(
+                  height: 1, color: AppColors.borderSubtle),
+              itemBuilder: (_, i) {
+                final m = _searchResults[i];
+                final isOnline = m['is_online'] == true;
+                final avatarColor = Color(int.parse(
+                    'FF',
+                    radix: 16));
+                final dist = _distanceTo(m);
+                final distLabel = dist < 999
+                    ? ' km'
+                    : '';
+
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    setState(() {
+                      _showSearch = false;
+                      _searchResults = [];
+                      _searchController.clear();
+                    });
+                    _searchFocus.unfocus();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            MechanicProfileScreen(mechanic: m),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    child: Row(children: [
+                      Container(
+                        width: 40, height: 40,
+                        decoration: BoxDecoration(
+                          color: avatarColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: AppColors.primaryBorder,
+                              width: 1.5),
+                        ),
+                        child: Center(
+                          child: Text(m['initials'] ?? '',
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  fontFamily: 'Inter')),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Text(m['name'] ?? '',
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                    fontFamily: 'Inter')),
+                            Text(
+                              m['location'] ?? '',
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                  fontFamily: 'Inter'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: 8, height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isOnline
+                                  ? AppColors.advisory
+                                  : AppColors.textTertiary,
+                            ),
+                          ),
+                          if (distLabel.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(distLabel,
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Inter')),
+                          ],
+                        ],
+                      ),
+                    ]),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.background,
-            AppColors.background.withValues(alpha: 0.0),
-          ],
-        ),
-      ),
       child: Row(
         children: [
           const Text('Nearby Mechanics',
@@ -726,33 +920,42 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                   color: AppColors.textPrimary,
                   fontFamily: 'Inter')),
           const Spacer(),
-          if (_state == _SearchState.idle)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _showBottomSheet,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(100),
-                  boxShadow: [BoxShadow(
-                      color:
-                          AppColors.primary.withValues(alpha: 0.4),
-                      blurRadius: 10)],
-                ),
-                child: const Text('Find Mechanic',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        fontFamily: 'Inter')),
+          // Search icon only
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              setState(() => _showSearch = !_showSearch);
+              if (_showSearch) {
+                Future.delayed(const Duration(milliseconds: 100),
+                    () => _searchFocus.requestFocus());
+              } else {
+                _searchResults = [];
+                _searchController.clear();
+                _searchFocus.unfocus();
+              }
+            },
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+                boxShadow: [BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 8)],
               ),
+              child: Icon(
+                _showSearch
+                    ? Icons.close_rounded
+                    : Icons.search_rounded,
+                color: AppColors.textPrimary, size: 20),
             ),
+          ),
         ],
       ),
     );
   }
+
 
   Widget _buildMap() {
     final center = _userPosition != null
@@ -806,7 +1009,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
         ? [
             Marker(
               point: center,
-              width: 80, height: 80,
+              width: 14, height: 14,
               child: _state == _SearchState.searching
                   ? AnimatedBuilder(
                       animation: _rippleController,
@@ -828,7 +1031,14 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
           ]
         : <Marker>[];
 
-    return FlutterMap(
+    return ColorFiltered(
+      colorFilter: const ColorFilter.matrix(<double>[
+        -0.9,  0,    0,    0, 245,
+         0,   -0.9,  0,    0, 245,
+         0,    0,   -0.9,  0, 245,
+         0,    0,    0,    1,   0,
+      ]),
+      child: FlutterMap(
       mapController: _mapController,
       options: MapOptions(
         initialCenter: center,
@@ -840,9 +1050,9 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
               'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.davelop.standiag_auto',
         ),
-        MarkerLayer(
-            markers: [...userMarkers, ...mechanicMarkers]),
+        MarkerLayer(markers: [...userMarkers, ...mechanicMarkers]),
       ],
+    ),
     );
   }
 
@@ -1259,11 +1469,11 @@ class _UserDotWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 20, height: 20,
+      width: 6, height: 6,
       decoration: BoxDecoration(
         color: const Color(0xFF4A90E2),
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
+        border: Border.all(color: Colors.white, width: 1),
         boxShadow: [BoxShadow(
             color: const Color(0xFF4A90E2).withValues(alpha: 0.5),
             blurRadius: 10, spreadRadius: 2)],
@@ -1271,5 +1481,20 @@ class _UserDotWidget extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
