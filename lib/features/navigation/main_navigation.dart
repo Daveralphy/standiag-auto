@@ -91,9 +91,7 @@ class MainNavigationState extends State<MainNavigation> {
                   label: 'Scan',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(_selectedIndex == 2
-                      ? Icons.build
-                      : Icons.build_outlined),
+                  icon: Icon(_selectedIndex == 2 ? Icons.car_repair : Icons.car_repair),
                   label: 'Mechanics',
                 ),
                 BottomNavigationBarItem(
@@ -110,6 +108,7 @@ class MainNavigationState extends State<MainNavigation> {
     );
   }
 }
+
 
 
 
