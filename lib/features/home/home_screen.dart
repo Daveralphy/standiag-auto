@@ -214,7 +214,7 @@ class HomeScreenContent extends ConsumerWidget {
           Text(
             '$year  •  $engineType',
             style: const TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 color: AppColors.textSecondary,
                 fontFamily: 'Inter'),
           ),
@@ -247,7 +247,7 @@ class HomeScreenContent extends ConsumerWidget {
               ),
               const Text('No recent scan',
                   style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       color: AppColors.textTertiary,
                       fontFamily: 'Inter')),
             ],
@@ -287,7 +287,7 @@ class HomeScreenContent extends ConsumerWidget {
             const Text('No vehicle added yet',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                     fontFamily: 'Inter')),
@@ -395,7 +395,7 @@ class HomeScreenContent extends ConsumerWidget {
             children: [
               Text('RUN A DIAGNOSTIC SCAN',
                   style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                       letterSpacing: 0.8,
@@ -679,7 +679,7 @@ class HomeScreenContent extends ConsumerWidget {
                 const SizedBox(height: 3),
                 Text('$dateStr  •  $codesStr',
                     style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         color: AppColors.textSecondary,
                         fontFamily: 'Inter')),
               ],
@@ -775,6 +775,7 @@ class HomeScreen extends StatelessWidget {
     return const Scaffold(body: HomeScreenContent());
   }
 }
+
 
 
 

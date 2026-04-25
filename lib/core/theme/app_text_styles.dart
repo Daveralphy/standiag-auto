@@ -5,9 +5,8 @@ class AppTextStyles {
   AppTextStyles._();
 
   // ── Field Labels ─────────────────────────────────────────
-  // Used above input fields — small, uppercase, muted
   static const fieldLabel = TextStyle(
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: FontWeight.w600,
     color: AppColors.textTertiary,
     letterSpacing: 1.5,
@@ -15,9 +14,8 @@ class AppTextStyles {
   );
 
   // ── Input Text ───────────────────────────────────────────
-  // The actual text the user types
   static const inputText = TextStyle(
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimary,
     fontFamily: 'Inter',
@@ -25,16 +23,15 @@ class AppTextStyles {
 
   // ── Hint Text ────────────────────────────────────────────
   static const hintText = TextStyle(
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: FontWeight.w400,
     color: AppColors.textDisabled,
     fontFamily: 'Inter',
   );
 
   // ── Section Labels ───────────────────────────────────────
-  // ACCOUNT, NOTIFICATIONS, MY VEHICLES etc.
   static const sectionLabel = TextStyle(
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.w600,
     color: AppColors.textTertiary,
     letterSpacing: 1.5,
@@ -43,7 +40,7 @@ class AppTextStyles {
 
   // ── Screen Title ─────────────────────────────────────────
   static const screenTitle = TextStyle(
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,
     fontFamily: 'Inter',
@@ -51,24 +48,35 @@ class AppTextStyles {
 
   // ── Card Title ───────────────────────────────────────────
   static const cardTitle = TextStyle(
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     fontFamily: 'Inter',
   );
 
   // ── Body ─────────────────────────────────────────────────
+  // Primary reading text across all screens
   static const body = TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.w400,
+    fontSize: 15,
+    fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
-    height: 1.5,
+    height: 1.55,
+    fontFamily: 'Inter',
+  );
+
+  // ── Body Primary ─────────────────────────────────────────
+  // Body text on primary/dark background
+  static const bodyPrimary = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textPrimary,
+    height: 1.55,
     fontFamily: 'Inter',
   );
 
   // ── Caption ──────────────────────────────────────────────
   static const caption = TextStyle(
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: FontWeight.w400,
     color: AppColors.textTertiary,
     fontFamily: 'Inter',
@@ -76,7 +84,7 @@ class AppTextStyles {
 
   // ── Button Label ─────────────────────────────────────────
   static const buttonLabel = TextStyle(
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: FontWeight.w700,
     color: Colors.white,
     letterSpacing: 0.3,
@@ -84,7 +92,6 @@ class AppTextStyles {
   );
 
   // ── Auth Heading ─────────────────────────────────────────
-  // "Welcome back." / "What's your name?" etc.
   static const authHeading = TextStyle(
     fontSize: 36,
     fontWeight: FontWeight.w800,
@@ -96,7 +103,7 @@ class AppTextStyles {
 
   // ── Auth Subheading ──────────────────────────────────────
   static const authSubheading = TextStyle(
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: FontWeight.w400,
     color: AppColors.textSecondary,
     fontFamily: 'Inter',

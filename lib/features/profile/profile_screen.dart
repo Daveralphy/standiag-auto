@@ -137,13 +137,13 @@ _buildProCard(context),
           if (username.isNotEmpty)
             Text('@$username',
                 style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 15,
                     color: AppColors.textSecondary,
                     fontFamily: 'Inter')),
           const SizedBox(height: 4),
           Text(joinStr,
               style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 13,
                   color: AppColors.textTertiary,
                   fontFamily: 'Inter')),
         ],
@@ -204,7 +204,7 @@ _buildProCard(context),
                 children: [
                   Text('Upgrade to StanDiag Pro',
                       style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                           fontFamily: 'Inter')),
@@ -295,7 +295,7 @@ _buildProCard(context),
             child: const Center(
               child: Text('No vehicles added yet.',
                   style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 15,
                       color: AppColors.textSecondary,
                       fontFamily: 'Inter')),
             ),
@@ -457,14 +457,14 @@ class _VehicleRow extends StatelessWidget {
               children: [
                 Text(name,
                     style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                         fontFamily: 'Inter')),
                 const SizedBox(height: 3),
                 Text(detail,
                     style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         color: AppColors.textSecondary,
                         fontFamily: 'Inter')),
               ],
@@ -535,7 +535,7 @@ class _SettingsRow extends StatelessWidget {
             Expanded(
               child: Text(label,
                   style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: color,
                       fontFamily: 'Inter')),
@@ -556,6 +556,7 @@ class _SettingsRow extends StatelessWidget {
     );
   }
 }
+
 
 
 

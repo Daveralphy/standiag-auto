@@ -155,7 +155,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
                 'Plug in your OBD-II adapter, make sure\nBluetooth is on, then tap the gauge.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 15,
                     color: AppColors.textSecondary,
                     height: 1.5,
                     fontFamily: 'Inter'),
@@ -529,7 +529,7 @@ class _StatusRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(subtitle,
                       style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           color: AppColors.textSecondary,
                           fontFamily: 'Inter')),
                 ],
@@ -551,6 +551,7 @@ class _StatusRow extends StatelessWidget {
     );
   }
 }
+
 
 
 

@@ -194,7 +194,7 @@ class _MechanicsScreenState extends State<MechanicsScreen> {
                 ? '${_mechanics.length} mechanics near you'
                 : '${_mechanics.length} mechanics in Lagos',
             style: const TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 color: AppColors.textSecondary,
                 fontFamily: 'Inter'),
           ),
@@ -567,7 +567,7 @@ class _MechanicCard extends StatelessWidget {
                     ),
                     child: Text(s,
                         style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 13,
                             color: AppColors.textSecondary,
                             fontFamily: 'Inter')),
                   )).toList(),
@@ -579,7 +579,7 @@ class _MechanicCard extends StatelessWidget {
               const SizedBox(width: 4),
               Text('${mechanic['jobs_done']} jobs done',
                   style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       color: AppColors.textTertiary,
                       fontFamily: 'Inter')),
               const SizedBox(width: 12),
@@ -588,7 +588,7 @@ class _MechanicCard extends StatelessWidget {
               const SizedBox(width: 4),
               Text('${mechanic['response_speed']} response',
                   style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       color: AppColors.textTertiary,
                       fontFamily: 'Inter')),
             ]),
@@ -598,6 +598,7 @@ class _MechanicCard extends StatelessWidget {
     );
   }
 }
+
 
 
 
