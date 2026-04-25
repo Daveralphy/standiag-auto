@@ -4,7 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/providers/profile_provider.dart';
 import '../../core/providers/vehicle_provider.dart';
 import '../../core/services/auth_service.dart';
-import '../history/scan_history_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../settings/settings_screen.dart';
 import '../subscription/upgrade_screen.dart';
@@ -356,16 +355,6 @@ _buildProCard(context),
                 fontFamily: 'Inter')),
         const SizedBox(height: 10),
         _SettingsRow(
-          icon: Icons.history_rounded,
-          label: 'Scan History',
-          trailing:
-              scanCount > 0 ? '$scanCount records' : '',
-          onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (_) => const ScanHistoryScreen())),
-        ),
-        const SizedBox(height: 8),
-        _SettingsRow(
           icon: Icons.notifications_outlined,
           label: 'Notifications',
           trailing: '',
@@ -567,6 +556,8 @@ class _SettingsRow extends StatelessWidget {
     );
   }
 }
+
+
 
 
 

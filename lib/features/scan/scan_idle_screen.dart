@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/providers/vehicle_provider.dart';
 import '../onboarding/obd_guide_screen.dart';
+import '../history/scan_history_screen.dart';
 import 'scan_connecting_screen.dart';
 
 class ScanIdleScreen extends ConsumerStatefulWidget {
@@ -172,15 +173,33 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
   }
 
   Widget _buildHeader() {
-    return const Row(
+    return Row(
       children: [
-        Text('Diagnostic Scan',
+        const Text('Diagnostic Scan',
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
                 fontFamily: 'Inter')),
-        Spacer(),
+        const Spacer(),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (_) => const ScanHistoryScreen()),
+          ),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Icon(Icons.history_rounded,
+                color: AppColors.textSecondary, size: 20),
+          ),
+        ),
       ],
     );
   }
@@ -532,6 +551,7 @@ class _StatusRow extends StatelessWidget {
     );
   }
 }
+
 
 
 

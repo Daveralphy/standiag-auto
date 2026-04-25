@@ -17,8 +17,7 @@ class FirstVehicleScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              _buildAccountBadge(),
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
               _buildCarIllustration(),
               const SizedBox(height: 32),
               _buildHeadline(),
@@ -52,24 +51,6 @@ class FirstVehicleScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountBadge() {
-    return Row(
-      children: [
-        Container(
-          width: 8, height: 8,
-          decoration: const BoxDecoration(
-              color: AppColors.advisory, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 8),
-        const Text('Account created!',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.advisory,
-                fontFamily: 'Inter')),
-      ],
-    );
-  }
 
   Widget _buildCarIllustration() {
     return Center(
@@ -297,6 +278,8 @@ class _CarPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+
 
 
 
