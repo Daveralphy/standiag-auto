@@ -82,7 +82,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       'StanDiag needs your car details to give\nyou accurate diagnostics.',
                       style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: const Color(0xFFBBBBBB),
                           height: 1.5,
                           fontFamily: 'Inter'),
                     ),
@@ -375,3 +375,4 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     );
   }
 }
+

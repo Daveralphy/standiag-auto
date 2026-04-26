@@ -438,7 +438,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                     'Tell us your car and problem to find the right mechanic nearby.',
                     style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: const Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
                 const SizedBox(height: 24),
 
@@ -463,7 +463,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                         'No vehicles added. Add a vehicle first.',
                         style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: const Color(0xFFBBBBBB),
                             fontFamily: 'Inter')),
                   )
                 else
@@ -1095,7 +1095,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                 Text('Tap "Find Mechanic" to search nearby',
                     style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: const Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
               ],
             ),
@@ -1329,7 +1329,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                         Text(location,
                             style: const TextStyle(
                                 fontSize: 11,
-                                color: AppColors.textSecondary,
+                                color: const Color(0xFFBBBBBB),
                                 fontFamily: 'Inter')),
                         Row(children: [
                           const Icon(Icons.star_rounded,
@@ -1363,7 +1363,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                     const Text('Quoted price:',
                         style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: const Color(0xFFBBBBBB),
                             fontFamily: 'Inter')),
                     const Spacer(),
                     Text(
@@ -1481,6 +1481,7 @@ class _UserDotWidget extends StatelessWidget {
     );
   }
 }
+
 
 
 

@@ -138,7 +138,7 @@ _buildProCard(context),
             Text('@$username',
                 style: const TextStyle(
                     fontSize: 15,
-                    color: AppColors.textSecondary,
+                    color: const Color(0xFFBBBBBB),
                     fontFamily: 'Inter')),
           const SizedBox(height: 4),
           Text(joinStr,
@@ -296,7 +296,7 @@ _buildProCard(context),
               child: Text('No vehicles added yet.',
                   style: TextStyle(
                       fontSize: 15,
-                      color: AppColors.textSecondary,
+                      color: const Color(0xFFBBBBBB),
                       fontFamily: 'Inter')),
             ),
           )
@@ -465,7 +465,7 @@ class _VehicleRow extends StatelessWidget {
                 Text(detail,
                     style: const TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: const Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
               ],
             ),
@@ -544,7 +544,7 @@ class _SettingsRow extends StatelessWidget {
               Text(trailing,
                   style: const TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: const Color(0xFFBBBBBB),
                       fontFamily: 'Inter')),
             const SizedBox(width: 6),
             if (!isDestructive)
@@ -556,6 +556,7 @@ class _SettingsRow extends StatelessWidget {
     );
   }
 }
+
 
 
 

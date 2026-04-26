@@ -297,7 +297,7 @@ class HomeScreenContent extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: const Color(0xFFBBBBBB),
                     height: 1.5,
                     fontFamily: 'Inter')),
             const SizedBox(height: 16),
@@ -465,7 +465,7 @@ class HomeScreenContent extends ConsumerWidget {
                     style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: const Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
                 SizedBox(height: 4),
                 Text(
@@ -499,7 +499,7 @@ class HomeScreenContent extends ConsumerWidget {
                     style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: const Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
                 SizedBox(height: 4),
                 Text(
@@ -582,7 +582,7 @@ class HomeScreenContent extends ConsumerWidget {
               style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: const Color(0xFFBBBBBB),
                   fontFamily: 'Inter')),
           SizedBox(height: 4),
           Text('Run your first diagnostic scan\nto see results here',
@@ -680,7 +680,7 @@ class HomeScreenContent extends ConsumerWidget {
                 Text('$dateStr  •  $codesStr',
                     style: const TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: const Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
               ],
             ),
@@ -775,6 +775,7 @@ class HomeScreen extends StatelessWidget {
     return const Scaffold(body: HomeScreenContent());
   }
 }
+
 
 
 

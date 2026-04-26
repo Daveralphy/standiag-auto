@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/login_screen.dart';
-import '../auth/register_screen.dart';
+import '../auth/account_type_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -22,7 +22,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     } else {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+        MaterialPageRoute(builder: (_) => const AccountTypeScreen()),
       );
     }
   }
@@ -702,6 +702,7 @@ class _MapGrid extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter o) => false;
 }
+
 
 
 

@@ -20,7 +20,7 @@ class AppColors {
   static const Color primaryBorder = Color(0x47C0272D);
 
   static const Color textPrimary   = Color(0xFFF2F2F4);
-  static const Color textSecondary = Color(0xFF8E8E9A);
+  static const Color textSecondary = Color(0xFFB0B0B8);
   static const Color textTertiary  = Color(0xFF5E5E6A);
   static const Color textDisabled  = Color(0xFF3A3A46);
   static const Color textGhost     = Color(0xFF1E1E24);
@@ -55,3 +55,4 @@ class AppColors {
     colors: [primary, primaryDark],
   );
 }
+

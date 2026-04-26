@@ -5,6 +5,7 @@ import '../onboarding/onboarding_screen.dart';
 import '../auth/login_screen.dart';
 import '../navigation/main_navigation.dart';
 import '../vehicle/first_vehicle_screen.dart';
+import '../mechanic/mechanic_navigation.dart';
 import '../../core/services/vehicle_service.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -30,8 +31,7 @@ class _SplashScreenState extends State<SplashScreen>
     _fadeIn =
         CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     _scaleIn = Tween<double>(begin: 0.88, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _controller, curve: Curves.easeOutCubic),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
     _controller.forward();
 
@@ -41,16 +41,33 @@ class _SplashScreenState extends State<SplashScreen>
       final session = Supabase.instance.client.auth.currentSession;
 
       if (session != null) {
-        // Already logged in — check vehicles
-        final hasVehicles = await VehicleService().hasVehicles();
-        if (!mounted) return;
-        _navigate(hasVehicles
-            ? MainNavigation()
-            : const FirstVehicleScreen());
+        final userId = Supabase.instance.client.auth.currentUser?.id;
+        if (userId != null) {
+          final profile = await Supabase.instance.client
+              .from('profiles')
+              .select('account_type')
+              .eq('id', userId)
+              .maybeSingle();
+
+          final accountType =
+              profile?['account_type'] ?? 'car_owner';
+
+          if (!mounted) return;
+
+          if (accountType == 'mechanic') {
+            _navigate(const MechanicNavigation());
+          } else {
+            final hasVehicles =
+                await VehicleService().hasVehicles();
+            if (!mounted) return;
+            _navigate(hasVehicles
+                ? MainNavigation()
+                : const FirstVehicleScreen());
+          }
+        }
         return;
       }
 
-      // Not logged in — check if onboarding has been seen before
       final prefs = await SharedPreferences.getInstance();
       final hasSeenOnboarding =
           prefs.getBool('has_seen_onboarding') ?? false;
@@ -58,10 +75,8 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
 
       if (hasSeenOnboarding) {
-        // Skip onboarding — go straight to login
         _navigate(const LoginScreen());
       } else {
-        // First time ever — show onboarding
         _navigate(const OnboardingScreen());
       }
     });
@@ -99,7 +114,8 @@ class _SplashScreenState extends State<SplashScreen>
                 Image.asset(
                   'assets/images/standiag-namelogo.png',
                   width: 240,
-                  errorBuilder: (_, __, ___) => const _DrawnLogo(),
+                  errorBuilder: (_, __, ___) =>
+                      const _DrawnLogo(),
                 ),
               ],
             ),
@@ -125,17 +141,15 @@ class _DrawnLogo extends StatelessWidget {
           children: const [
             Text('Stan',
                 style: TextStyle(
-                  fontSize: 64, fontWeight: FontWeight.w900,
-                  fontStyle: FontStyle.italic, color: Colors.white,
-                  letterSpacing: -2, height: 1, fontFamily: 'Inter',
-                )),
+                    fontSize: 64, fontWeight: FontWeight.w900,
+                    fontStyle: FontStyle.italic, color: Colors.white,
+                    letterSpacing: -2, height: 1, fontFamily: 'Inter')),
             Text('Diag',
                 style: TextStyle(
-                  fontSize: 64, fontWeight: FontWeight.w900,
-                  fontStyle: FontStyle.italic,
-                  color: Color(0xFFC0272D),
-                  letterSpacing: -2, height: 1, fontFamily: 'Inter',
-                )),
+                    fontSize: 64, fontWeight: FontWeight.w900,
+                    fontStyle: FontStyle.italic,
+                    color: Color(0xFFC0272D),
+                    letterSpacing: -2, height: 1, fontFamily: 'Inter')),
           ],
         ),
         const SizedBox(height: 8),
@@ -146,10 +160,9 @@ class _DrawnLogo extends StatelessWidget {
             const SizedBox(width: 10),
             const Text('AUTO',
                 style: TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w700,
-                  color: Color(0xFFC0272D),
-                  letterSpacing: 6, fontFamily: 'Inter',
-                )),
+                    fontSize: 13, fontWeight: FontWeight.w700,
+                    color: Color(0xFFC0272D),
+                    letterSpacing: 6, fontFamily: 'Inter')),
             const SizedBox(width: 10),
             _Wing(left: false),
           ],
@@ -177,4 +190,3 @@ class _Wing extends StatelessWidget {
     );
   }
 }
-

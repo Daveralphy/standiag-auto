@@ -156,7 +156,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 15,
-                    color: AppColors.textSecondary,
+                    color: const Color(0xFFBBBBBB),
                     height: 1.5,
                     fontFamily: 'Inter'),
               ),
@@ -216,7 +216,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
       child: Text(label,
           style: const TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: const Color(0xFFBBBBBB),
               fontFamily: 'Inter')),
     );
   }
@@ -357,7 +357,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
                   'You need an ELM327 Bluetooth adapter. They cost under ₦5,000 and work on any car with an OBD-II port (most cars after 2000).',
                   style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: const Color(0xFFBBBBBB),
                       height: 1.5,
                       fontFamily: 'Inter'),
                 ),
@@ -530,7 +530,7 @@ class _StatusRow extends StatelessWidget {
                   Text(subtitle,
                       style: const TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: const Color(0xFFBBBBBB),
                           fontFamily: 'Inter')),
                 ],
               ),
@@ -551,6 +551,7 @@ class _StatusRow extends StatelessWidget {
     );
   }
 }
+
 
 
 

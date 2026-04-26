@@ -5,8 +5,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_field.dart';
 import '../../core/services/auth_service.dart';
-import 'register_screen.dart';
+import 'account_type_screen.dart';
 import '../navigation/main_navigation.dart';
+import '../mechanic/mechanic_navigation.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -33,23 +34,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      setState(
-          () => _errorMessage = 'Please fill in all fields.');
+      setState(() => _errorMessage = 'Please fill in all fields.');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    setState(() { _isLoading = true; _errorMessage = null; });
 
     try {
-      await AuthService()
-          .signIn(emailOrUsername: email, password: password);
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => MainNavigation()),
-        );
+      await AuthService().signIn(
+          emailOrUsername: email, password: password);
+
+      if (!mounted) return;
+
+      // Check account type and route accordingly
+      final userId =
+          Supabase.instance.client.auth.currentUser?.id;
+      if (userId != null) {
+        final profile = await Supabase.instance.client
+            .from('profiles')
+            .select('account_type')
+            .eq('id', userId)
+            .maybeSingle();
+        final accountType =
+            profile?['account_type'] ?? 'car_owner';
+        if (!mounted) return;
+        if (accountType == 'mechanic') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+                builder: (_) => const MechanicNavigation()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => MainNavigation()),
+          );
+        }
       }
     } on AuthException catch (e) {
       setState(() => _errorMessage = e.message);
@@ -74,18 +92,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ── Heading ───────────────────────────────
+                // Heading
                 const Text('Welcome back.',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.authHeading),
                 const SizedBox(height: 8),
-                const Text(
-                    'Sign in to your StanDiag account',
+                const Text('Sign in to your StanDiag account',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.authSubheading),
                 const SizedBox(height: 36),
 
-                // ── Error ─────────────────────────────────
+                // Error
                 if (_errorMessage != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -104,7 +121,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 16),
                 ],
 
-                // ── Fields ────────────────────────────────
+                // Fields
                 AppField(
                   label: 'Email or Username',
                   hint: 'Enter your email or username',
@@ -134,15 +151,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // ── Sign In Button ────────────────────────
+                // Sign In Button
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     disabledBackgroundColor:
                         AppColors.primary.withValues(alpha: 0.5),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                     elevation: 0,
@@ -151,61 +168,62 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ? const SizedBox(
                           height: 20, width: 20,
                           child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2))
+                              color: Colors.white, strokeWidth: 2))
                       : const Text('SIGN IN',
                           style: AppTextStyles.buttonLabel),
                 ),
                 const SizedBox(height: 24),
 
-                // ── Divider ───────────────────────────────
+                // Divider
                 Row(children: [
                   const Expanded(
                       child: Divider(
-                          color: Color(0xFF2A2A2E),
-                          height: 1)),
+                          color: Color(0xFF2A2A2E), height: 1)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12),
                     child: Text('or continue with',
                         style: AppTextStyles.caption.copyWith(
                             color: const Color(0xFF666666))),
                   ),
                   const Expanded(
                       child: Divider(
-                          color: Color(0xFF2A2A2E),
-                          height: 1)),
+                          color: Color(0xFF2A2A2E), height: 1)),
                 ]),
                 const SizedBox(height: 16),
 
-                // ── Google + Apple ────────────────────────
+                // Google + Apple
                 Row(children: [
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () {},
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 13),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 13),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFFFFF),
+                          color: const Color(0xFF4285F4),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('G',
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFFEA4335),
-                                    fontFamily: 'Inter')),
-                            SizedBox(width: 8),
+                            CircleAvatar(
+                              radius: 9,
+                              backgroundColor: Colors.white,
+                              child: Text('G',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF4285F4),
+                                      fontFamily: 'Inter')),
+                            ),
+                            SizedBox(width: 10),
                             Text('Google',
                                 style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF3C4043),
+                                    color: Colors.white,
                                     fontFamily: 'Inter')),
                           ],
                         ),
@@ -218,8 +236,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       behavior: HitTestBehavior.opaque,
                       onTap: () {},
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 13),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 13),
                         decoration: BoxDecoration(
                           color: Colors.black,
                           borderRadius: BorderRadius.circular(10),
@@ -246,7 +264,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ]),
                 const SizedBox(height: 28),
 
-                // ── Register Link ─────────────────────────
+                // Register link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -259,9 +277,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                             builder: (_) =>
-                                const RegisterScreen()),
+                                const AccountTypeScreen()),
                       ),
-                      child: const Text('Create an account',
+                      child: const Text('Create One',
                           style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -274,9 +292,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text(
                   'By signing in, you agree to our\nTerms of Service and Privacy Policy',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.caption
-                      .copyWith(color: const Color(0xFF666666),
-                          height: 1.4),
+                  style: AppTextStyles.caption.copyWith(
+                      color: const Color(0xFF666666), height: 1.4),
                 ),
               ],
             ),
@@ -286,5 +303,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
-
-

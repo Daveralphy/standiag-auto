@@ -478,7 +478,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'Are you sure you want to sign out?',
             style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: const Color(0xFFBBBBBB),
                 height: 1.5,
                 fontFamily: 'Inter')),
         actions: [
@@ -488,7 +488,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: const Color(0xFFBBBBBB),
                     fontFamily: 'Inter')),
           ),
           TextButton(
@@ -542,7 +542,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'This will permanently delete your account, all your vehicles, scan history, and bookings. This cannot be undone.',
                 style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
+                    color: const Color(0xFFBBBBBB),
                     height: 1.5,
                     fontFamily: 'Inter'),
               ),
@@ -589,7 +589,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: const Color(0xFFBBBBBB),
                       fontFamily: 'Inter')),
             ),
             TextButton(
@@ -796,7 +796,7 @@ class _NavRow extends StatelessWidget {
                     Text(subtitle!,
                         style: const TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: const Color(0xFFBBBBBB),
                             fontFamily: 'Inter')),
                   ],
                 ],
@@ -908,5 +908,6 @@ class _SheetFieldState extends State<_SheetField> {
     );
   }
 }
+
 
 

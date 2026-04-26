@@ -233,7 +233,7 @@ class VehicleDetailScreen extends ConsumerWidget {
               Text(label,
                   style: const TextStyle(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: const Color(0xFFBBBBBB),
                       fontFamily: 'Inter')),
               const Spacer(),
               Text(value,
@@ -306,7 +306,7 @@ class VehicleDetailScreen extends ConsumerWidget {
           'Are you sure you want to delete $vehicleName? All scan history for this vehicle will also be removed. This cannot be undone.',
           style: const TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: const Color(0xFFBBBBBB),
               height: 1.5,
               fontFamily: 'Inter'),
         ),
@@ -317,7 +317,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                 style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: const Color(0xFFBBBBBB),
                     fontFamily: 'Inter')),
           ),
           TextButton(
@@ -350,3 +350,4 @@ class VehicleDetailScreen extends ConsumerWidget {
     return months[m];
   }
 }
+
