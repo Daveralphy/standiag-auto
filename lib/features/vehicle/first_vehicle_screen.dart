@@ -3,8 +3,31 @@ import '../../core/theme/app_colors.dart';
 import 'add_vehicle_screen.dart';
 import '../navigation/main_navigation.dart';
 
-class FirstVehicleScreen extends StatelessWidget {
+class FirstVehicleScreen extends StatefulWidget {
   const FirstVehicleScreen({super.key});
+
+  @override
+  State<FirstVehicleScreen> createState() => _FirstVehicleScreenState();
+}
+
+class _FirstVehicleScreenState extends State<FirstVehicleScreen> {
+  bool _isNavigating = false;
+
+  void _navigateToHome(BuildContext context) {
+    if (_isNavigating) return;
+    setState(() => _isNavigating = true);
+    
+    // Small delay to allow UI to respond to tap
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted) return;
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => MainNavigation()),
+          (route) => false,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,16 +54,17 @@ class FirstVehicleScreen extends StatelessWidget {
               Center(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                        builder: (_) => MainNavigation()),
-                    (route) => false,
+                  onTap: _isNavigating ? null : () => _navigateToHome(context),
+                  child: Opacity(
+                    opacity: _isNavigating ? 0.5 : 1.0,
+                    child: Text("I'll add a vehicle later →",
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: _isNavigating 
+                              ? AppColors.textTertiary.withValues(alpha: 0.5)
+                              : AppColors.textTertiary,
+                            fontFamily: 'Inter')),
                   ),
-                  child: const Text("I'll add a vehicle later →",
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textTertiary,
-                          fontFamily: 'Inter')),
                 ),
               ),
               const SizedBox(height: 32),

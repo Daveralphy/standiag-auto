@@ -2,8 +2,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/providers/profile_provider.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/widgets/app_toast.dart';
 import '../auth/login_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -148,25 +150,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => Navigator.of(context).pop(),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: AppColors.textPrimary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          const Text('Settings',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Inter')),
-        ],
-      ),
+    return AppSecondaryHeader(
+      title: 'Settings',
+      onBack: () => Navigator.of(context).pop(),
     );
   }
 
@@ -322,7 +308,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showChangePassword(BuildContext context) {
     final newCtrl = TextEditingController();
     final confirmCtrl = TextEditingController();
-    String? error;
     bool saving = false;
 
     showModalBottomSheet(
@@ -330,12 +315,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(24))),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) => Padding(
-          padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
             child: Column(
@@ -354,28 +337,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 20),
                 const Text('Change Password',
                     style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        fontFamily: 'Inter')),
+                        fontSize: 18, fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary, fontFamily: 'Inter')),
                 const SizedBox(height: 24),
-                if (error != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.criticalBg,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: AppColors.criticalBorder),
-                    ),
-                    child: Text(error!,
-                        style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.primaryLight,
-                            fontFamily: 'Inter')),
-                  ),
-                  const SizedBox(height: 16),
-                ],
                 _SheetField(
                     label: 'NEW PASSWORD',
                     controller: newCtrl,
@@ -395,61 +359,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ? null
                         : () async {
                             if (newCtrl.text.length < 8) {
-                              setSheetState(() => error =
+                              AppToast.error(context,
                                   'Password must be at least 8 characters.');
                               return;
                             }
-                            if (newCtrl.text !=
-                                confirmCtrl.text) {
-                              setSheetState(() =>
-                                  error = 'Passwords do not match.');
+                            if (newCtrl.text != confirmCtrl.text) {
+                              AppToast.error(context, 'Passwords do not match.');
                               return;
                             }
-                            setSheetState(
-                                () => saving = true);
+                            setSheetState(() => saving = true);
                             try {
-                              await Supabase.instance.client
-                                  .auth
-                                  .updateUser(UserAttributes(
-                                      password:
-                                          newCtrl.text));
-                              if (ctx.mounted) {
-                                Navigator.of(ctx).pop();
+                              await Supabase.instance.client.auth
+                                  .updateUser(UserAttributes(password: newCtrl.text));
+                              if (ctx.mounted) Navigator.of(ctx).pop();
+                              if (context.mounted) {
+                                AppToast.success(context, 'Password updated successfully.');
                               }
                             } on AuthException catch (e) {
-                              setSheetState(() {
-                                error = e.message;
-                                saving = false;
-                              });
+                              setSheetState(() => saving = false);
+                              if (context.mounted) AppToast.error(context, e.message);
                             } catch (_) {
-                              setSheetState(() {
-                                error =
-                                    'Something went wrong.';
-                                saving = false;
-                              });
+                              setSheetState(() => saving = false);
+                              if (context.mounted) {
+                                AppToast.error(context, 'Something went wrong.');
+                              }
                             }
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
                     child: saving
                         ? const SizedBox(
                             width: 20, height: 20,
-                            child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2))
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Text('Update Password',
                             style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                fontFamily: 'Inter')),
+                                fontSize: 15, fontWeight: FontWeight.w700,
+                                color: Colors.white, fontFamily: 'Inter')),
                   ),
                 ),
               ],
@@ -478,7 +428,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'Are you sure you want to sign out?',
             style: TextStyle(
                 fontSize: 14,
-                color: const Color(0xFFBBBBBB),
+                color: Color(0xFFBBBBBB),
                 height: 1.5,
                 fontFamily: 'Inter')),
         actions: [
@@ -488,7 +438,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFFBBBBBB),
+                    color: Color(0xFFBBBBBB),
                     fontFamily: 'Inter')),
           ),
           TextButton(
@@ -542,7 +492,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'This will permanently delete your account, all your vehicles, scan history, and bookings. This cannot be undone.',
                 style: TextStyle(
                     fontSize: 13,
-                    color: const Color(0xFFBBBBBB),
+                    color: Color(0xFFBBBBBB),
                     height: 1.5,
                     fontFamily: 'Inter'),
               ),
@@ -589,7 +539,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFBBBBBB),
+                      color: Color(0xFFBBBBBB),
                       fontFamily: 'Inter')),
             ),
             TextButton(
@@ -796,7 +746,7 @@ class _NavRow extends StatelessWidget {
                     Text(subtitle!,
                         style: const TextStyle(
                             fontSize: 12,
-                            color: const Color(0xFFBBBBBB),
+                            color: Color(0xFFBBBBBB),
                             fontFamily: 'Inter')),
                   ],
                 ],
@@ -908,6 +858,9 @@ class _SheetFieldState extends State<_SheetField> {
     );
   }
 }
+
+
+
 
 
 

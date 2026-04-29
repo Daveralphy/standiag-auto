@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/providers/vehicle_provider.dart';
 import 'mechanic_profile_screen.dart';
 
@@ -438,7 +439,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                     'Tell us your car and problem to find the right mechanic nearby.',
                     style: TextStyle(
                         fontSize: 13,
-                        color: const Color(0xFFBBBBBB),
+                        color: Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
                 const SizedBox(height: 24),
 
@@ -463,7 +464,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                         'No vehicles added. Add a vehicle first.',
                         style: TextStyle(
                             fontSize: 13,
-                            color: const Color(0xFFBBBBBB),
+                            color: Color(0xFFBBBBBB),
                             fontFamily: 'Inter')),
                   )
                 else
@@ -593,7 +594,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                           blurRadius: 16,
                           offset: const Offset(0, 6))],
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Text('FIND MECHANIC',
                           style: TextStyle(
                               fontSize: 15,
@@ -907,55 +908,23 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
       ],
     );
   }
-
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      child: Row(
-        children: [
-          const Text('Nearby Mechanics',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Inter')),
-          const Spacer(),
-          // Search icon only
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              setState(() => _showSearch = !_showSearch);
-              if (_showSearch) {
-                Future.delayed(const Duration(milliseconds: 100),
-                    () => _searchFocus.requestFocus());
-              } else {
-                _searchResults = [];
-                _searchController.clear();
-                _searchFocus.unfocus();
-              }
-            },
-            child: Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.surface.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
-                boxShadow: [BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 8)],
-              ),
-              child: Icon(
-                _showSearch
-                    ? Icons.close_rounded
-                    : Icons.search_rounded,
-                color: AppColors.textPrimary, size: 20),
-            ),
-          ),
-        ],
-      ),
+    return AppHeader(
+      title: 'Nearby Mechanics',
+      subtitle: 'Find help around you',
+      action: Icon(_showSearch ? Icons.close_rounded : Icons.search_rounded, color: AppColors.textPrimary, size: 20),
+      onActionTap: () {
+        setState(() => _showSearch = !_showSearch);
+        if (_showSearch) {
+          Future.delayed(const Duration(milliseconds: 100), () => _searchFocus.requestFocus());
+        } else {
+          _searchResults = [];
+          _searchController.clear();
+          _searchFocus.unfocus();
+        }
+      },
     );
   }
-
 
   Widget _buildMap() {
     final center = _userPosition != null
@@ -1081,7 +1050,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                 color: AppColors.primary, size: 22),
           ),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1095,7 +1064,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                 Text('Tap "Find Mechanic" to search nearby',
                     style: TextStyle(
                         fontSize: 12,
-                        color: const Color(0xFFBBBBBB),
+                        color: Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
               ],
             ),
@@ -1217,13 +1186,15 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                 const Icon(Icons.directions_car_outlined,
                     color: AppColors.textTertiary, size: 16),
                 const SizedBox(width: 8),
-                Text(
-                  '${_selectedVehicle!['make']} ${_selectedVehicle!['model']}  •  ${_problemController.text}',
-                  style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                      fontFamily: 'Inter'),
-                  overflow: TextOverflow.ellipsis,
+                Expanded(
+                  child: Text(
+                    '${_selectedVehicle!['make']} ${_selectedVehicle!['model']}  •  ${_problemController.text}',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Inter'),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ]),
             ),
@@ -1329,7 +1300,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                         Text(location,
                             style: const TextStyle(
                                 fontSize: 11,
-                                color: const Color(0xFFBBBBBB),
+                                color: Color(0xFFBBBBBB),
                                 fontFamily: 'Inter')),
                         Row(children: [
                           const Icon(Icons.star_rounded,
@@ -1363,7 +1334,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                     const Text('Quoted price:',
                         style: TextStyle(
                             fontSize: 12,
-                            color: const Color(0xFFBBBBBB),
+                            color: Color(0xFFBBBBBB),
                             fontFamily: 'Inter')),
                     const Spacer(),
                     Text(
@@ -1393,7 +1364,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                           border: Border.all(
                               color: AppColors.criticalBorder),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text('Decline',
                               style: TextStyle(
                                   fontSize: 13,
@@ -1421,7 +1392,7 @@ class _MechanicsScreenState extends ConsumerState<MechanicsScreen>
                                   .withValues(alpha: 0.35),
                               blurRadius: 10)],
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text('Accept',
                               style: TextStyle(
                                   fontSize: 13,
@@ -1481,6 +1452,12 @@ class _UserDotWidget extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
 
 
 

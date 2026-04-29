@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/providers/vehicle_provider.dart';
 import '../onboarding/obd_guide_screen.dart';
 import '../history/scan_history_screen.dart';
@@ -126,84 +127,73 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              _buildHeader(),
-              const SizedBox(height: 8),
-              activeVehicleAsync.when(
-                data: (v) => _buildVehiclePill(v != null
-                    ? '${v['make']} ${v['model']} ${v['year']}'
-                    : 'No vehicle — add one first'),
-                loading: () => _buildVehiclePill('Loading...'),
-                error: (_, __) =>
-                    _buildVehiclePill('No vehicle'),
+        bottom: false,
+        child: Column(
+          children: [
+            // ── Full-width Header ────────────────────────
+            activeVehicleAsync.when(
+              data: (v) => _buildHeader(v != null ? '${v['make']} ${v['model']} ${v['year']}' : ''),
+              loading: () => _buildHeader(''),
+              error: (_, __) => _buildHeader(''),
+            ),
+            // ── Scrollable Content ───────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    activeVehicleAsync.when(
+                      data: (v) => _buildVehiclePill(v != null
+                          ? '${v['make']} ${v['model']} ${v['year']}'
+                          : 'No vehicle — add one first'),
+                      loading: () => _buildVehiclePill('Loading...'),
+                      error: (_, __) =>
+                          _buildVehiclePill('No vehicle'),
+                    ),
+                    const SizedBox(height: 32),
+                    _buildGauge(),
+                    const SizedBox(height: 16),
+                    const Text('Ready to diagnose.',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            fontFamily: 'Inter')),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Plug in your OBD-II adapter, make sure\nBluetooth is on, then tap the gauge.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 15,
+                          color: Color(0xFFBBBBBB),
+                          height: 1.5,
+                          fontFamily: 'Inter'),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildStatusCards(),
+                    const SizedBox(height: 20),
+                    _buildHelperCard(),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
-              const SizedBox(height: 32),
-              _buildGauge(),
-              const SizedBox(height: 16),
-              const Text('Ready to diagnose.',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      fontFamily: 'Inter')),
-              const SizedBox(height: 6),
-              const Text(
-                'Plug in your OBD-II adapter, make sure\nBluetooth is on, then tap the gauge.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 15,
-                    color: const Color(0xFFBBBBBB),
-                    height: 1.5,
-                    fontFamily: 'Inter'),
-              ),
-              const SizedBox(height: 24),
-              _buildStatusCards(),
-              const SizedBox(height: 20),
-              _buildHelperCard(),
-              const SizedBox(height: 24),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        const Text('Diagnostic Scan',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                fontFamily: 'Inter')),
-        const Spacer(),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (_) => const ScanHistoryScreen()),
-          ),
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Icon(Icons.history_rounded,
-                color: AppColors.textSecondary, size: 20),
-          ),
-        ),
-      ],
+  Widget _buildHeader(String vehicleName) {
+    return AppHeader(
+      title: 'Ready to scan.',
+      subtitle: vehicleName.isNotEmpty ? vehicleName : 'No vehicle selected',
+      titleHasPrimary: true,
+      action: const Icon(Icons.history_rounded, color: AppColors.textPrimary, size: 20),
+      onActionTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScanHistoryScreen())),
     );
   }
-
   Widget _buildVehiclePill(String label) {
     return Container(
       padding:
@@ -216,7 +206,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
       child: Text(label,
           style: const TextStyle(
               fontSize: 12,
-              color: const Color(0xFFBBBBBB),
+              color: Color(0xFFBBBBBB),
               fontFamily: 'Inter')),
     );
   }
@@ -357,7 +347,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
                   'You need an ELM327 Bluetooth adapter. They cost under ₦5,000 and work on any car with an OBD-II port (most cars after 2000).',
                   style: TextStyle(
                       fontSize: 12,
-                      color: const Color(0xFFBBBBBB),
+                      color: Color(0xFFBBBBBB),
                       height: 1.5,
                       fontFamily: 'Inter'),
                 ),
@@ -530,7 +520,7 @@ class _StatusRow extends StatelessWidget {
                   Text(subtitle,
                       style: const TextStyle(
                           fontSize: 13,
-                          color: const Color(0xFFBBBBBB),
+                          color: Color(0xFFBBBBBB),
                           fontFamily: 'Inter')),
                 ],
               ),
@@ -551,6 +541,11 @@ class _StatusRow extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
 
 
 

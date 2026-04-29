@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_field.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/services/auth_service.dart';
 import 'account_type_screen.dart';
 import '../navigation/main_navigation.dart';
@@ -20,7 +21,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -34,34 +34,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _errorMessage = 'Please fill in all fields.');
+      AppToast.error(context, 'Please fill in all fields.');
       return;
     }
 
-    setState(() { _isLoading = true; _errorMessage = null; });
+    setState(() => _isLoading = true);
 
     try {
-      await AuthService().signIn(
-          emailOrUsername: email, password: password);
+      await AuthService().signIn(emailOrUsername: email, password: password);
 
       if (!mounted) return;
 
-      // Check account type and route accordingly
-      final userId =
-          Supabase.instance.client.auth.currentUser?.id;
+      final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId != null) {
         final profile = await Supabase.instance.client
             .from('profiles')
             .select('account_type')
             .eq('id', userId)
             .maybeSingle();
-        final accountType =
-            profile?['account_type'] ?? 'car_owner';
+        final accountType = profile?['account_type'] ?? 'car_owner';
         if (!mounted) return;
         if (accountType == 'mechanic') {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-                builder: (_) => const MechanicNavigation()),
+            MaterialPageRoute(builder: (_) => const MechanicNavigation()),
           );
         } else {
           Navigator.of(context).pushReplacement(
@@ -70,10 +65,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
       }
     } on AuthException catch (e) {
-      setState(() => _errorMessage = e.message);
-    } catch (e) {
-      setState(() =>
-          _errorMessage = 'Something went wrong. Please try again.');
+      if (mounted) AppToast.error(context, e.message);
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'Something went wrong. Please try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -86,13 +80,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Heading
                 const Text('Welcome back.',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.authHeading),
@@ -101,27 +93,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textAlign: TextAlign.center,
                     style: AppTextStyles.authSubheading),
                 const SizedBox(height: 36),
-
-                // Error
-                if (_errorMessage != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.criticalBg,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                          color: AppColors.criticalBorder),
-                    ),
-                    child: Text(_errorMessage!,
-                        style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.primaryLight,
-                            fontFamily: 'Inter')),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                // Fields
                 AppField(
                   label: 'Email or Username',
                   hint: 'Enter your email or username',
@@ -150,16 +121,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Sign In Button
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    disabledBackgroundColor:
-                        AppColors.primary.withValues(alpha: 0.5),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 16),
+                    disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                     elevation: 0,
@@ -169,38 +136,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           height: 20, width: 20,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
-                      : const Text('SIGN IN',
-                          style: AppTextStyles.buttonLabel),
+                      : const Text('SIGN IN', style: AppTextStyles.buttonLabel),
                 ),
                 const SizedBox(height: 24),
-
-                // Divider
                 Row(children: [
-                  const Expanded(
-                      child: Divider(
-                          color: Color(0xFF2A2A2E), height: 1)),
+                  const Expanded(child: Divider(color: Color(0xFF2A2A2E), height: 1)),
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text('or continue with',
-                        style: AppTextStyles.caption.copyWith(
-                            color: const Color(0xFF666666))),
+                        style: AppTextStyles.caption.copyWith(color: const Color(0xFF666666))),
                   ),
-                  const Expanded(
-                      child: Divider(
-                          color: Color(0xFF2A2A2E), height: 1)),
+                  const Expanded(child: Divider(color: Color(0xFF2A2A2E), height: 1)),
                 ]),
                 const SizedBox(height: 16),
-
-                // Google + Apple
                 Row(children: [
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () {},
                       child: Container(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 13),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         decoration: BoxDecoration(
                           color: const Color(0xFF4285F4),
                           borderRadius: BorderRadius.circular(10),
@@ -236,19 +191,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       behavior: HitTestBehavior.opaque,
                       onTap: () {},
                       child: Container(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 13),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         decoration: BoxDecoration(
                           color: Colors.black,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                              color: const Color(0xFF3A3A3A)),
+                          border: Border.all(color: const Color(0xFF3A3A3A)),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.apple,
-                                color: Colors.white, size: 20),
+                            Icon(Icons.apple, color: Colors.white, size: 20),
                             SizedBox(width: 8),
                             Text('Apple',
                                 style: TextStyle(
@@ -263,21 +215,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ]),
                 const SizedBox(height: 28),
-
-                // Register link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text("Don't have an account yet? ",
                         style: AppTextStyles.caption.copyWith(
-                            fontSize: 13,
-                            color: const Color(0xFF999999))),
+                            fontSize: 13, color: const Color(0xFF999999))),
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) =>
-                                const AccountTypeScreen()),
+                        MaterialPageRoute(builder: (_) => const AccountTypeScreen()),
                       ),
                       child: const Text('Create One',
                           style: TextStyle(
@@ -292,8 +239,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text(
                   'By signing in, you agree to our\nTerms of Service and Privacy Policy',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.caption.copyWith(
-                      color: const Color(0xFF666666), height: 1.4),
+                  style: AppTextStyles.caption
+                      .copyWith(color: const Color(0xFF666666), height: 1.4),
                 ),
               ],
             ),

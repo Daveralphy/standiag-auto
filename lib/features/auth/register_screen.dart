@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_field.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/providers/auth_provider.dart';
 import 'login_screen.dart';
 import 'register_screen_step2.dart';
@@ -12,14 +13,12 @@ class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  ConsumerState<RegisterScreen> createState() =>
-      _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -32,16 +31,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     if (firstName.isEmpty || lastName.isEmpty) {
-      setState(
-          () => _errorMessage = 'Please enter your full name.');
+      AppToast.error(context, 'Please enter your full name.');
       return;
     }
-    ref
-        .read(registrationProvider.notifier)
-        .setStep1(firstName, lastName);
+    ref.read(registrationProvider.notifier).setStep1(firstName, lastName);
     Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => const RegisterScreenStep2()),
+      MaterialPageRoute(builder: (_) => const RegisterScreenStep2()),
     );
   }
 
@@ -64,14 +59,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const SizedBox(height: 24),
               buildHeading("What's your", 'name?'),
               const SizedBox(height: 6),
-              const Text(
-                  "This is how you'll appear on your account.",
+              const Text("This is how you'll appear on your account.",
                   style: AppTextStyles.authSubheading),
               const SizedBox(height: 28),
-              if (_errorMessage != null) ...[
-                errorBanner(_errorMessage!),
-                const SizedBox(height: 16),
-              ],
               AppField(
                 label: 'First Name',
                 hint: 'Enter your first name',
@@ -84,10 +74,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 controller: _lastNameController,
               ),
               const SizedBox(height: 8),
-              const Text(
-                "Use the name on your official ID.",
-                style: AppTextStyles.caption,
-              ),
+              const Text('Use the name on your official ID.',
+                  style: AppTextStyles.caption),
               const SizedBox(height: 28),
               primaryButton('NEXT', _next),
             ],
@@ -97,5 +85,3 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 }
-
-

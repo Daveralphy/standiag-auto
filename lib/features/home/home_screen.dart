@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
+
 import '../../core/providers/profile_provider.dart';
 import '../../core/providers/vehicle_provider.dart';
 import '../history/scan_history_screen.dart';
@@ -41,25 +43,36 @@ class HomeScreenContent extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              // ── Header ──────────────────────────────────
-              profileAsync.when(
-                data: (profile) => _buildHeader(
-                  context,
-                  username: profile?['username'] ?? '',
-                ),
-                loading: () => _buildHeader(context, username: ''),
-                error: (_, __) => _buildHeader(context, username: ''),
-              ),
-              const SizedBox(height: 20),
-              // ── Vehicle Card ─────────────────────────────
-              activeVehicleAsync.when(
-                data: (vehicle) => vehicle != null
+        bottom: false,
+        child: Column(
+          children: [
+            // ── Full-width Header ────────────────────────
+            profileAsync.when(
+              data: (profile) {
+                final username = profile?['username'] ?? '';
+                final greeting = _greeting();
+                return AppHeader(
+                  title: username.isNotEmpty ? '$greeting, $username' : greeting,
+                  subtitle: _formattedDate(),
+                  titleHasPrimary: true,
+                  action: const NotifBell(),
+                  onActionTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+                );
+              },
+              loading: () => AppHeader(title: _greeting(), subtitle: _formattedDate()),
+              error: (_, __) => AppHeader(title: _greeting(), subtitle: _formattedDate()),
+            ),
+            // ── Scrollable Content ───────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    // ── Vehicle Card ─────────────────────────────
+                    activeVehicleAsync.when(
+                      data: (vehicle) => vehicle != null
                     ? _buildVehicleCard(vehicle)
                     : _buildNoVehicleCard(context),
                 loading: () => _buildVehicleCardSkeleton(),
@@ -86,88 +99,18 @@ class HomeScreenContent extends ConsumerWidget {
                 loading: () => _buildRecentScansSection(context, null),
                 error: (_, __) => _buildRecentScansSection(context, null),
               ),
-              const SizedBox(height: 24),
-            ],
-          ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, {required String username}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text.rich(
-              TextSpan(
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Inter',
-                ),
-                children: [
-                  TextSpan(text: '${_greeting()}, '),
-                  TextSpan(
-                    text: username.isNotEmpty ? '$username.' : 'there.',
-                    style: const TextStyle(color: AppColors.primary),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _formattedDate(),
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textTertiary,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ],
-        ),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (_) => const NotificationsScreen()),
-          ),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Stack(
-              children: [
-                const Center(
-                  child: Icon(Icons.notifications_outlined,
-                      color: AppColors.textSecondary, size: 20),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildVehicleCard(Map<String, dynamic> vehicle) {
     final make = vehicle['make'] ?? '';
@@ -297,7 +240,7 @@ class HomeScreenContent extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 12,
-                    color: const Color(0xFFBBBBBB),
+                    color: Color(0xFFBBBBBB),
                     height: 1.5,
                     fontFamily: 'Inter')),
             const SizedBox(height: 16),
@@ -390,7 +333,7 @@ class HomeScreenContent extends ConsumerWidget {
             // Switch to Scan tab (index 1) in MainNavigation
             mainNavKey.currentState?.switchToTab(1);
           },
-          child: const Column(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text('RUN A DIAGNOSTIC SCAN',
@@ -455,7 +398,7 @@ class HomeScreenContent extends ConsumerWidget {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Column(
+            child: Column(
               children: [
                 Icon(Icons.build_circle_outlined,
                     color: AppColors.textTertiary, size: 32),
@@ -465,7 +408,7 @@ class HomeScreenContent extends ConsumerWidget {
                     style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFBBBBBB),
+                        color: Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
                 SizedBox(height: 4),
                 Text(
@@ -489,7 +432,7 @@ class HomeScreenContent extends ConsumerWidget {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Column(
+            child: Column(
               children: [
                 Icon(Icons.build_circle_outlined,
                     color: AppColors.textTertiary, size: 32),
@@ -499,7 +442,7 @@ class HomeScreenContent extends ConsumerWidget {
                     style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFBBBBBB),
+                        color: Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
                 SizedBox(height: 4),
                 Text(
@@ -572,7 +515,7 @@ class HomeScreenContent extends ConsumerWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
           Icon(Icons.wifi_tethering_outlined,
               color: AppColors.textTertiary, size: 32),
@@ -582,7 +525,7 @@ class HomeScreenContent extends ConsumerWidget {
               style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFBBBBBB),
+                  color: Color(0xFFBBBBBB),
                   fontFamily: 'Inter')),
           SizedBox(height: 4),
           Text('Run your first diagnostic scan\nto see results here',
@@ -680,7 +623,7 @@ class HomeScreenContent extends ConsumerWidget {
                 Text('$dateStr  •  $codesStr',
                     style: const TextStyle(
                         fontSize: 13,
-                        color: const Color(0xFFBBBBBB),
+                        color: Color(0xFFBBBBBB),
                         fontFamily: 'Inter')),
               ],
             ),
@@ -775,6 +718,14 @@ class HomeScreen extends StatelessWidget {
     return const Scaffold(body: HomeScreenContent());
   }
 }
+
+
+
+
+
+
+
+
 
 
 

@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
 
 class ScanNoFaultsScreen extends StatefulWidget {
   const ScanNoFaultsScreen({super.key});
@@ -109,33 +110,19 @@ class _ScanNoFaultsScreenState extends State<ScanNoFaultsScreen>
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => Navigator.of(context).pop(),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: AppColors.textPrimary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          const Text('Diagnostic Scan',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary, fontFamily: 'Inter')),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.advisoryBg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.advisoryBorder),
-            ),
-            child: const Text('Scan complete',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-                    color: AppColors.advisory, fontFamily: 'Inter')),
-          ),
-        ],
+    return AppSecondaryHeader(
+      title: 'Diagnostic Scan',
+      onBack: () => Navigator.of(context).pop(),
+      action: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.advisoryBg,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.advisoryBorder),
+        ),
+        child: const Text('Scan complete',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
+                color: AppColors.advisory, fontFamily: 'Inter')),
       ),
     );
   }

@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_field.dart';
-import '../../core/services/auth_service.dart';
+import '../../core/widgets/app_toast.dart';
+import '../../core/widgets/screen_header.dart';
+
 import '../auth/login_screen.dart';
 
 class MechanicProfileScreen extends StatefulWidget {
@@ -35,42 +37,52 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
     final phCtrl = TextEditingController(text: _profile?['phone'] ?? '');
     final locCtrl = TextEditingController(text: _mechProfile?['location'] ?? '');
     final bioCtrl = TextEditingController(text: _mechProfile?['bio'] ?? '');
-    bool saving = false;
-    showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: AppColors.surface,
+    showModalBottomSheet(
+      context: context, isScrollControlled: true, backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => StatefulBuilder(builder: (ctx, set) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(24, 20, 24, 32), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
-          const SizedBox(height: 20),
-          const Text('Edit Profile', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontFamily: 'Inter')),
-          const SizedBox(height: 20),
-          AppField(label: 'First Name', hint: 'First name', controller: fCtrl),
-          const SizedBox(height: 12),
-          AppField(label: 'Last Name', hint: 'Last name', controller: lCtrl),
-          const SizedBox(height: 12),
-          AppField(label: 'Phone', hint: 'Phone number', controller: phCtrl, keyboardType: TextInputType.phone),
-          const SizedBox(height: 12),
-          AppField(label: 'Location', hint: 'e.g. Ikeja, Lagos', controller: locCtrl),
-          const SizedBox(height: 12),
-          AppField(label: 'Bio', hint: 'About you', controller: bioCtrl),
-          const SizedBox(height: 24),
-          GestureDetector(behavior: HitTestBehavior.opaque,
-            onTap: saving ? null : () async {
-              set(() => saving = true);
-              try {
-                final uid = Supabase.instance.client.auth.currentUser?.id;
-                await Supabase.instance.client.from('profiles').update({'first_name': fCtrl.text.trim(), 'last_name': lCtrl.text.trim(), 'phone': phCtrl.text.trim()}).eq('id', uid!);
-                await Supabase.instance.client.from('mechanic_profiles').update({'location': locCtrl.text.trim(), 'bio': bioCtrl.text.trim()}).eq('id', uid);
-                if (ctx.mounted) { Navigator.of(ctx).pop(); _loadData(); }
-              } catch (_) { set(() => saving = false); }
-            },
-            child: Container(width: double.infinity, height: 54,
-              decoration: BoxDecoration(gradient: AppColors.primaryGradient, borderRadius: BorderRadius.circular(12)),
-              child: Center(child: saving
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Text('Save Changes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'Inter'))))),
-        ])))));
+      builder: (ctx) => StatefulBuilder(builder: (ctx, set) {
+        bool saving = false;
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(24, 20, 24, 32), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 20),
+            const Text('Edit Profile', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontFamily: 'Inter')),
+            const SizedBox(height: 20),
+            AppField(label: 'First Name', hint: 'First name', controller: fCtrl),
+            const SizedBox(height: 12),
+            AppField(label: 'Last Name', hint: 'Last name', controller: lCtrl),
+            const SizedBox(height: 12),
+            AppField(label: 'Phone', hint: 'Phone number', controller: phCtrl, keyboardType: TextInputType.phone),
+            const SizedBox(height: 12),
+            AppField(label: 'Location', hint: 'e.g. Ikeja, Lagos', controller: locCtrl),
+            const SizedBox(height: 12),
+            AppField(label: 'Bio', hint: 'About you', controller: bioCtrl),
+            const SizedBox(height: 24),
+            StatefulBuilder(builder: (_, setSave) => GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: saving ? null : () async {
+                setSave(() => saving = true);
+                final nav = Navigator.of(ctx);
+                try {
+                  final uid = Supabase.instance.client.auth.currentUser?.id;
+                  await Supabase.instance.client.from('profiles').update({'first_name': fCtrl.text.trim(), 'last_name': lCtrl.text.trim(), 'phone': phCtrl.text.trim()}).eq('id', uid!);
+                  await Supabase.instance.client.from('mechanic_profiles').update({'location': locCtrl.text.trim(), 'bio': bioCtrl.text.trim()}).eq('id', uid);
+                  nav.pop();
+                  _loadData();
+                } catch (_) {
+                  setSave(() => saving = false);
+                  if (mounted) AppToast.error(context, 'Failed to save profile.');
+                }
+              },
+              child: Container(width: double.infinity, height: 54,
+                decoration: BoxDecoration(gradient: AppColors.primaryGradient, borderRadius: BorderRadius.circular(12)),
+                child: Center(child: saving
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Save Changes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'Inter')))))),
+          ])));
+      }),
+    );
   }
 
   void _signOut() {
@@ -83,8 +95,8 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
         TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter'))),
         TextButton(onPressed: () async {
           Navigator.of(ctx).pop();
-          await AuthService().signOut();
-          if (context.mounted) Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginScreen()), (r) => false);
+          final nav = Navigator.of(context);
+          if (context.mounted) { nav.pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginScreen()), (r) => false); }
         }, child: const Text('Sign Out', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontFamily: 'Inter'))),
       ],
     ));
@@ -102,16 +114,22 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
     final specs = List<String>.from(_mechProfile?['specialisations'] ?? []);
     final exp = (_mechProfile?['experience_years'] as num?)?.toInt() ?? 0;
     final verified = _mechProfile?['is_verified'] ?? false;
-    final ac = Color(int.parse('FF' + (_mechProfile?['avatar_color'] ?? 'C0272D'), radix: 16));
+    final avatarHex = _mechProfile?['avatar_color'] ?? 'C0272D';
+    final ac = Color(int.parse('FF$avatarHex', radix: 16));
     final initials = ((fn.isNotEmpty ? fn[0] : '') + (ln.isNotEmpty ? ln[0] : '')).toUpperCase();
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(child: _loading
-        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+        ? Center(child: CircularProgressIndicator(color: AppColors.primary))
         : RefreshIndicator(color: AppColors.primary, backgroundColor: AppColors.surface, onRefresh: _loadData,
           child: ListView(padding: const EdgeInsets.symmetric(horizontal: 20), children: [
             const SizedBox(height: 16),
-            const Text('Profile', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontFamily: 'Inter')),
+            ScreenHeader(
+              title: un.isNotEmpty ? '@$un' : 'Profile',
+              subtitle: 'Mechanic account',
+              actionIcon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary, size: 20),
+              onActionTap: () {},
+            ),
             const SizedBox(height: 20),
             Container(padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.primaryBorder)),
@@ -125,8 +143,8 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
                       child: const Icon(Icons.verified_rounded, color: Colors.white, size: 14))),
                 ]),
                 const SizedBox(height: 12),
-                Text(fn + ' ' + ln, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontFamily: 'Inter')),
-                Text('@' + un, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontFamily: 'Inter')),
+                Text(' ', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontFamily: 'Inter')),
+                Text('@$un', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontFamily: 'Inter')),
                 if (loc.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -139,7 +157,7 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
                 Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
                   _stat('Rating', rating.toStringAsFixed(1), Icons.star_rounded, AppColors.gold),
                   _stat('Jobs', jobs.toString(), Icons.build_rounded, AppColors.primary),
-                  _stat('Exp', exp.toString() + 'yr', Icons.workspace_premium_rounded, AppColors.moderate),
+                  _stat('Exp', '${exp}yr', Icons.workspace_premium_rounded, AppColors.moderate),
                 ]),
               ])),
             if (bio.isNotEmpty) ...[
@@ -199,3 +217,6 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
         ])));
   }
 }
+
+
+

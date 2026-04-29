@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_field.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/notification_service.dart';
@@ -15,17 +16,14 @@ class RegisterScreenStep4 extends ConsumerStatefulWidget {
   const RegisterScreenStep4({super.key});
 
   @override
-  ConsumerState<RegisterScreenStep4> createState() =>
-      _RegisterScreenStep4State();
+  ConsumerState<RegisterScreenStep4> createState() => _RegisterScreenStep4State();
 }
 
-class _RegisterScreenStep4State
-    extends ConsumerState<RegisterScreenStep4> {
+class _RegisterScreenStep4State extends ConsumerState<RegisterScreenStep4> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _isLoading = false;
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -41,35 +39,27 @@ class _RegisterScreenStep4State
     final confirm = _confirmController.text;
 
     if (username.isEmpty) {
-      setState(
-          () => _errorMessage = 'Please enter a username.');
+      AppToast.error(context, 'Please enter a username.');
       return;
     }
     if (username.length < 3) {
-      setState(() => _errorMessage =
-          'Username must be at least 3 characters.');
+      AppToast.error(context, 'Username must be at least 3 characters.');
       return;
     }
     if (password.isEmpty) {
-      setState(
-          () => _errorMessage = 'Please enter a password.');
+      AppToast.error(context, 'Please enter a password.');
       return;
     }
     if (password.length < 8) {
-      setState(() => _errorMessage =
-          'Password must be at least 8 characters.');
+      AppToast.error(context, 'Password must be at least 8 characters.');
       return;
     }
     if (password != confirm) {
-      setState(
-          () => _errorMessage = 'Passwords do not match.');
+      AppToast.error(context, 'Passwords do not match.');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final regData = ref.read(registrationProvider);
@@ -82,8 +72,7 @@ class _RegisterScreenStep4State
 
       final user = response.user;
       if (user == null) {
-        setState(() => _errorMessage =
-            'Account creation failed. Please try again.');
+        if (mounted) AppToast.error(context, 'Account creation failed. Please try again.');
         return;
       }
 
@@ -105,23 +94,20 @@ class _RegisterScreenStep4State
         age: regData.age,
       );
 
-      await NotificationService()
-          .createWelcomeNotification(user.id);
+      await NotificationService().createWelcomeNotification(user.id);
 
       ref.read(registrationProvider.notifier).reset();
 
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-              builder: (_) => const FirstVehicleScreen()),
+          MaterialPageRoute(builder: (_) => const FirstVehicleScreen()),
           (route) => false,
         );
       }
     } on AuthException catch (e) {
-      setState(() => _errorMessage = e.message);
-    } catch (e) {
-      setState(() => _errorMessage =
-          'Something went wrong. Please try again.');
+      if (mounted) AppToast.error(context, e.message);
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'Something went wrong. Please try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -133,8 +119,7 @@ class _RegisterScreenStep4State
       backgroundColor: AppColors.background,
       appBar: buildAppBar(context, () {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-              builder: (_) => const RegisterScreenStep3()),
+          MaterialPageRoute(builder: (_) => const RegisterScreenStep3()),
         );
       }),
       body: SafeArea(
@@ -147,14 +132,9 @@ class _RegisterScreenStep4State
               const SizedBox(height: 24),
               buildHeading('Secure your', 'account.'),
               const SizedBox(height: 6),
-              const Text(
-                  'Choose a username and a strong password.',
+              const Text('Choose a username and a strong password.',
                   style: AppTextStyles.authSubheading),
               const SizedBox(height: 28),
-              if (_errorMessage != null) ...[
-                errorBanner(_errorMessage!),
-                const SizedBox(height: 16),
-              ],
               AppField(
                 label: 'Username',
                 hint: 'Choose a username',
@@ -175,14 +155,10 @@ class _RegisterScreenStep4State
                 obscure: true,
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Password must be at least 8 characters.',
-                style: AppTextStyles.caption,
-              ),
+              const Text('Password must be at least 8 characters.',
+                  style: AppTextStyles.caption),
               const SizedBox(height: 32),
-              primaryButton(
-                  'CREATE MY ACCOUNT', _createAccount,
-                  isLoading: _isLoading),
+              primaryButton('CREATE MY ACCOUNT', _createAccount, isLoading: _isLoading),
               const SizedBox(height: 16),
               const Center(
                 child: Text(
@@ -198,4 +174,3 @@ class _RegisterScreenStep4State
     );
   }
 }
-

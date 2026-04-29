@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
 import 'booking_confirmed_screen.dart';
 
 class BookMechanicScreen extends StatefulWidget {
@@ -61,22 +62,9 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => Navigator.of(context).pop(),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: AppColors.textPrimary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          const Text('Book a Mechanic',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary, fontFamily: 'Inter')),
-        ],
-      ),
+    return AppSecondaryHeader(
+      title: 'Book a Mechanic',
+      onBack: () => Navigator.of(context).pop(),
     );
   }
 
@@ -401,9 +389,12 @@ class _BookMechanicScreenState extends State<BookMechanicScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              Text('Toyota Corolla 2016',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary, fontFamily: 'Inter')),
+              Flexible(
+                child: Text('Toyota Corolla 2016',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary, fontFamily: 'Inter')),
+              ),
               SizedBox(height: 4),
               Text('P0301  ·  P0420  ·  P0171',
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,

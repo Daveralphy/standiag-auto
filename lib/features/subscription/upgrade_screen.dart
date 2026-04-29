@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
 
 class UpgradeScreen extends StatefulWidget {
   const UpgradeScreen({super.key});
@@ -77,22 +78,9 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => Navigator.of(context).pop(),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: AppColors.textPrimary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          const Text('Upgrade to Pro',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary, fontFamily: 'Inter')),
-        ],
-      ),
+    return AppSecondaryHeader(
+      title: 'Upgrade to Pro',
+      onBack: () => Navigator.of(context).pop(),
     );
   }
 

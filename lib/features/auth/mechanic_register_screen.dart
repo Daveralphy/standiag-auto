@@ -423,12 +423,24 @@ class _MechanicRegStep4State extends State<MechanicRegStep4> {
         );
       } on AuthException catch (e) {
         // If user already exists in auth, try signing in
-        if (e.message.toLowerCase().contains('already registered') ||
-            e.message.toLowerCase().contains('already exists')) {
-          await authService.signIn(
-            emailOrUsername: widget.data.email,
-            password: widget.data.password,
-          );
+        final errorMsg = e.message.toLowerCase();
+        if (errorMsg.contains('already') || 
+            errorMsg.contains('registered') || 
+            errorMsg.contains('exists') ||
+            errorMsg.contains('user')) {
+          // Account already exists, just sign in
+          try {
+            await authService.signIn(
+              emailOrUsername: widget.data.email,
+              password: widget.data.password,
+            );
+            // Sign in successful, proceed
+          } catch (_) {
+            // If sign in fails, the account might exist with different password
+            setState(() => _error = 'This email is already registered. Please use your original password or contact support.');
+            if (mounted) setState(() => _loading = false);
+            return;
+          }
         } else {
           rethrow;
         }

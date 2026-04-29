@@ -10,15 +10,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="06772109-18d1-4a57-b825-587e04bad172" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/theme/app_theme.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/theme/app_theme.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/booking/book_mechanic_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/booking/book_mechanic_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/scan/scan_connecting_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/scan/scan_connecting_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/splash/splash_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/splash/splash_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/standiag_auto.iml" beforeDir="false" afterPath="$PROJECT_DIR$/standiag_auto.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/home/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/home_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/mechanic/mechanic_earnings_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/mechanic/mechanic_earnings_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/mechanic/mechanic_orders_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/mechanic/mechanic_orders_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/mechanic/mechanic_profile_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/mechanic/mechanic_profile_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/mechanics/mechanics_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/mechanics/mechanics_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/profile/profile_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/profile_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/scan/scan_idle_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/scan/scan_idle_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/settings/settings_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/settings/settings_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/vehicle/add_vehicle_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/vehicle/add_vehicle_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/vehicle/vehicle_detail_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/vehicle/vehicle_detail_screen.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,7 +77,9 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
+    "device.streaming.spark.single.device.do.not.ask": "true",
     "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
     "io.flutter.project.isFirstOpen": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/rapha/Documents/Projects/standiag-auto",

@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/providers/vehicle_provider.dart';
 
 class MaintenanceScreen extends ConsumerWidget {
@@ -40,44 +41,9 @@ class MaintenanceScreen extends ConsumerWidget {
 
   Widget _buildHeader(
       BuildContext context, Map<String, dynamic>? vehicle) {
-    final vehicleLabel = vehicle != null
-        ? '${vehicle['make']} ${vehicle['model']} ${vehicle['year']}'
-        : 'No vehicle selected';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => Navigator.of(context).pop(),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: AppColors.textPrimary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Maintenance',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        fontFamily: 'Inter')),
-                Text(
-                  '$vehicleLabel  •  Keep your car healthy',
-                  style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
-                      fontFamily: 'Inter'),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return AppSecondaryHeader(
+      title: 'Maintenance',
+      onBack: () => Navigator.of(context).pop(),
     );
   }
 

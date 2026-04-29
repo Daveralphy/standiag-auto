@@ -1,15 +1,19 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/design_system.dart';
+import '../../core/widgets/app_header.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/providers/profile_provider.dart';
 import '../../core/providers/vehicle_provider.dart';
 import '../../core/services/auth_service.dart';
 import '../notifications/notifications_screen.dart';
-import '../settings/settings_screen.dart';
 import '../subscription/upgrade_screen.dart';
 import '../vehicle/add_vehicle_screen.dart';
-import '../vehicle/vehicle_detail_screen.dart';
 import '../auth/login_screen.dart';
+import 'profile_detail_screen.dart';
+import 'account_management_screen.dart';
+import '../settings/settings_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -18,549 +22,380 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(profileProvider);
     final vehiclesAsync = ref.watch(userVehiclesProvider);
-    final scanCountAsync = ref.watch(scanCountProvider);
+    final activeVehicleAsync = ref.watch(activeVehicleProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              _buildHeader(context),
-              const SizedBox(height: 24),
-              profileAsync.when(
-                data: (profile) => _buildAvatar(profile),
-                loading: () => _buildAvatarSkeleton(),
-                error: (_, __) => _buildAvatar(null),
+        bottom: false,
+        child: Column(
+          children: [
+            // ── Full-width Header ────────────────────────
+            AppHeader(
+              title: 'My Profile',
+              subtitle: _formattedDate(),
+              action: const NotifBell(),
+              onActionTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
               ),
-              const SizedBox(height: 20),
-_buildProCard(context),
-              const SizedBox(height: 24),
-              vehiclesAsync.when(
-                data: (vehicles) =>
-                    _buildVehiclesSection(context, ref, vehicles),
-                loading: () =>
-                    _buildVehiclesSection(context, ref, null),
-                error: (_, __) =>
-                    _buildVehiclesSection(context, ref, []),
+            ),
+            // ── Scrollable Content ───────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+
+                    // ── Profile Summary Card ──────────────────────
+                    profileAsync.when(
+                      data: (profile) => _buildSummaryCard(context, profile, activeVehicleAsync),
+                      loading: () => _buildSummarySkeleton(),
+                      error: (_, __) => _buildSummaryCard(context, null, activeVehicleAsync),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // ── Menu List ─────────────────────────────────
+                    _buildMenuSection(context, ref, vehiclesAsync),
+                    const SizedBox(height: 32),
+
+                    // ── Logout Button ─────────────────────────────
+                    _buildLogoutButton(context, ref),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
-              const SizedBox(height: 24),
-              _buildAccountSection(
-                context,
-                ref,
-                scanCount: scanCountAsync.value ?? 0,
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text('My Profile',
-            style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                fontFamily: 'Inter')),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SettingsScreen())),
-          child: Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Icon(Icons.settings_outlined,
-                color: AppColors.textSecondary, size: 20),
-          ),
-        ),
-      ],
-    );
+  String _formattedDate() {
+    final now = DateTime.now();
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+    return '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]} ${now.year}';
   }
 
-  Widget _buildAvatar(Map<String, dynamic>? profile) {
-    final firstName = profile?['first_name'] ?? '';
-    final lastName = profile?['last_name'] ?? '';
-    final username = profile?['username'] ?? '';
-    final createdAt = profile?['created_at'] != null
-        ? DateTime.parse(profile!['created_at'])
-        : null;
+  String _initials(String firstName, String lastName) {
+    final f = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
+    final l = lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
+    final result = '$f$l';
+    return result.isNotEmpty ? result : 'SD';
+  }
 
+  Widget _buildSummaryCard(
+    BuildContext context,
+    Map<String, dynamic>? profile,
+    AsyncValue<Map<String, dynamic>?> activeVehicleAsync,
+  ) {
+    final firstName = profile?['first_name'] as String? ?? '';
+    final lastName = profile?['last_name'] as String? ?? '';
+    final username = profile?['username'] as String? ?? '';
+    final fullName = '$firstName $lastName'.trim();
     final initials = _initials(firstName, lastName);
-    final joinStr = createdAt != null
-        ? 'Member since ${_monthName(createdAt.month)} ${createdAt.year}'
-        : 'Member since recently';
-    final fullName = firstName.isNotEmpty || lastName.isNotEmpty
-        ? '$firstName $lastName'.trim()
-        : 'StanDiag User';
 
-    return Center(
-      child: Column(
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.lgAll,
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.sm,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Avatar - increased size
           Container(
-            width: 80, height: 80,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
               color: AppColors.vehicleCard,
               shape: BoxShape.circle,
-              border: Border.all(
-                  color: AppColors.primaryBorder, width: 2),
+              border: Border.all(color: AppColors.primaryBorder, width: 2),
             ),
             child: Center(
-              child: Text(initials,
-                  style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                      fontFamily: 'Inter')),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(fullName,
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Inter')),
-          const SizedBox(height: 4),
-          if (username.isNotEmpty)
-            Text('@$username',
+              child: Text(
+                initials,
                 style: const TextStyle(
-                    fontSize: 15,
-                    color: const Color(0xFFBBBBBB),
-                    fontFamily: 'Inter')),
-          const SizedBox(height: 4),
-          Text(joinStr,
-              style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textTertiary,
-                  fontFamily: 'Inter')),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAvatarSkeleton() {
-    return Center(
-      child: Column(
-        children: [
-          Container(
-            width: 80, height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                  fontFamily: 'Inter',
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-              width: 140, height: 18,
-              decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(4))),
-          const SizedBox(height: 8),
-          Container(
-              width: 80, height: 13,
-              decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(4))),
+          const SizedBox(width: 16),
+          // Text info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  fullName.isNotEmpty ? fullName : 'StanDiag User',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    fontFamily: 'Inter',
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (username.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '@$username',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 2),
+                activeVehicleAsync.when(
+                  data: (v) => Text(
+                    v != null
+                        ? '${v['make']} ${v['model']} ${v['year']}'
+                        : 'No vehicle added',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: v != null ? AppColors.primary : AppColors.textTertiary,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary, size: 18),
         ],
       ),
     );
   }
 
-
-  Widget _buildProCard(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const UpgradeScreen())),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.vehicleCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primaryBorder),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.workspace_premium_rounded,
-                color: AppColors.primary, size: 22),
-            const SizedBox(width: 10),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Upgrade to StanDiag Pro',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                          fontFamily: 'Inter')),
-                  SizedBox(height: 4),
-                  Wrap(spacing: 6, children: [
-                    _ProChip(label: 'Unlimited scans'),
-                    _ProChip(label: 'Full AI reports'),
-                  ]),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text('Upgrade →',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      fontFamily: 'Inter')),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVehiclesSection(BuildContext context, WidgetRef ref,
-      List<Map<String, dynamic>>? vehicles) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('MY VEHICLES',
-                style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textTertiary,
-                    letterSpacing: 1.5,
-                    fontFamily: 'Inter')),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => Navigator.of(context)
-                  .push(MaterialPageRoute(
-                      builder: (_) => const AddVehicleScreen()))
-                  .then((_) {
-                ref.invalidate(userVehiclesProvider);
-                ref.invalidate(activeVehicleProvider);
-              }),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primarySubtle,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.primaryBorder),
-                ),
-                child: const Text('+ Add',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                        fontFamily: 'Inter')),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        if (vehicles == null)
-          Column(children: [
-            _skeleton(), const SizedBox(height: 8), _skeleton(),
-          ])
-        else if (vehicles.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Center(
-              child: Text('No vehicles added yet.',
-                  style: TextStyle(
-                      fontSize: 15,
-                      color: const Color(0xFFBBBBBB),
-                      fontFamily: 'Inter')),
-            ),
-          )
-        else
-          ...vehicles.asMap().entries.map((e) {
-            final v = e.value;
-            final isLast = e.key == vehicles.length - 1;
-            return Column(children: [
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => Navigator.of(context)
-                    .push(MaterialPageRoute(
-                        builder: (_) =>
-                            VehicleDetailScreen(vehicle: v)))
-                    .then((_) {
-                  ref.invalidate(userVehiclesProvider);
-                  ref.invalidate(activeVehicleProvider);
-                }),
-                child: _VehicleRow(
-                  name:
-                      '${v['make']} ${v['model']}  •  ${v['year']}',
-                  detail:
-                      '${v['engine_type']}${v['nickname'] != null ? '  •  ${v['nickname']}' : ''}',
-                  isActive: v['is_active'] == true,
-                ),
-              ),
-              if (!isLast) const SizedBox(height: 8),
-            ]);
-          }),
-      ],
-    );
-  }
-
-  Widget _skeleton() {
+  Widget _buildSummarySkeleton() {
     return Container(
-      height: 64,
+      height: 84,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.lgAll,
         border: Border.all(color: AppColors.border),
       ),
     );
   }
 
-  Widget _buildAccountSection(BuildContext context, WidgetRef ref,
-      {required int scanCount}) {
+  Widget _buildMenuSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<Map<String, dynamic>>> vehiclesAsync,
+  ) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('ACCOUNT SETTINGS',
-            style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textTertiary,
-                letterSpacing: 1.5,
-                fontFamily: 'Inter')),
-        const SizedBox(height: 10),
-        _SettingsRow(
-          icon: Icons.notifications_outlined,
-          label: 'Notifications',
-          trailing: '',
+        _MenuItem(
+          icon: Icons.person_outline_rounded,
+          label: 'Profile',
           onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (_) => const NotificationsScreen())),
+            MaterialPageRoute(builder: (_) => const ProfileDetailScreen()),
+          ),
         ),
         const SizedBox(height: 8),
-        _SettingsRow(
-          icon: Icons.logout_rounded,
-          label: 'Sign Out',
-          trailing: '',
-          isDestructive: true,
-          onTap: () async {
-            await AuthService().signOut();
-            if (context.mounted) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                    builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
-            }
-          },
+        _MenuItem(
+          icon: Icons.directions_car_outlined,
+          label: 'Vehicles',
+          onTap: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const AddVehicleScreen()))
+              .then((_) {
+            ref.invalidate(userVehiclesProvider);
+            ref.invalidate(activeVehicleProvider);
+          }),
+        ),
+        const SizedBox(height: 8),
+        _MenuItem(
+          icon: Icons.workspace_premium_outlined,
+          label: 'Subscription',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const UpgradeScreen()),
+          ),
+        ),
+        const SizedBox(height: 8),
+        _MenuItem(
+          icon: Icons.notifications_outlined,
+          label: 'Notifications',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+          ),
+        ),
+        const SizedBox(height: 8),
+        _MenuItem(
+          icon: Icons.settings_outlined,
+          label: 'Settings',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+          ),
+        ),
+        const SizedBox(height: 8),
+        _MenuItem(
+          icon: Icons.shield_outlined,
+          label: 'Account Management',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AccountManagementScreen()),
+          ),
         ),
       ],
     );
   }
 
-  String _initials(String firstName, String lastName) {
-    final f =
-        firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
-    final l =
-        lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
-    return '$f$l'.isNotEmpty ? '$f$l' : 'SD';
-  }
-
-  String _monthName(int month) {
-    const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November',
-      'December'
-    ];
-    return months[month];
-  }
-}
-
-// ── SUPPORTING WIDGETS ────────────────────────────────────────
-
-class _ProChip extends StatelessWidget {
-  final String label;
-  const _ProChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.primarySubtle,
-        borderRadius: BorderRadius.circular(100),
+  Widget _buildLogoutButton(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _confirmSignOut(context, ref),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: AppColors.criticalBg,
+          borderRadius: AppRadius.lgAll,
+          border: Border.all(color: AppColors.criticalBorder),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout_rounded, color: AppColors.primary, size: 18),
+            SizedBox(width: 8),
+            Text(
+              'Sign Out',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Text(label,
-          style: const TextStyle(
-              fontSize: 10,
-              color: AppColors.primary,
-              fontFamily: 'Inter')),
     );
   }
-}
 
-class _VehicleRow extends StatelessWidget {
-  final String name, detail;
-  final bool isActive;
-
-  const _VehicleRow({
-    required this.name,
-    required this.detail,
-    required this.isActive,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: isActive
-                ? AppColors.primaryBorder
-                : AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.directions_car_outlined,
-              color: AppColors.textSecondary, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name,
-                    style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        fontFamily: 'Inter')),
-                const SizedBox(height: 3),
-                Text(detail,
-                    style: const TextStyle(
-                        fontSize: 13,
-                        color: const Color(0xFFBBBBBB),
-                        fontFamily: 'Inter')),
-              ],
+  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
+        title: const Text(
+          'Sign Out',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            fontFamily: 'Inter',
+          ),
+        ),
+        content: const Text(
+          'Are you sure you want to sign out?',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+            fontFamily: 'Inter',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter'),
             ),
           ),
-          if (isActive)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.advisoryBg,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.advisoryBorder),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text(
+              'Sign Out',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Inter',
               ),
-              child: const Text('ACTIVE',
-                  style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.advisory,
-                      letterSpacing: 0.5,
-                      fontFamily: 'Inter')),
-            )
-          else
-            const Icon(Icons.chevron_right_rounded,
-                color: AppColors.textTertiary, size: 18),
+            ),
+          ),
         ],
       ),
     );
+
+    if (confirmed != true) return;
+    try {
+      await AuthService().signOut();
+      if (!context.mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      AppToast.error(context, 'Failed to sign out. Please try again.');
+    }
   }
 }
 
-class _SettingsRow extends StatelessWidget {
+// ── MENU ITEM ─────────────────────────────────────────────────
+class _MenuItem extends StatelessWidget {
   final IconData icon;
-  final String label, trailing;
+  final String label;
   final VoidCallback onTap;
-  final bool isDestructive;
 
-  const _SettingsRow({
+  const _MenuItem({
     required this.icon,
     required this.label,
-    required this.trailing,
     required this.onTap,
-    this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isDestructive ? AppColors.primary : AppColors.textPrimary;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 14, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-              color: isDestructive
-                  ? AppColors.primaryBorder
-                  : AppColors.border),
+          borderRadius: AppRadius.lgAll,
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 12),
+            Icon(icon, color: AppColors.textSecondary, size: 20),
+            const SizedBox(width: 14),
             Expanded(
-              child: Text(label,
-                  style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                      fontFamily: 'Inter')),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Inter',
+                ),
+              ),
             ),
-            if (trailing.isNotEmpty)
-              Text(trailing,
-                  style: const TextStyle(
-                      fontSize: 12,
-                      color: const Color(0xFFBBBBBB),
-                      fontFamily: 'Inter')),
-            const SizedBox(width: 6),
-            if (!isDestructive)
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.textTertiary, size: 18),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary, size: 18),
           ],
         ),
       ),
     );
   }
 }
-
-
-
-
-
-
-
-

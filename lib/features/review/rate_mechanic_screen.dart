@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
 
 class RateMechanicScreen extends StatefulWidget {
   const RateMechanicScreen({super.key});
@@ -77,22 +78,9 @@ class _RateMechanicScreenState extends State<RateMechanicScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => Navigator.of(context).pop(),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: AppColors.textPrimary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          const Text('Rate Your Experience',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary, fontFamily: 'Inter')),
-        ],
-      ),
+    return AppSecondaryHeader(
+      title: 'Rate Your Experience',
+      onBack: () => Navigator.of(context).pop(),
     );
   }
 

@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_toast.dart';
+import '../../core/widgets/screen_header.dart';
 
 class MechanicEarningsScreen extends StatefulWidget {
   const MechanicEarningsScreen({super.key});
@@ -34,7 +36,7 @@ class _MechanicEarningsScreenState extends State<MechanicEarningsScreen> {
     final numCtrl = TextEditingController();
     final nameCtrl = TextEditingController();
     final amtCtrl = TextEditingController();
-    bool loading = false; String? error;
+    bool loading = false;
 
     showModalBottomSheet(
       context: context, isScrollControlled: true, backgroundColor: AppColors.surface,
@@ -54,12 +56,6 @@ class _MechanicEarningsScreenState extends State<MechanicEarningsScreen> {
               decoration: BoxDecoration(color: AppColors.moderateBg, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.moderateBorder)),
               child: const Text('A 5% transaction fee applies to all withdrawals.', style: TextStyle(fontSize: 12, color: AppColors.moderate, fontFamily: 'Inter'))),
             const SizedBox(height: 16),
-            if (error != null) ...[
-              Container(padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.criticalBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.criticalBorder)),
-                child: Text(error!, style: const TextStyle(fontSize: 13, color: AppColors.primaryLight, fontFamily: 'Inter'))),
-              const SizedBox(height: 12),
-            ],
             _field('AMOUNT (₦)', 'Enter amount', amtCtrl, TextInputType.number),
             const SizedBox(height: 12),
             _field('BANK NAME', 'e.g. GTBank, First Bank', bankCtrl),
@@ -86,9 +82,15 @@ class _MechanicEarningsScreenState extends State<MechanicEarningsScreen> {
               behavior: HitTestBehavior.opaque,
               onTap: loading ? null : () async {
                 final gross = double.tryParse(amtCtrl.text.trim());
-                if (gross == null || gross <= 0) { set(() => error = 'Enter a valid amount.'); return; }
-                if (gross > balance) { set(() => error = 'Exceeds available balance.'); return; }
-                if (bankCtrl.text.isEmpty || numCtrl.text.isEmpty || nameCtrl.text.isEmpty) { set(() => error = 'Fill in all bank details.'); return; }
+                if (gross == null || gross <= 0) {
+                  AppToast.error(context, 'Enter a valid amount.'); return;
+                }
+                if (gross > balance) {
+                  AppToast.error(context, 'Exceeds available balance.'); return;
+                }
+                if (bankCtrl.text.isEmpty || numCtrl.text.isEmpty || nameCtrl.text.isEmpty) {
+                  AppToast.error(context, 'Fill in all bank details.'); return;
+                }
                 set(() => loading = true);
                 try {
                   final userId = Supabase.instance.client.auth.currentUser?.id;
@@ -99,14 +101,17 @@ class _MechanicEarningsScreenState extends State<MechanicEarningsScreen> {
                     'account_number': numCtrl.text.trim(), 'account_name': nameCtrl.text.trim(), 'status': 'pending',
                   });
                   if (ctx.mounted) { Navigator.of(ctx).pop(); _loadData(); }
-                } catch (_) { set(() { error = 'Something went wrong.'; loading = false; }); }
+                } catch (_) {
+                  set(() => loading = false);
+                  if (mounted) AppToast.error(context,'Something went wrong.');
+                }
               },
               child: Container(width: double.infinity, height: 54,
                 decoration: BoxDecoration(gradient: AppColors.primaryGradient, borderRadius: BorderRadius.circular(12)),
                 child: Center(child: loading
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Text('REQUEST WITHDRAWAL', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white, fontFamily: 'Inter')))),
-          ),
+            ),
           ]),
         ),
       )),
@@ -145,7 +150,10 @@ class _MechanicEarningsScreenState extends State<MechanicEarningsScreen> {
         : RefreshIndicator(color: AppColors.primary, backgroundColor: AppColors.surface, onRefresh: _loadData,
           child: ListView(padding: const EdgeInsets.symmetric(horizontal: 20), children: [
             const SizedBox(height: 16),
-            const Text('Earnings', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontFamily: 'Inter')),
+            const ScreenHeader(
+              title: 'Earnings',
+              subtitle: 'Your wallet \u0026 payouts',
+            ),
             const SizedBox(height: 16),
             Container(padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -216,3 +224,4 @@ class _MechanicEarningsScreenState extends State<MechanicEarningsScreen> {
     );
   }
 }
+
