@@ -7,9 +7,8 @@ import '../../core/widgets/app_toast.dart';
 import '../../core/providers/profile_provider.dart';
 import '../../core/providers/vehicle_provider.dart';
 import '../../core/services/auth_service.dart';
-import '../notifications/notifications_screen.dart';
 import '../subscription/upgrade_screen.dart';
-import '../vehicle/add_vehicle_screen.dart';
+import '../vehicle/vehicle_list_screen.dart';
 import '../auth/login_screen.dart';
 import 'profile_detail_screen.dart';
 import 'account_management_screen.dart';
@@ -34,10 +33,7 @@ class ProfileScreen extends ConsumerWidget {
             AppHeader(
               title: 'My Profile',
               subtitle: _formattedDate(),
-              action: const NotifBell(),
-              onActionTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-              ),
+              action: _TierBadge(tier: 'bronze'),
             ),
             // ── Scrollable Content ───────────────────────
             Expanded(
@@ -54,9 +50,9 @@ class ProfileScreen extends ConsumerWidget {
                       loading: () => _buildSummarySkeleton(),
                       error: (_, __) => _buildSummaryCard(context, null, activeVehicleAsync),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
 
-                    // ── Menu List ─────────────────────────────────
+                    // ── Menu Sections ─────────────────────────────
                     _buildMenuSection(context, ref, vehiclesAsync),
                     const SizedBox(height: 32),
 
@@ -100,7 +96,7 @@ class ProfileScreen extends ConsumerWidget {
     final initials = _initials(firstName, lastName);
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.lgAll,
@@ -108,12 +104,12 @@ class ProfileScreen extends ConsumerWidget {
         boxShadow: AppShadows.sm,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Avatar - increased size
+          // Avatar - matches height of 3 lines
           Container(
-            width: 72,
-            height: 72,
+            width: 90,
+            height: 90,
             decoration: BoxDecoration(
               color: AppColors.vehicleCard,
               shape: BoxShape.circle,
@@ -123,7 +119,7 @@ class ProfileScreen extends ConsumerWidget {
               child: Text(
                 initials,
                 style: const TextStyle(
-                  fontSize: 22,
+                  fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppColors.primary,
                   fontFamily: 'Inter',
@@ -132,12 +128,13 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 16),
-          // Text info
+          // Text info - 3 lines
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Line 1: Name
                 Text(
                   fullName.isNotEmpty ? fullName : 'StanDiag User',
                   style: const TextStyle(
@@ -149,40 +146,46 @@ class ProfileScreen extends ConsumerWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (username.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    '@$username',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      fontFamily: 'Inter',
-                    ),
+                const SizedBox(height: 8),
+                // Line 2: Username
+                Text(
+                  username.isNotEmpty ? '@$username' : '@user',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    fontFamily: 'Inter',
                   ),
-                ],
-                const SizedBox(height: 2),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                // Line 3: Active Vehicle
                 activeVehicleAsync.when(
                   data: (v) => Text(
                     v != null
-                        ? '${v['make']} ${v['model']} ${v['year']}'
+                        ? '${v['make']} ${v['model']} • ${v['year']}'
                         : 'No vehicle added',
                     style: TextStyle(
                       fontSize: 13,
+                      fontWeight: FontWeight.w600,
                       color: v != null ? AppColors.primary : AppColors.textTertiary,
                       fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
+                  loading: () => const SizedBox(
+                    height: 13,
+                    child: SizedBox.shrink(),
+                  ),
+                  error: (_, __) => const SizedBox(
+                    height: 13,
+                    child: SizedBox.shrink(),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary, size: 18),
         ],
       ),
     );
@@ -206,57 +209,82 @@ class ProfileScreen extends ConsumerWidget {
   ) {
     return Column(
       children: [
+        // ── ACCOUNT & SECURITY ───────────────────────
+        _buildSectionTitle('ACCOUNT & SECURITY'),
+        const SizedBox(height: 12),
         _MenuItem(
           icon: Icons.person_outline_rounded,
-          label: 'Profile',
+          label: 'Edit Profile',
+          subtitle: 'Personal information',
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const ProfileDetailScreen()),
           ),
         ),
         const SizedBox(height: 8),
         _MenuItem(
+          icon: Icons.lock_outline_rounded,
+          label: 'Password & Security',
+          subtitle: 'Change password and login settings',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AccountManagementScreen()),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // ── MY VEHICLES ──────────────────────────────
+        _buildSectionTitle('MY VEHICLES'),
+        const SizedBox(height: 12),
+        _MenuItem(
           icon: Icons.directions_car_outlined,
           label: 'Vehicles',
+          subtitle: 'Manage your vehicles',
           onTap: () => Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => const AddVehicleScreen()))
+              .push(MaterialPageRoute(builder: (_) => const VehicleListScreen()))
               .then((_) {
             ref.invalidate(userVehiclesProvider);
             ref.invalidate(activeVehicleProvider);
           }),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 24),
+
+        // ── PREFERENCES ──────────────────────────────
+        _buildSectionTitle('PREFERENCES'),
+        const SizedBox(height: 12),
         _MenuItem(
           icon: Icons.workspace_premium_outlined,
           label: 'Subscription',
+          subtitle: 'Upgrade your plan',
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const UpgradeScreen()),
           ),
         ),
         const SizedBox(height: 8),
         _MenuItem(
-          icon: Icons.notifications_outlined,
-          label: 'Notifications',
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-          ),
-        ),
-        const SizedBox(height: 8),
-        _MenuItem(
           icon: Icons.settings_outlined,
           label: 'Settings',
+          subtitle: 'App preferences',
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const SettingsScreen()),
           ),
         ),
-        const SizedBox(height: 8),
-        _MenuItem(
-          icon: Icons.shield_outlined,
-          label: 'Account Management',
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AccountManagementScreen()),
-          ),
-        ),
       ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return SizedBox(
+      width: double.infinity,
+      child: Text(
+        title,
+        textAlign: TextAlign.left,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textTertiary,
+          letterSpacing: 1.5,
+          fontFamily: 'Inter',
+        ),
+      ),
     );
   }
 
@@ -357,11 +385,13 @@ class ProfileScreen extends ConsumerWidget {
 class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String? subtitle;
   final VoidCallback onTap;
 
   const _MenuItem({
     required this.icon,
     required this.label,
+    this.subtitle,
     required this.onTap,
   });
 
@@ -382,18 +412,75 @@ class _MenuItem extends StatelessWidget {
             Icon(icon, color: AppColors.textSecondary, size: 20),
             const SizedBox(width: 14),
             Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Inter',
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textTertiary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ]
+                ],
               ),
             ),
             const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary, size: 18),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── TIER BADGE ────────────────────────────────────────────────
+class _TierBadge extends StatelessWidget {
+  final String tier; // 'bronze', 'silver', 'gold'
+
+  const _TierBadge({required this.tier});
+
+  Color _getTierColor() {
+    switch (tier.toLowerCase()) {
+      case 'gold':
+        return const Color(0xFFFFD700);
+      case 'silver':
+        return const Color(0xFFC0C0C0);
+      case 'bronze':
+      default:
+        return const Color(0xFFCD7F32);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _getTierColor();
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.shield_rounded,
+          color: color,
+          size: 22,
         ),
       ),
     );

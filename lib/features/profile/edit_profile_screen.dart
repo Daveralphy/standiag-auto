@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/design_system.dart';
 import '../../core/widgets/app_header.dart';
@@ -21,6 +23,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _phoneCtrl = TextEditingController();
   bool _loaded = false;
   bool _saving = false;
+  File? _selectedImage;
+  final _imagePicker = ImagePicker();
 
   @override
   void dispose() {
@@ -38,6 +42,54 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _loaded = true;
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 500,
+        maxHeight: 500,
+      );
+      if (image != null && mounted) {
+        setState(() => _selectedImage = File(image.path));
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.error(context, 'Failed to pick image. Please try again.');
+      }
+    }
+  }
+
+  Future<String?> _uploadImage() async {
+    if (_selectedImage == null) return null;
+
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) return null;
+
+      final fileName = 'avatar_$userId.jpg';
+      final storagePath = 'avatars/$userId/$fileName';
+
+      final file = _selectedImage!;
+      final bytes = await file.readAsBytes();
+
+      await Supabase.instance.client.storage
+          .from('user_files')
+          .uploadBinary(storagePath, bytes, fileOptions: const FileOptions(upsert: true));
+
+      final publicUrl = Supabase.instance.client.storage
+          .from('user_files')
+          .getPublicUrl(storagePath);
+
+      return publicUrl;
+    } catch (e) {
+      if (mounted) {
+        AppToast.error(context, 'Failed to upload image. Please try again.');
+      }
+      return null;
+    }
+  }
+
   Future<void> _save() async {
     final firstName = _firstNameCtrl.text.trim();
     final lastName = _lastNameCtrl.text.trim();
@@ -52,11 +104,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) throw Exception('Not signed in');
-      await Supabase.instance.client.from('profiles').update({
+
+      // Upload image if selected
+      String? avatarUrl;
+      if (_selectedImage != null) {
+        avatarUrl = await _uploadImage();
+      }
+
+      // Update profile
+      final updateData = {
         'first_name': firstName,
         'last_name': lastName,
         'phone': phone,
-      }).eq('id', userId);
+      };
+
+      if (avatarUrl != null) {
+        updateData['avatar_url'] = avatarUrl;
+      }
+
+      await Supabase.instance.client.from('profiles').update(updateData).eq('id', userId);
       ref.invalidate(profileProvider);
       if (!mounted) return;
       AppToast.success(context, 'Profile updated successfully.');
@@ -87,6 +153,46 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
+                    // Photo Upload Section
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.border, width: 2),
+                        ),
+                        child: _selectedImage != null
+                            ? ClipOval(
+                                child: Image.file(
+                                  _selectedImage!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.camera_alt_outlined,
+                                    color: AppColors.primary,
+                                    size: 32,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Change Photo',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.textTertiary,
+                                      fontFamily: 'Inter',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
                     AppField(
                       label: 'First Name',
                       hint: 'Enter your first name',

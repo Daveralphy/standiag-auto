@@ -15,6 +15,225 @@ class AccountManagementScreen extends StatefulWidget {
 
 class _AccountManagementScreenState extends State<AccountManagementScreen> {
   bool _deleting = false;
+  bool _changingPassword = false;
+
+  Future<void> _changePassword() async {
+    final oldPasswordCtrl = TextEditingController();
+    final newPasswordCtrl = TextEditingController();
+    final confirmPasswordCtrl = TextEditingController();
+    bool showOldPassword = false;
+    bool showNewPassword = false;
+    bool showConfirmPassword = false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
+            title: const Text(
+              'Change Password',
+              style: TextStyle(
+                fontSize: 17, fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary, fontFamily: 'Inter',
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Old Password
+                  const Text(
+                    'Current Password',
+                    style: TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600, fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: oldPasswordCtrl,
+                    obscureText: !showOldPassword,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary, fontFamily: 'Inter',
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Enter current password',
+                      hintStyle: const TextStyle(color: AppColors.textTertiary, fontFamily: 'Inter'),
+                      filled: true,
+                      fillColor: AppColors.background,
+                      border: OutlineInputBorder(
+                        borderRadius: AppRadius.mdAll,
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.mdAll,
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.mdAll,
+                        borderSide: const BorderSide(color: AppColors.primary),
+                      ),
+                      suffixIcon: GestureDetector(
+                        onTap: () => setDialogState(() => showOldPassword = !showOldPassword),
+                        child: Icon(
+                          showOldPassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                          color: AppColors.textTertiary,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // New Password
+                  const Text(
+                    'New Password',
+                    style: TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600, fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: newPasswordCtrl,
+                    obscureText: !showNewPassword,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary, fontFamily: 'Inter',
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Enter new password',
+                      hintStyle: const TextStyle(color: AppColors.textTertiary, fontFamily: 'Inter'),
+                      filled: true,
+                      fillColor: AppColors.background,
+                      border: OutlineInputBorder(
+                        borderRadius: AppRadius.mdAll,
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.mdAll,
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.mdAll,
+                        borderSide: const BorderSide(color: AppColors.primary),
+                      ),
+                      suffixIcon: GestureDetector(
+                        onTap: () => setDialogState(() => showNewPassword = !showNewPassword),
+                        child: Icon(
+                          showNewPassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                          color: AppColors.textTertiary,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Confirm Password
+                  const Text(
+                    'Confirm Password',
+                    style: TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600, fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: confirmPasswordCtrl,
+                    obscureText: !showConfirmPassword,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary, fontFamily: 'Inter',
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Confirm new password',
+                      hintStyle: const TextStyle(color: AppColors.textTertiary, fontFamily: 'Inter'),
+                      filled: true,
+                      fillColor: AppColors.background,
+                      border: OutlineInputBorder(
+                        borderRadius: AppRadius.mdAll,
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.mdAll,
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.mdAll,
+                        borderSide: const BorderSide(color: AppColors.primary),
+                      ),
+                      suffixIcon: GestureDetector(
+                        onTap: () => setDialogState(() => showConfirmPassword = !showConfirmPassword),
+                        child: Icon(
+                          showConfirmPassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                          color: AppColors.textTertiary,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel',
+                    style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter')),
+              ),
+              TextButton(
+                onPressed: oldPasswordCtrl.text.isNotEmpty &&
+                        newPasswordCtrl.text.isNotEmpty &&
+                        confirmPasswordCtrl.text.isNotEmpty &&
+                        newPasswordCtrl.text == confirmPasswordCtrl.text
+                    ? () => Navigator.of(ctx).pop(true)
+                    : null,
+                child: Text(
+                  'Change Password',
+                  style: TextStyle(
+                    color: oldPasswordCtrl.text.isNotEmpty &&
+                            newPasswordCtrl.text.isNotEmpty &&
+                            confirmPasswordCtrl.text.isNotEmpty &&
+                            newPasswordCtrl.text == confirmPasswordCtrl.text
+                        ? AppColors.primary
+                        : AppColors.textTertiary,
+                    fontWeight: FontWeight.w700, fontFamily: 'Inter',
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    oldPasswordCtrl.dispose();
+    newPasswordCtrl.dispose();
+    confirmPasswordCtrl.dispose();
+
+    if (confirmed != true) return;
+    await _performPasswordChange(oldPasswordCtrl.text, newPasswordCtrl.text);
+  }
+
+  Future<void> _performPasswordChange(String oldPassword, String newPassword) async {
+    setState(() => _changingPassword = true);
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+
+      if (!mounted) return;
+      setState(() => _changingPassword = false);
+      AppToast.success(context, 'Password changed successfully.');
+    } catch (err) {
+      if (!mounted) return;
+      setState(() => _changingPassword = false);
+      AppToast.error(context, 'Failed to change password. Please try again.');
+    }
+  }
 
   Future<void> _pauseAccount() async {
     AppToast.info(context, 'Pause account feature coming soon.');
@@ -153,6 +372,59 @@ class _AccountManagementScreenState extends State<AccountManagementScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ── Change Password ──────────────────────
+                    Text('CHANGE PASSWORD', style: AppTypography.overline),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: AppRadius.lgAll,
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Update your password to keep your account secure. Use a strong password with a mix of letters, numbers, and symbols.',
+                            style: TextStyle(
+                              fontSize: 13, color: AppColors.textSecondary,
+                              fontFamily: 'Inter', height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: _changingPassword ? null : _changePassword,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: AppRadius.mdAll,
+                              ),
+                              child: Center(
+                                child: _changingPassword
+                                    ? const SizedBox(
+                                        width: 18, height: 18,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white, strokeWidth: 2),
+                                      )
+                                    : const Text(
+                                        'Change Password',
+                                        style: TextStyle(
+                                          fontSize: 14, fontWeight: FontWeight.w700,
+                                          color: Colors.white, fontFamily: 'Inter',
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
                     // ── Pause Account ────────────────────────
                     Text('PAUSE ACCOUNT', style: AppTypography.overline),
                     const SizedBox(height: 10),
