@@ -1,12 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/providers/vehicle_provider.dart';
-import '../onboarding/obd_guide_screen.dart';
 import '../history/scan_history_screen.dart';
 import 'scan_connecting_screen.dart';
 
@@ -22,8 +19,6 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  bool _btEnabled = false;
-  bool _checkingBt = true;
 
   @override
   void initState() {
@@ -37,81 +32,14 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
       CurvedAnimation(
           parent: _pulseController, curve: Curves.easeInOut),
     );
-    _checkBluetooth();
-  }
-
-  Future<void> _checkBluetooth() async {
-    try {
-      final state = await FlutterBluePlus.adapterState.first;
-      if (mounted) {
-        setState(() {
-          _btEnabled = state == BluetoothAdapterState.on;
-          _checkingBt = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _checkingBt = false);
-    }
-    FlutterBluePlus.adapterState.listen((state) {
-      if (mounted) {
-        setState(
-            () => _btEnabled = state == BluetoothAdapterState.on);
-      }
-    });
   }
 
   Future<void> _onTapScan() async {
-    // Request BT + location permissions
-    final results = await [
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
-    ].request();
-
-    final permanentlyDenied = results.values
-        .any((s) => s == PermissionStatus.permanentlyDenied);
-
-    if (permanentlyDenied) {
-      if (!mounted) return;
-      _showSnack(
-          'Bluetooth permissions denied. Please enable in Settings.');
-      await openAppSettings();
-      return;
-    }
-
-    final anyDenied = results.values
-        .any((s) => s == PermissionStatus.denied);
-
-    if (anyDenied) {
-      if (!mounted) return;
-      _showSnack('Bluetooth and location permissions are required.');
-      return;
-    }
-
-    if (!_btEnabled) {
-      if (!mounted) return;
-      _showSnack('Please enable Bluetooth to scan.');
-      return;
-    }
-
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
           builder: (_) => const ScanConnectingScreen()),
     );
-  }
-
-
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg,
-          style: const TextStyle(
-              fontFamily: 'Inter', fontSize: 13)),
-      backgroundColor: AppColors.surface,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12)),
-    ));
   }
 
   @override
@@ -136,45 +64,30 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
               loading: () => _buildHeader(''),
               error: (_, __) => _buildHeader(''),
             ),
-            // ── Scrollable Content ───────────────────────
+            // ── Centered Gauge + Button ──────────────────
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Center(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 16),
-                    activeVehicleAsync.when(
-                      data: (v) => _buildVehiclePill(v != null
-                          ? '${v['make']} ${v['model']} ${v['year']}'
-                          : 'No vehicle — add one first'),
-                      loading: () => _buildVehiclePill('Loading...'),
-                      error: (_, __) =>
-                          _buildVehiclePill('No vehicle'),
-                    ),
-                    const SizedBox(height: 32),
                     _buildGauge(),
-                    const SizedBox(height: 16),
-                    const Text('Ready to diagnose.',
+                    const SizedBox(height: 32),
+                    const Text('Ready to diagnose',
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
                             fontFamily: 'Inter')),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     const Text(
-                      'Plug in your OBD-II adapter, make sure\nBluetooth is on, then tap the gauge.',
+                      'Plug in your OBD-II adapter\nand tap to start scanning',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 13,
                           color: Color(0xFFBBBBBB),
                           height: 1.5,
                           fontFamily: 'Inter'),
                     ),
-                    const SizedBox(height: 24),
-                    _buildStatusCards(),
-                    const SizedBox(height: 20),
-                    _buildHelperCard(),
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -194,22 +107,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
       onActionTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScanHistoryScreen())),
     );
   }
-  Widget _buildVehiclePill(String label) {
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Text(label,
-          style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFFBBBBBB),
-              fontFamily: 'Inter')),
-    );
-  }
+
 
   Widget _buildGauge() {
     return AnimatedBuilder(
@@ -279,100 +177,7 @@ class _ScanIdleScreenState extends ConsumerState<ScanIdleScreen>
     );
   }
 
-  Widget _buildStatusCards() {
-    return Column(
-      children: [
-        _StatusRow(
-          icon: Icons.bluetooth,
-          iconColor: AppColors.bluetooth,
-          iconBg: AppColors.bluetooth.withValues(alpha: 0.12),
-          title: 'Bluetooth',
-          subtitle: _checkingBt
-              ? 'Checking...'
-              : _btEnabled
-                  ? 'Enabled  •  Ready'
-                  : 'Disabled  •  Tap to enable',
-          dotColor:
-              _btEnabled ? AppColors.advisory : AppColors.moderate,
-          onTap: _btEnabled
-              ? null
-              : () async => await FlutterBluePlus.turnOn(),
-        ),
-        const SizedBox(height: 10),
-        const _StatusRow(
-          icon: Icons.power_outlined,
-          iconColor: AppColors.textSecondary,
-          iconBg: AppColors.surface,
-          title: 'OBD-II Adapter',
-          subtitle: 'Not connected  •  Plug in to begin',
-          dotColor: AppColors.moderate,
-        ),
-      ],
-    );
-  }
 
-  Widget _buildHelperCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primaryBorder),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primarySubtle,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.power_outlined,
-                color: AppColors.primary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('First time scanning?',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        fontFamily: 'Inter')),
-                const SizedBox(height: 4),
-                const Text(
-                  'You need an ELM327 Bluetooth adapter. They cost under ₦5,000 and work on any car with an OBD-II port (most cars after 2000).',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFFBBBBBB),
-                      height: 1.5,
-                      fontFamily: 'Inter'),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            const OBDGuideScreen()),
-                  ),
-                  child: const Text('Where to buy one →',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                          fontFamily: 'Inter')),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ── STATIC GAUGE PAINTER ─────────────────────────────────────
@@ -465,83 +270,6 @@ class _StaticGaugePainter extends CustomPainter {
   @override
   bool shouldRepaint(_StaticGaugePainter old) => false;
 }
-
-// ── STATUS ROW ───────────────────────────────────────────────
-class _StatusRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor, iconBg, dotColor;
-  final String title, subtitle;
-  final VoidCallback? onTap;
-
-  const _StatusRow({
-    required this.icon,
-    required this.iconColor,
-    required this.iconBg,
-    required this.title,
-    required this.subtitle,
-    required this.dotColor,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: iconColor, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          fontFamily: 'Inter')),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFFBBBBBB),
-                          fontFamily: 'Inter')),
-                ],
-              ),
-            ),
-            Container(
-              width: 10, height: 10,
-              decoration: BoxDecoration(
-                color: dotColor,
-                shape: BoxShape.circle,
-                boxShadow: [BoxShadow(
-                    color: dotColor.withValues(alpha: 0.5),
-                    blurRadius: 6)],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 
 
 

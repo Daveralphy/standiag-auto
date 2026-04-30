@@ -427,7 +427,8 @@ class _MechanicRegStep4State extends State<MechanicRegStep4> {
         if (errorMsg.contains('already') || 
             errorMsg.contains('registered') || 
             errorMsg.contains('exists') ||
-            errorMsg.contains('user')) {
+            errorMsg.contains('user') ||
+            errorMsg.contains('duplicate')) {
           // Account already exists, just sign in
           try {
             await authService.signIn(
@@ -437,12 +438,14 @@ class _MechanicRegStep4State extends State<MechanicRegStep4> {
             // Sign in successful, proceed
           } catch (_) {
             // If sign in fails, the account might exist with different password
-            setState(() => _error = 'This email is already registered. Please use your original password or contact support.');
+            setState(() => _error = 'This email is already registered with a different password. Please log in or contact support.');
             if (mounted) setState(() => _loading = false);
             return;
           }
         } else {
-          rethrow;
+          setState(() => _error = formatErrorMessage(e.message));
+          if (mounted) setState(() => _loading = false);
+          return;
         }
       }
 
@@ -493,10 +496,10 @@ class _MechanicRegStep4State extends State<MechanicRegStep4> {
         );
       }
     } on AuthException catch (e) {
-      setState(() => _error = e.message);
+      setState(() => _error = formatErrorMessage(e.message));
     } catch (e) {
       setState(() => _error =
-          e.toString().replaceAll('Exception: ', ''));
+          formatErrorMessage(e.toString().replaceAll('Exception: ', '')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

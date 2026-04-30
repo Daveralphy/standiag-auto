@@ -105,9 +105,13 @@ class _RegisterScreenStep4State extends ConsumerState<RegisterScreenStep4> {
         );
       }
     } on AuthException catch (e) {
-      if (mounted) AppToast.error(context, e.message);
-    } catch (_) {
-      if (mounted) AppToast.error(context, 'Something went wrong. Please try again.');
+      if (mounted) {
+        AppToast.error(context, formatErrorMessage(e.message));
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.error(context, formatErrorMessage(e.toString()));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

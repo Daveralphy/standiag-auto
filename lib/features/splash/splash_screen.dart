@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../onboarding/onboarding_screen.dart';
@@ -20,6 +21,8 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeIn;
   late Animation<double> _scaleIn;
+  String? _errorMessage;
+  bool _isRetrying = false;
 
   @override
   void initState() {
@@ -35,51 +38,83 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _controller.forward();
 
-    Future.delayed(const Duration(milliseconds: 2500), () async {
-      if (!mounted) return;
-
-      final session = Supabase.instance.client.auth.currentSession;
-
-      if (session != null) {
-        final userId = Supabase.instance.client.auth.currentUser?.id;
-        if (userId != null) {
-          final profile = await Supabase.instance.client
-              .from('profiles')
-              .select('account_type')
-              .eq('id', userId)
-              .maybeSingle();
-
-          final accountType =
-              profile?['account_type'] ?? 'car_owner';
-
-          if (!mounted) return;
-
-          if (accountType == 'mechanic') {
-            _navigate(const MechanicNavigation());
-          } else {
-            final hasVehicles =
-                await VehicleService().hasVehicles();
-            if (!mounted) return;
-            _navigate(hasVehicles
-                ? MainNavigation()
-                : const FirstVehicleScreen());
-          }
-        }
-        return;
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      final hasSeenOnboarding =
-          prefs.getBool('has_seen_onboarding') ?? false;
-
-      if (!mounted) return;
-
-      if (hasSeenOnboarding) {
-        _navigate(const LoginScreen());
-      } else {
-        _navigate(const OnboardingScreen());
-      }
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      _checkAuthStatus();
     });
+  }
+
+  Future<void> _checkAuthStatus() async {
+    if (!mounted) return;
+
+    try {
+      setState(() {
+        _errorMessage = null;
+        _isRetrying = true;
+      });
+
+      // Timeout after 8 seconds
+      await Future.any([
+        _performAuthCheck(),
+        Future.delayed(const Duration(seconds: 8), () => throw TimeoutException('Network timeout')),
+      ]);
+
+      if (!mounted) return;
+      setState(() => _isRetrying = false);
+    } on TimeoutException {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'No network access.\nPlease check your internet connection and try again.';
+        _isRetrying = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Connection error.\nPlease check your internet and try again.';
+        _isRetrying = false;
+      });
+    }
+  }
+
+  Future<void> _performAuthCheck() async {
+    final session = Supabase.instance.client.auth.currentSession;
+
+    if (session != null) {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId != null) {
+        final profile = await Supabase.instance.client
+            .from('profiles')
+            .select('account_type')
+            .eq('id', userId)
+            .maybeSingle();
+
+        final accountType = profile?['account_type'] ?? 'car_owner';
+
+        if (!mounted) return;
+
+        if (accountType == 'mechanic') {
+          _navigate(const MechanicNavigation());
+        } else {
+          final hasVehicles = await VehicleService().hasVehicles();
+          if (!mounted) return;
+          _navigate(hasVehicles
+              ? MainNavigation()
+              : const FirstVehicleScreen());
+        }
+      }
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding =
+        prefs.getBool('has_seen_onboarding') ?? false;
+
+    if (!mounted) return;
+
+    if (hasSeenOnboarding) {
+      _navigate(const LoginScreen());
+    } else {
+      _navigate(const OnboardingScreen());
+    }
   }
 
   void _navigate(Widget destination) {
@@ -101,6 +136,75 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.wifi_off_rounded,
+                  color: Color(0xFFE59A12),
+                  size: 64,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontFamily: 'Inter',
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                GestureDetector(
+                  onTap: _isRetrying ? null : _checkAuthStatus,
+                  child: Opacity(
+                    opacity: _isRetrying ? 0.6 : 1.0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC0272D),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: _isRetrying
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text(
+                              'Retry',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(

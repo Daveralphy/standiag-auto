@@ -7,6 +7,7 @@ import '../../core/widgets/app_field.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/services/auth_service.dart';
 import 'account_type_screen.dart';
+import 'register_helpers.dart';
 import '../navigation/main_navigation.dart';
 import '../mechanic/mechanic_navigation.dart';
 
@@ -65,9 +66,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
       }
     } on AuthException catch (e) {
-      if (mounted) AppToast.error(context, e.message);
-    } catch (_) {
-      if (mounted) AppToast.error(context, 'Something went wrong. Please try again.');
+      if (mounted) AppToast.error(context, formatErrorMessage(e.message));
+    } catch (e) {
+      if (mounted) AppToast.error(context, formatErrorMessage(e.toString()));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

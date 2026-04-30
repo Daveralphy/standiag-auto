@@ -92,3 +92,69 @@ Widget primaryButton(String label, VoidCallback onTap,
     ),
   );
 }
+
+/// Formats auth and API error messages to be professional and user-friendly
+String formatErrorMessage(String errorMessage) {
+  final msg = errorMessage.toLowerCase();
+
+  // Email/Username already exists
+  if (msg.contains('already registered') ||
+      msg.contains('user already exists') ||
+      msg.contains('email already exists') ||
+      msg.contains('email already registered') ||
+      msg.contains('duplicate key value') ||
+      msg.contains('unique constraint')) {
+    if (msg.contains('email') ||
+        msg.contains('profiles_email')) {
+      return 'This email is already registered. Please log in or use a different email.';
+    } else if (msg.contains('username') ||
+        msg.contains('profiles_username')) {
+      return 'This username is already taken. Please choose a different username.';
+    }
+    return 'This account already exists. Please log in or use different credentials.';
+  }
+
+  // Invalid email format
+  if (msg.contains('invalid email') || msg.contains('email format')) {
+    return 'Please enter a valid email address.';
+  }
+
+  // Weak password
+  if (msg.contains('weak password') || msg.contains('password')) {
+    return 'Your password is too weak. Please use a stronger password with at least 8 characters.';
+  }
+
+  // Network errors
+  if (msg.contains('socket') ||
+      msg.contains('connection') ||
+      msg.contains('timeout') ||
+      msg.contains('failed host lookup') ||
+      msg.contains('no address associated')) {
+    return 'No internet connection. Please check your network and try again.';
+  }
+
+  // Invalid credentials
+  if (msg.contains('invalid credentials') ||
+      msg.contains('incorrect password') ||
+      msg.contains('user not found')) {
+    return 'Invalid email or password. Please try again.';
+  }
+
+  // Rate limiting
+  if (msg.contains('rate limit') || msg.contains('too many attempts')) {
+    return 'Too many login attempts. Please wait a few minutes and try again.';
+  }
+
+  // Generic fallback
+  if (msg.isEmpty) {
+    return 'Something went wrong. Please try again.';
+  }
+
+  // If it's already professional-looking, return as-is
+  if (msg.contains('please') || msg.contains('must')) {
+    return errorMessage;
+  }
+
+  // Default: capitalize first letter and make user-friendly
+  return 'Unable to complete your request. Please try again or contact support.';
+}

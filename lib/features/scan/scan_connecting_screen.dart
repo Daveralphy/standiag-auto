@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../core/theme/app_colors.dart';
 import 'scan_results_screen.dart';
 import 'scan_no_faults_screen.dart';
@@ -14,194 +15,217 @@ class ScanConnectingScreen extends StatefulWidget {
       _ScanConnectingScreenState();
 }
 
-// ── SCAN PHASES ──────────────────────────────────────────────
-enum _Phase {
-  checkingBt,     // 0 — checking bluetooth is on
-  scanning,       // 1 — scanning for BLE devices
-  selectAdapter,  // 2 — showing found adapters, waiting for tap
-  connecting,     // 3 — connecting to chosen adapter
-  readingCodes,   // 4 — sending OBD commands, reading DTCs
-  done,           // 5 — finished
-  error,          // 6 — something went wrong
+// ── SCAN STEPS ───────────────────────────────────────────────
+enum _Step {
+  bluetooth,      // 0 — Enable Bluetooth
+  odbAdapter,     // 1 — Find & select OBD adapter
+  scanning,       // 2 — Scan for fault codes
+  completed,      // 3 — Scan finished
 }
 
-class _ScanConnectingScreenState
-    extends State<ScanConnectingScreen>
+class _ScanConnectingScreenState extends State<ScanConnectingScreen>
     with TickerProviderStateMixin {
   // Animation controllers
-  late AnimationController _ringController;
   late AnimationController _needleController;
-  late Animation<double> _ring1, _ring2, _ring3;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   // State
-  _Phase _phase = _Phase.checkingBt;
-  String _statusText = 'Checking Bluetooth…';
-  String _subText = 'Making sure your device is ready.';
+  _Step _currentStep = _Step.bluetooth;
+  _Step _completedUpTo = _Step.bluetooth;
+  bool _cancelled = false;
+  bool _bluetoothOn = false;
+  int _faultCount = 0;
   String? _errorText;
 
   // BT scanning
-  final List<ScanResult> _foundDevices = [];
-  BluetoothDevice? _selectedDevice;
+  final List<ScanResult> _foundAdapters = [];
+  BluetoothDevice? _selectedAdapter;
   BluetoothCharacteristic? _obdChar;
   final List<String> _dtcCodes = [];
-  bool _cancelled = false;
   StreamSubscription? _scanSub;
+  StreamSubscription? _adapterStateListener;
 
   @override
   void initState() {
     super.initState();
-
-    _ringController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat();
 
     _needleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
 
-    _ring1 = Tween<double>(begin: 0.6, end: 1.0).animate(
-        CurvedAnimation(parent: _ringController,
-            curve: const Interval(0.0, 0.6,
-                curve: Curves.easeOut)));
-    _ring2 = Tween<double>(begin: 0.6, end: 1.0).animate(
-        CurvedAnimation(parent: _ringController,
-            curve: const Interval(0.2, 0.8,
-                curve: Curves.easeOut)));
-    _ring3 = Tween<double>(begin: 0.6, end: 1.0).animate(
-        CurvedAnimation(parent: _ringController,
-            curve: const Interval(0.4, 1.0,
-                curve: Curves.easeOut)));
+    // Pulse animation for meter
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
+      CurvedAnimation(
+          parent: _pulseController, curve: Curves.easeInOut),
+    );
 
-    _start();
+    _init();
   }
 
-  Future<void> _start() async {
-    // Phase 0: Check BT
-    _setPhase(_Phase.checkingBt,
-        'Checking Bluetooth…', 'Making sure your device is ready.');
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    if (_cancelled) return;
-
-    try {
-      final state = await FlutterBluePlus.adapterState.first;
-      if (state != BluetoothAdapterState.on) {
-        _setError(
-            'Bluetooth is off.\nPlease enable Bluetooth and try again.');
-        return;
-      }
-    } catch (_) {
-      _setError('Could not check Bluetooth state.');
+  Future<void> _init() async {
+    // Check Bluetooth permission first
+    final btPermission = await Permission.bluetoothScan.request();
+    if (!btPermission.isGranted && mounted && !_cancelled) {
+      _showError('Bluetooth permissions are required');
       return;
     }
 
-    if (_cancelled) return;
+    // Check if Bluetooth is on
+    _checkBluetoothStatus();
 
-    // Phase 1: Scan for devices
-    _setPhase(_Phase.scanning,
-        'Searching for OBD adapters…',
-        'Make sure your ELM327 is plugged into the OBD port.');
-
-    _scanSub = FlutterBluePlus.scanResults.listen((results) {
-      if (!mounted || _cancelled) return;
-      for (final r in results) {
-        if (!_foundDevices
-            .any((d) => d.device.remoteId == r.device.remoteId)) {
-          setState(() {
-            _foundDevices.add(r);
-            // Auto-switch to selectAdapter phase when first device found
-            if (_phase == _Phase.scanning) {
-              _phase = _Phase.selectAdapter;
-              _statusText = 'Select your OBD adapter';
-              _subText =
-                  'Tap your ELM327 adapter from the list below.';
-            }
-          });
-        }
+    // Listen for Bluetooth state changes
+    _adapterStateListener =
+        FlutterBluePlus.adapterState.listen((state) {
+      if (mounted && !_cancelled) {
+        setState(() {
+          _bluetoothOn = state == BluetoothAdapterState.on;
+        });
       }
     });
+  }
 
-    await FlutterBluePlus.startScan(
-        timeout: const Duration(seconds: 15));
-
-    if (_cancelled) return;
-    await _scanSub?.cancel();
-
-    // If no devices found after scan
-    if (_foundDevices.isEmpty && mounted && !_cancelled) {
-      _setError(
-          'No Bluetooth devices found.\nMake sure your ELM327 adapter is plugged in and powered on.');
+  Future<void> _checkBluetoothStatus() async {
+    try {
+      final state = await FlutterBluePlus.adapterState.first;
+      if (mounted && !_cancelled) {
+        setState(() {
+          _bluetoothOn = state == BluetoothAdapterState.on;
+        });
+      }
+    } catch (_) {
+      if (mounted && !_cancelled) {
+        _showError('Could not check Bluetooth');
+      }
     }
   }
 
-  void _onSelectDevice(BluetoothDevice device) async {
-    if (_cancelled) return;
-    setState(() => _selectedDevice = device);
+  Future<void> _enableBluetooth() async {
+    try {
+      await FlutterBluePlus.turnOn();
+      // Bluetooth should be on now, wait a bit for state update
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted && !_cancelled && _bluetoothOn) {
+        _advanceStep();
+      }
+    } catch (_) {
+      if (mounted && !_cancelled) {
+        _showError('Could not enable Bluetooth');
+      }
+    }
+  }
 
-    await FlutterBluePlus.stopScan();
-    await _scanSub?.cancel();
-
-    // Phase 3: Connect
-    _setPhase(_Phase.connecting,
-        'Connecting to ${device.platformName.isNotEmpty ? device.platformName : 'adapter'}…',
-        'Establishing OBD-II session.');
+  Future<void> _startAdapterSearch() async {
+    setState(() {
+      _currentStep = _Step.odbAdapter;
+    });
 
     try {
-      await device.connect(
-          timeout: const Duration(seconds: 15));
+      _scanSub = FlutterBluePlus.scanResults.listen((results) {
+        if (!mounted || _cancelled) return;
+
+        for (final result in results) {
+          final isOBD = _isLikelyOBD(result.device.platformName);
+          if (isOBD &&
+              !_foundAdapters
+                  .any((d) => d.device.remoteId == result.device.remoteId)) {
+            setState(() {
+              _foundAdapters.add(result);
+            });
+          }
+        }
+      });
+
+      await FlutterBluePlus.startScan(
+        timeout: const Duration(seconds: 12),
+      );
 
       if (_cancelled) return;
 
+      // Stop scanning after timeout
+      await _scanSub?.cancel();
+
+      if (!mounted || _cancelled) return;
+
+      if (_foundAdapters.isEmpty) {
+        _showError('No OBD adapters found.\nMake sure your adapter is powered on.');
+      }
+    } catch (e) {
+      if (!_cancelled && mounted) {
+        _showError('Scan failed. Please try again.');
+      }
+    }
+  }
+
+  Future<void> _selectAdapter(ScanResult adapterResult) async {
+    if (_cancelled) return;
+
+    setState(() => _selectedAdapter = adapterResult.device);
+
+    try {
+      // Stop scanning
+      await FlutterBluePlus.stopScan().catchError((_) {});
+      await _scanSub?.cancel();
+
+      // Connect to adapter
+      await adapterResult.device.connect(
+        timeout: const Duration(seconds: 15),
+      );
+
+      if (_cancelled || !mounted) return;
+
       // Discover services
-      _setPhase(_Phase.connecting,
-          'Establishing OBD session…',
-          'Discovering services on the adapter.');
+      final services =
+          await adapterResult.device.discoverServices();
 
-      final services = await device.discoverServices();
-
-      // Find the OBD characteristic
-      for (final s in services) {
-        for (final c in s.characteristics) {
-          final uuid = c.uuid.toString().toLowerCase();
+      // Find OBD characteristic
+      for (final service in services) {
+        for (final char in service.characteristics) {
+          final uuid = char.uuid.toString().toLowerCase();
+          // Common OBD characteristic UUIDs
           if (uuid.contains('ffe1') ||
               uuid.contains('fff1') ||
-              uuid.contains('be95')) {
-            _obdChar = c;
+              uuid.contains('be95') ||
+              (char.properties.write && char.properties.notify)) {
+            _obdChar = char;
             break;
           }
         }
         if (_obdChar != null) break;
       }
 
-      // Fallback: first writable + notify characteristic
-      if (_obdChar == null) {
-        for (final s in services) {
-          for (final c in s.characteristics) {
-            if (c.properties.write && c.properties.notify) {
-              _obdChar = c;
-              break;
-            }
-          }
-          if (_obdChar != null) break;
-        }
-      }
-
       if (_obdChar == null || _cancelled) {
-        _setError(
-            'OBD characteristic not found.\nThis adapter may not be compatible.');
+        _showError('OBD characteristic not found');
         return;
       }
 
-      // Phase 4: Read codes
-      _setPhase(_Phase.readingCodes,
-          'Reading fault codes…',
-          'Scanning all vehicle systems for DTCs.');
+      if (mounted && !_cancelled) {
+        _advanceStep(); // Move to scanning
+      }
+    } catch (e) {
+      if (!_cancelled && mounted) {
+        _showError('Connection failed. Try again.');
+      }
+      try {
+        await _selectedAdapter?.disconnect();
+      } catch (_) {}
+    }
+  }
 
+  Future<void> _startScanning() async {
+    setState(() {
+      _currentStep = _Step.scanning;
+    });
+
+    try {
       await _obdChar!.setNotifyValue(true);
 
-      // Init ELM327
+      // Initialize ELM327
       await _sendCmd('ATZ\r');
       await Future.delayed(const Duration(milliseconds: 500));
       await _sendCmd('ATE0\r');
@@ -211,51 +235,88 @@ class _ScanConnectingScreenState
       await _sendCmd('ATSP0\r');
       await Future.delayed(const Duration(milliseconds: 500));
 
+      if (_cancelled) return;
+
       // Request stored DTCs (Mode 03)
       final response = await _readCmd('03\r');
-
       if (_cancelled) return;
 
       final codes = _parseDTCs(response);
-      for (final code in codes) {
-        if (_cancelled || !mounted) break;
-        setState(() => _dtcCodes.add(code));
-        // Small delay between each code so needle visibly jumps
+
+      // Animate needle as codes are found
+      for (int i = 0; i < codes.length && !_cancelled; i++) {
+        if (mounted) {
+          setState(() {
+            _dtcCodes.add(codes[i]);
+            _faultCount = _dtcCodes.length;
+          });
+        }
         await Future.delayed(const Duration(milliseconds: 400));
       }
 
       if (_cancelled || !mounted) return;
 
-      // Phase 5: Done
-      _setPhase(_Phase.done,
-          'Scan complete.',
-          _dtcCodes.isEmpty
-              ? 'No fault codes detected.'
-              : '${_dtcCodes.length} fault code${_dtcCodes.length > 1 ? 's' : ''} found.');
+      // Mark scanning as completed
+      setState(() {
+        _completedUpTo = _Step.scanning;
+      });
 
-      await Future.delayed(const Duration(milliseconds: 800));
-      await device.disconnect().catchError((_) {});
-
-      if (!mounted || _cancelled) return;
-
-      final navigator = Navigator.of(context);
-      if (_dtcCodes.isEmpty) {
-        navigator.pushReplacement(
-          MaterialPageRoute(
-              builder: (_) => const ScanNoFaultsScreen()),
-        );
-      } else {
-        navigator.pushReplacement(
-          MaterialPageRoute(
-              builder: (_) =>
-                  ScanResultsScreen(dtcCodes: _dtcCodes)),
-        );
-      }
+      // Move to completed
+      await Future.delayed(const Duration(milliseconds: 400));
+      _advanceStep();
     } catch (e) {
       if (!_cancelled && mounted) {
-        _setError(
-            'Connection failed.\nMake sure the adapter is on and try again.');
+        _showError('Scanning failed. Try again.');
       }
+    }
+  }
+
+  Future<void> _finishScan() async {
+    try {
+      await _selectedAdapter?.disconnect().catchError((_) {});
+    } catch (_) {}
+
+    if (!mounted || _cancelled) return;
+
+    setState(() {
+      _currentStep = _Step.completed;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    if (!mounted || _cancelled) return;
+
+    final navigator = Navigator.of(context);
+    if (_dtcCodes.isEmpty) {
+      navigator.pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const ScanNoFaultsScreen(),
+        ),
+      );
+    } else {
+      navigator.pushReplacement(
+        MaterialPageRoute(
+          builder: (_) =>
+              ScanResultsScreen(dtcCodes: _dtcCodes),
+        ),
+      );
+    }
+  }
+
+  void _advanceStep() {
+    if (_currentStep == _Step.bluetooth && _bluetoothOn) {
+      _startAdapterSearch();
+    } else if (_currentStep == _Step.odbAdapter &&
+        _selectedAdapter != null) {
+      _selectAdapter(
+        _foundAdapters.firstWhere(
+          (a) => a.device == _selectedAdapter,
+        ),
+      );
+    } else if (_currentStep == _Step.scanning) {
+      _startScanning();
+    } else if (_currentStep == _Step.completed) {
+      _finishScan();
     }
   }
 
@@ -277,8 +338,9 @@ class _ScanConnectingScreenState
 
     await _sendCmd(cmd);
     final result = await completer.future.timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => '');
+      const Duration(seconds: 5),
+      onTimeout: () => '',
+    );
     await sub.cancel();
     return result;
   }
@@ -294,34 +356,14 @@ class _ScanConnectingScreenState
 
     for (int i = 0; i + 1 < bytes.length; i += 2) {
       final first = int.tryParse(bytes[i], radix: 16) ?? 0;
-      final second =
-          int.tryParse(bytes[i + 1], radix: 16) ?? 0;
+      final second = int.tryParse(bytes[i + 1], radix: 16) ?? 0;
       if (first == 0 && second == 0) continue;
-      final prefix =
-          ['P', 'C', 'B', 'U'][(first >> 6) & 0x03];
+      final prefix = ['P', 'C', 'B', 'U'][(first >> 6) & 0x03];
       final num = ((first & 0x3F) << 8) | second;
       codes.add(
           '$prefix${num.toRadixString(16).padLeft(4, '0').toUpperCase()}');
     }
     return codes;
-  }
-
-  void _setPhase(_Phase phase, String status, String sub) {
-    if (!mounted) return;
-    setState(() {
-      _phase = phase;
-      _statusText = status;
-      _subText = sub;
-    });
-  }
-
-  void _setError(String msg) {
-    if (!mounted) return;
-    setState(() {
-      _phase = _Phase.error;
-      _errorText = msg;
-    });
-    _ringController.stop();
   }
 
   bool _isLikelyOBD(String name) {
@@ -334,14 +376,22 @@ class _ScanConnectingScreenState
         n.contains('obdii');
   }
 
+  void _showError(String msg) {
+    if (!mounted) return;
+    setState(() {
+      _errorText = msg;
+    });
+  }
+
   @override
   void dispose() {
     _cancelled = true;
     _scanSub?.cancel();
+    _adapterStateListener?.cancel();
     FlutterBluePlus.stopScan().catchError((_) {});
-    _selectedDevice?.disconnect().catchError((_) {});
-    _ringController.dispose();
+    _selectedAdapter?.disconnect().catchError((_) {});
     _needleController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -350,253 +400,559 @@ class _ScanConnectingScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            _buildHeader(),
-            const SizedBox(height: 8),
-            _buildPhasePill(),
-            const SizedBox(height: 24),
-            // Gauge — static until readingCodes phase
-            AnimatedBuilder(
-              animation: Listenable.merge(
-                  [_ring1, _ring2, _ring3]),
-              builder: (_, __) => _buildGauge(),
+            // ── Header ───────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: AppColors.textPrimary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Diagnostic Scan',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const Spacer(),
+                  // Help icon (?)
+                  GestureDetector(
+                    onTap: () => _showHelpOverlay(),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: AppColors.border),
+                      ),
+                      child: const Icon(
+                        Icons.help_outline_rounded,
+                        color: AppColors.textTertiary,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
-            Text(_statusText,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontFamily: 'Inter')),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Text(_subText,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                      fontFamily: 'Inter')),
-            ),
-            if (_phase == _Phase.error && _errorText != null) ...[
-              const SizedBox(height: 12),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40),
-                child: Text(_errorText!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 13,
+
+            // ── Meter (Static at top) ─────────────────────
+            _buildMeter(),
+            const SizedBox(height: 32),
+
+            // ── Progress Steps ────────────────────────────
+            _buildProgressSteps(),
+            const SizedBox(height: 28),
+
+            // ── Status Text ───────────────────────────────
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_errorText != null) ...[
+                    Text(
+                      'Error',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.critical,
-                        height: 1.5,
-                        fontFamily: 'Inter')),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 24, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: AppColors.border),
-                  ),
-                  child: const Text('Go Back',
-                      style: TextStyle(
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        _errorText!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ),
+                  ] else if (_currentStep ==
+                      _Step.bluetooth) ...[
+                    if (!_bluetoothOn) ...[
+                      const Text(
+                        'Enable Bluetooth',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Bluetooth is required to connect\nto your OBD adapter',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: _enableBluetooth,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius:
+                                BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'Enable Bluetooth',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      const SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                          strokeWidth: 2.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Bluetooth ready',
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ]
+                  ] else if (_currentStep ==
+                      _Step.odbAdapter) ...[
+                    if (_foundAdapters.isEmpty)
+                      const SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    else ...[
+                      const Text(
+                        'Select your adapter',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
-                          fontFamily: 'Inter')),
-                ),
-              ),
-            ],
-            // Device list — shown during selectAdapter phase
-            if (_phase == _Phase.selectAdapter &&
-                _foundDevices.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Expanded(child: _buildDeviceList()),
-            ] else
-              const Spacer(),
-            // Step progress
-            if (_phase != _Phase.selectAdapter &&
-                _phase != _Phase.error)
-              _buildStepProgress(),
-            const SizedBox(height: 16),
-            if (_phase != _Phase.done &&
-                _phase != _Phase.error)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  _cancelled = true;
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Cancel',
-                    style: TextStyle(
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                          ),
+                          itemCount: _foundAdapters.length,
+                          itemBuilder: (_, i) {
+                            final adapter =
+                                _foundAdapters[i];
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 10,
+                              ),
+                              child: GestureDetector(
+                                onTap: () =>
+                                    _selectAdapter(adapter),
+                                child: Container(
+                                  padding:
+                                      const EdgeInsets
+                                          .symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    borderRadius:
+                                        BorderRadius
+                                            .circular(12),
+                                    border: Border.all(
+                                      color:
+                                          AppColors.border,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons
+                                            .bluetooth_rounded,
+                                        color: AppColors
+                                            .textTertiary,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(
+                                        width: 12,
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          adapter
+                                              .device
+                                              .platformName,
+                                          style:
+                                              const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight:
+                                                FontWeight
+                                                    .w500,
+                                            color: AppColors
+                                                .textPrimary,
+                                            fontFamily:
+                                                'Inter',
+                                          ),
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons
+                                            .chevron_right_rounded,
+                                        color: AppColors
+                                            .textTertiary,
+                                        size: 20,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ]
+                  ] else if (_currentStep ==
+                      _Step.scanning) ...[
+                    Text(
+                      '$_faultCount',
+                      style: TextStyle(
+                        fontSize: 42,
+                        fontWeight: FontWeight.w900,
+                        color: _faultCount == 0
+                            ? AppColors.textTertiary
+                            : AppColors.critical,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _faultCount == 0
+                          ? 'scanning…'
+                          : _faultCount == 1
+                              ? 'fault found'
+                              : 'faults found',
+                      style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textTertiary,
-                        fontFamily: 'Inter')),
+                        fontWeight: FontWeight.w500,
+                        color: _faultCount == 0
+                            ? AppColors.textTertiary
+                            : AppColors.critical,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ] else if (_currentStep ==
+                      _Step.completed) ...[
+                    Icon(
+                      Icons.check_circle_rounded,
+                      color: _dtcCodes.isEmpty
+                          ? AppColors.advisory
+                          : AppColors.textTertiary,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Scan complete',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _dtcCodes.isEmpty
+                          ? 'No faults found'
+                          : '${_dtcCodes.length} fault${_dtcCodes.length > 1 ? 's' : ''} detected',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            const SizedBox(height: 20),
+            ),
+
+            // ── Cancel button ─────────────────────────────
+            if (_currentStep != _Step.completed &&
+                _errorText == null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: GestureDetector(
+                  onTap: () {
+                    _cancelled = true;
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
+              )
+            else if (_errorText != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: GestureDetector(
+                  onTap: () =>
+                      Navigator.of(context).pop(),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
+              )
+            else
+              const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          const Text('Diagnostic Scan',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Inter')),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: _phase == _Phase.error
-                  ? AppColors.criticalBg
-                  : _phase == _Phase.done
-                      ? AppColors.advisoryBg
-                      : AppColors.primarySubtle,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                  color: _phase == _Phase.error
-                      ? AppColors.criticalBorder
-                      : _phase == _Phase.done
-                          ? AppColors.advisoryBorder
-                          : AppColors.primaryBorder),
-            ),
-            child: Text(
-              _phase == _Phase.error
-                  ? 'Error'
-                  : _phase == _Phase.done
-                      ? 'Complete'
-                      : 'Scanning…',
-              style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: _phase == _Phase.error
-                      ? AppColors.critical
-                      : _phase == _Phase.done
-                          ? AppColors.advisory
-                          : AppColors.primary,
-                  fontFamily: 'Inter'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPhasePill() {
-    final label = _selectedDevice != null
-        ? _selectedDevice!.platformName.isNotEmpty
-            ? _selectedDevice!.platformName
-            : 'ELM327 Adapter'
-        : 'Searching for adapter…';
-
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Text(label,
-          style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              fontFamily: 'Inter')),
-    );
-  }
-
-  Widget _buildGauge() {
-    // Needle only active during readingCodes phase
-    final isReading = _phase == _Phase.readingCodes;
-    final faultCount = _dtcCodes.length;
-
-    return SizedBox(
-      width: 220, height: 220,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Expanding rings
-          _Ring(scale: _ring3.value,
-              opacity: 1 - _ring3.value),
-          _Ring(scale: _ring2.value,
-              opacity: 1 - _ring2.value),
-          _Ring(scale: _ring1.value,
-              opacity: 1 - _ring1.value),
-          // Gauge
-          CustomPaint(
-            size: const Size(200, 200),
-            painter: _FaultGaugePainter(
-              faultCount: isReading ? faultCount : 0,
-              maxFaults: 10,
-              isActive: isReading,
-            ),
-          ),
-          // Center display
-          Column(
-            mainAxisSize: MainAxisSize.min,
+  Widget _buildMeter() {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, _) {
+        return SizedBox(
+          width: 260,
+          height: 260,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              const SizedBox(height: 16),
-              if (isReading) ...[
-                Text(
-                  '$faultCount',
-                  style: TextStyle(
-                    fontSize: 42,
-                    fontWeight: FontWeight.w900,
-                    color: faultCount == 0
-                        ? AppColors.textTertiary
-                        : AppColors.critical,
-                    fontFamily: 'Inter',
+              // Pulsing outer ring
+              Transform.scale(
+                scale: _pulseAnimation.value,
+                child: Container(
+                  width: 260,
+                  height: 260,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary
+                          .withValues(alpha: 0.08),
+                      width: 1,
+                    ),
                   ),
                 ),
-                Text(
-                  faultCount == 0
-                      ? 'checking…'
-                      : faultCount == 1
-                          ? 'fault found'
-                          : 'faults found',
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: faultCount == 0
-                          ? AppColors.textTertiary
-                          : AppColors.critical,
-                      fontFamily: 'Inter'),
+              ),
+              Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.primary
+                        .withValues(alpha: 0.12),
+                    width: 1,
+                  ),
                 ),
-              ] else if (_phase == _Phase.done) ...[
-                Icon(
-                  _dtcCodes.isEmpty
-                      ? Icons.check_circle_outline_rounded
-                      : Icons.warning_amber_rounded,
-                  color: _dtcCodes.isEmpty
-                      ? AppColors.advisory
-                      : AppColors.critical,
-                  size: 40,
-                ),
-              ] else ...[
-                const SizedBox(
-                  width: 28, height: 28,
-                  child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                      strokeWidth: 2.5),
-                ),
+              ),
+              // Gauge painter
+              CustomPaint(
+                size: const Size(200, 200),
+                painter: _GaugePainter(needlePosition: _faultCount / 10.0),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 20),
+                  if (_currentStep == _Step.scanning) ...[
+                    Text(
+                      '$_faultCount',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: _faultCount == 0
+                            ? AppColors.textTertiary
+                            : AppColors.critical,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ] else if (_currentStep ==
+                      _Step.completed) ...[
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.advisory,
+                      size: 32,
+                    ),
+                  ]
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProgressSteps() {
+    const steps = [
+      'Bluetooth',
+      'ODB Adapter',
+      'Scanning',
+      'Completed',
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          // Progress line with numbered circles ON the line
+          SizedBox(
+            height: 32,
+            child: Row(
+              children: [
+                for (int i = 0; i < steps.length; i++) ...[
+                  // Step circle
+                  Expanded(
+                    child: Center(
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: i < _Step.values.indexOf(_completedUpTo) +
+                                  1
+                              ? AppColors.primary
+                              : i == _Step.values.indexOf(_currentStep)
+                                  ? AppColors.primary
+                                  : AppColors.surface,
+                          border: Border.all(
+                            color: i <=
+                                    _Step.values
+                                        .indexOf(_currentStep)
+                                ? AppColors.primary
+                                : AppColors.border,
+                          ),
+                        ),
+                        child: Center(
+                          child: i <
+                                  _Step.values.indexOf(
+                                          _completedUpTo) +
+                                      1
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  color: Colors.white,
+                                  size: 16,
+                                )
+                              : Text(
+                                  '${i + 1}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight:
+                                        FontWeight.w600,
+                                    color: i ==
+                                            _Step.values.indexOf(
+                                                _currentStep)
+                                        ? Colors.white
+                                        : AppColors
+                                            .textTertiary,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Connecting line
+                  if (i < steps.length - 1)
+                    Expanded(
+                      child: Container(
+                        height: 2,
+                        color: i <
+                                _Step.values.indexOf(
+                                        _completedUpTo) +
+                                    1
+                            ? AppColors.primary
+                            : AppColors.border,
+                      ),
+                    ),
+                ]
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Step labels below
+          Row(
+            children: [
+              for (int i = 0; i < steps.length; i++) ...[
+                Expanded(
+                  child: Text(
+                    steps[i],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: i <=
+                              _Step.values
+                                  .indexOf(_currentStep)
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: i <=
+                              _Step.values
+                                  .indexOf(_currentStep)
+                          ? AppColors.textPrimary
+                          : AppColors.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
+              ]
             ],
           ),
         ],
@@ -604,124 +960,82 @@ class _ScanConnectingScreenState
     );
   }
 
-  Widget _buildDeviceList() {
-    final obdDevices = _foundDevices
-        .where((r) => _isLikelyOBD(r.device.platformName))
-        .toList();
-    final otherDevices = _foundDevices
-        .where((r) => !_isLikelyOBD(r.device.platformName))
-        .toList();
-
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      children: [
-        if (obdDevices.isNotEmpty) ...[
-          const _SectionLabel(label: 'OBD ADAPTERS DETECTED'),
-          const SizedBox(height: 8),
-          ...obdDevices.map((r) => _DeviceTile(
-                result: r,
-                isOBD: true,
-                onTap: () => _onSelectDevice(r.device),
-              )),
-          const SizedBox(height: 12),
-        ],
-        if (otherDevices.isNotEmpty) ...[
-          const _SectionLabel(label: 'OTHER NEARBY DEVICES'),
-          const SizedBox(height: 8),
-          ...otherDevices.map((r) => _DeviceTile(
-                result: r,
-                isOBD: false,
-                onTap: () => _onSelectDevice(r.device),
-              )),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildStepProgress() {
-    final steps = [
-      'Check Bluetooth',
-      'Find OBD adapter',
-      'Connect & initialise',
-      'Read fault codes',
-    ];
-    final currentStep = _phase.index.clamp(0, 3);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        children: steps.asMap().entries.map((e) {
-          final idx = e.key;
-          final label = e.value;
-          final isDone = idx < currentStep;
-          final isActive = idx == currentStep;
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 20, height: 20,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDone
-                        ? AppColors.advisory
-                        : isActive
-                            ? AppColors.primary
-                            : AppColors.surface,
-                    border: Border.all(
-                        color: isDone
-                            ? AppColors.advisory
-                            : isActive
-                                ? AppColors.primary
-                                : AppColors.border),
+  void _showHelpOverlay() {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: AppColors.background,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                'How to connect',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '1. Plug in your OBD-II adapter into your car\'s OBD port (usually under the dashboard).\n\n'
+                '2. Make sure your adapter is powered on (usually has an LED indicator).\n\n'
+                '3. Your phone will automatically find the adapter in the list.\n\n'
+                '4. Tap to select it and the scan will begin.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.6,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
                   ),
-                  child: Center(
-                    child: isDone
-                        ? const Icon(Icons.check_rounded,
-                            color: Colors.white, size: 12)
-                        : isActive
-                            ? const SizedBox(
-                                width: 10, height: 10,
-                                child:
-                                    CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 1.5))
-                            : null,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius:
+                        BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    'Got it',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      fontFamily: 'Inter',
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text(label,
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: isActive
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                        color: isDone
-                            ? AppColors.advisory
-                            : isActive
-                                ? AppColors.textPrimary
-                                : AppColors.textTertiary,
-                        fontFamily: 'Inter')),
-              ],
-            ),
-          );
-        }).toList(),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-// ── FAULT GAUGE PAINTER ──────────────────────────────────────
-class _FaultGaugePainter extends CustomPainter {
-  final int faultCount, maxFaults;
-  final bool isActive;
+// ── GAUGE PAINTER ───────────────────────────────────────────
+class _GaugePainter extends CustomPainter {
+  final double needlePosition; // 0.0 to 1.0
 
-  const _FaultGaugePainter({
-    required this.faultCount,
-    required this.maxFaults,
-    required this.isActive,
-  });
+  const _GaugePainter({required this.needlePosition});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -733,7 +1047,9 @@ class _FaultGaugePainter extends CustomPainter {
     // Track
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
-      startAngle, sweepAngle, false,
+      startAngle,
+      sweepAngle,
+      false,
       Paint()
         ..color = const Color(0xFF1E1E24)
         ..style = PaintingStyle.stroke
@@ -741,24 +1057,7 @@ class _FaultGaugePainter extends CustomPainter {
         ..strokeCap = StrokeCap.round,
     );
 
-    // Active arc
-    final progress =
-        isActive ? (faultCount / maxFaults).clamp(0.0, 1.0) : 0.0;
-    if (progress > 0) {
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle, sweepAngle * progress, false,
-        Paint()
-          ..color = faultCount <= 3
-              ? AppColors.moderate
-              : AppColors.critical
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 10
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-
-    // Ticks 0–10
+    // Tick marks + labels (0–10)
     final tickPaint = Paint()
       ..color = const Color(0xFF5E5E6A)
       ..strokeWidth = 1.5
@@ -801,175 +1100,25 @@ class _FaultGaugePainter extends CustomPainter {
 
     // Needle
     final needleAngle =
-        startAngle + sweepAngle * progress;
+        startAngle + sweepAngle * needlePosition;
     final needleEnd = Offset(
-        center.dx + (radius - 28) * math.cos(needleAngle),
-        center.dy + (radius - 28) * math.sin(needleAngle));
-    final needleColor =
-        isActive && faultCount > 0
-            ? faultCount <= 3
-                ? AppColors.moderate
-                : AppColors.critical
-            : AppColors.primary;
+        center.dx + (radius - 30) * math.cos(needleAngle),
+        center.dy + (radius - 30) * math.sin(needleAngle));
 
-    canvas.drawLine(center, needleEnd,
+    canvas.drawLine(
+        center,
+        needleEnd,
         Paint()
-          ..color = needleColor
-          ..strokeWidth = 3
+          ..color = AppColors.primary
+          ..strokeWidth = 2.5
           ..strokeCap = StrokeCap.round);
+
     canvas.drawCircle(
-        center, 8, Paint()..color = needleColor);
-    canvas.drawCircle(center, 4,
+        center, 6, Paint()..color = AppColors.primary);
+    canvas.drawCircle(center, 3,
         Paint()..color = const Color(0xFF0A0A0B));
   }
 
   @override
-  bool shouldRepaint(_FaultGaugePainter old) =>
-      old.faultCount != faultCount ||
-      old.isActive != isActive;
+  bool shouldRepaint(_GaugePainter old) => false;
 }
-
-// ── SUPPORTING WIDGETS ────────────────────────────────────────
-class _Ring extends StatelessWidget {
-  final double scale, opacity;
-  const _Ring({required this.scale, required this.opacity});
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.scale(
-      scale: scale,
-      child: Opacity(
-        opacity: opacity.clamp(0.0, 1.0),
-        child: Container(
-          width: 220, height: 220,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                width: 1.5),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  final String label;
-  const _SectionLabel({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(label,
-        style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textTertiary,
-            letterSpacing: 1.5,
-            fontFamily: 'Inter'));
-  }
-}
-
-class _DeviceTile extends StatelessWidget {
-  final ScanResult result;
-  final bool isOBD;
-  final VoidCallback onTap;
-
-  const _DeviceTile({
-    required this.result,
-    required this.isOBD,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final name = result.device.platformName.isNotEmpty
-        ? result.device.platformName
-        : 'Unknown Device';
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-              color: isOBD
-                  ? AppColors.primaryBorder
-                  : AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: isOBD
-                    ? AppColors.primarySubtle
-                    : AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: isOBD
-                        ? AppColors.primaryBorder
-                        : AppColors.border),
-              ),
-              child: Icon(
-                isOBD
-                    ? Icons.power_outlined
-                    : Icons.bluetooth_rounded,
-                color: isOBD
-                    ? AppColors.primary
-                    : AppColors.textSecondary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name,
-                      style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          fontFamily: 'Inter')),
-                  const SizedBox(height: 2),
-                  Text(
-                    result.device.remoteId.toString(),
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textTertiary,
-                        fontFamily: 'monospace'),
-                  ),
-                ],
-              ),
-            ),
-            if (isOBD)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primarySubtle,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text('TAP TO USE',
-                    style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                        fontFamily: 'Inter')),
-              )
-            else
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.textTertiary, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
