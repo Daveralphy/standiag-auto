@@ -1,84 +1,119 @@
-﻿import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
   final _supabase = Supabase.instance.client;
 
-  // â”€â”€ Sign Up â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  Future<AuthResponse> signUp({
+  // ── Register Car Owner ────────────────────────────────────────
+  Future<void> registerCarOwner({
     required String email,
     required String password,
+    required String username,
+    required String firstName,
+    required String lastName,
+    required String gender,
+    required String phone,
+    required String countryCode,
+    required Map<String, dynamic> vehicle,
   }) async {
-    return await _supabase.auth.signUp(
+    final res = await _supabase.auth.signUp(
       email: email.trim(),
       password: password,
     );
-  }
-
-  // â”€â”€ Create Profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  Future<void> createProfile({
-    required String userId,
-    required String email,
-    required String firstName,
-    required String lastName,
-    required String username,
-    required String phone,
-    required String gender,
-    required int age,
-  }) async {
+    final userId = res.user?.id;
+    if (userId == null) throw AuthException('Registration failed.');
     await _supabase.from('profiles').upsert({
       'id': userId,
       'email': email.trim(),
       'first_name': firstName.trim(),
       'last_name': lastName.trim(),
       'username': username.trim().toLowerCase(),
-      'phone': phone.trim(),
+      'phone': countryCode + phone.trim(),
       'gender': gender,
-      'age': age,
+      'account_type': 'car_owner',
+    });
+    await _supabase.from('vehicles').insert({
+      'user_id': userId,
+      'make': vehicle['make'],
+      'model': vehicle['model'],
+      'year': vehicle['year'],
+      'engine_type': vehicle['engine_type'],
+      'nickname': vehicle['nickname'],
+      'is_active': true,
     });
   }
 
-  // â”€â”€ Sign In â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Register Mechanic ─────────────────────────────────────────
+  Future<void> registerMechanic({
+    required String email,
+    required String password,
+    required String username,
+    required String firstName,
+    required String lastName,
+    required String gender,
+    required String phone,
+    required String countryCode,
+    required String address,
+    required List<String> specialisations,
+    required int experienceYears,
+  }) async {
+    final res = await _supabase.auth.signUp(
+      email: email.trim(),
+      password: password,
+    );
+    final userId = res.user?.id;
+    if (userId == null) throw AuthException('Registration failed.');
+    await _supabase.from('profiles').upsert({
+      'id': userId,
+      'email': email.trim(),
+      'first_name': firstName.trim(),
+      'last_name': lastName.trim(),
+      'username': username.trim().toLowerCase(),
+      'phone': countryCode + phone.trim(),
+      'gender': gender,
+      'account_type': 'mechanic',
+    });
+    await _supabase.from('mechanic_profiles').upsert({
+      'id': userId,
+      'location': address.trim(),
+      'specialisations': specialisations,
+      'experience_years': experienceYears,
+      'is_subscribed': false,
+      'is_active': true,
+      'rating': 0.0,
+    });
+  }
+
+  // ── Sign In ───────────────────────────────────────────────────
   Future<AuthResponse> signIn({
     required String emailOrUsername,
     required String password,
   }) async {
     String email = emailOrUsername.trim();
-
     if (!email.contains('@')) {
       final result = await _supabase
           .from('profiles')
           .select('email')
           .eq('username', email.toLowerCase())
           .maybeSingle();
-
-      if (result == null ||
-          result['email'] == null ||
-          (result['email'] as String).isEmpty) {
+      if (result == null || result['email'] == null) {
         throw AuthException('No account found with that username.');
       }
       email = result['email'] as String;
     }
-
     return await _supabase.auth.signInWithPassword(
       email: email,
       password: password,
     );
   }
 
-  // â”€â”€ Sign Out â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Sign Out ──────────────────────────────────────────────────
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }
 
-  // â”€â”€ Current Session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Helpers ───────────────────────────────────────────────────
   Session? get currentSession => _supabase.auth.currentSession;
-
-  // â”€â”€ Current User â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   User? get currentUser => _supabase.auth.currentUser;
-
-  // â”€â”€ Auth State Stream â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  Stream<AuthState> get authStateStream =>
-      _supabase.auth.onAuthStateChange;
+  Stream<AuthState> get authStateStream => _supabase.auth.onAuthStateChange;
 }
-
 

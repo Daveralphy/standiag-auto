@@ -1,11 +1,39 @@
 ﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
-import 'register_screen.dart';
-import 'mechanic_register_screen.dart';
-import 'login_screen.dart';
+import '../../core/theme/design_system.dart';
+import 'account_type_info_screen.dart';
+import '../../core/models/register_state.dart';
+import 'register_step_details.dart';
 
-class AccountTypeScreen extends StatelessWidget {
-  const AccountTypeScreen({super.key});
+
+class AccountTypeScreen extends StatefulWidget {
+  final void Function(String accountType)? onNext;
+  const AccountTypeScreen({super.key, this.onNext});
+  @override
+  State<AccountTypeScreen> createState() => _AccountTypeScreenState();
+}
+
+class _AccountTypeScreenState extends State<AccountTypeScreen> {
+  String? _selected;
+
+  void _select(String type) => setState(() => _selected = type);
+
+  void _next() {
+    if (_selected == null) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => RegisterStepDetails(
+        state: RegisterState(accountType: _selected!),
+        onNext: (_) {},
+        onBack: () => Navigator.of(context).pop(),
+      ),
+    ));
+  }
+
+  void _openInfo() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => const AccountTypeInfoScreen(),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,78 +41,107 @@ class AccountTypeScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 48),
-              // Back
+              // â”€â”€ Back arrow top left â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () => Navigator.of(context).canPop()
-                    ? Navigator.of(context).pop()
-                    : Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                            builder: (_) => const LoginScreen())),
-                child: const Icon(Icons.arrow_back_ios_new_rounded,
-                    color: AppColors.textPrimary, size: 20),
+                onTap: () => Navigator.of(context).pop(),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: AppColors.textTertiary,
+                  size: 22,
+                ),
               ),
-              const SizedBox(height: 32),
-              // Heading
-              const Text('Join StanDiag',
-                  style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
-                      height: 1.2,
-                      letterSpacing: -0.4,
-                      fontFamily: 'Inter')),
-              const SizedBox(height: 8),
-              const Text('Choose how you want to use the app.',
-                  style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                      fontFamily: 'Inter')),
-              const SizedBox(height: 48),
-
-              // Car Owner card
-              _AccountTypeCard(
-                icon: Icons.directions_car_outlined,
+              const SizedBox(height: 20),
+              // â”€â”€ Step tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              _StepTabs(currentStep: 0),
+              const SizedBox(height: 40),
+              // â”€â”€ Title â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              Center(
+                child: Text('Choose account type',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.h1.copyWith(
+                        fontSize: 26, letterSpacing: -0.5)),
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: Text('How do you want to use StanDiag?',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.body.copyWith(
+                        color: AppColors.textSecondary)),
+              ),
+              const SizedBox(height: 40),
+              // â”€â”€ Option cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              _OptionCard(
+                emoji: '\u{1F697}',
                 title: 'Car Owner',
-                subtitle:
-                    'Diagnose your car, find mechanics,\ntrack maintenance and repairs.',
-                isPrimary: true,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const RegisterScreen()),
-                ),
+                subtitle: 'Diagnose your vehicle and find mechanics',
+                tag: 'Owner',
+                selected: _selected == 'car_owner',
+                onTap: () => _select('car_owner'),
               ),
-              const SizedBox(height: 16),
-
-              // Mechanic card
-              _AccountTypeCard(
-                icon: Icons.car_repair,
+              const SizedBox(height: 14),
+              _OptionCard(
+                emoji: '\u{1F527}',
                 title: 'Mechanic',
-                subtitle:
-                    'Receive job requests, manage\nearnings and grow your business.',
-                isPrimary: false,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const MechanicRegisterScreen()),
-                ),
+                subtitle: 'Offer your services and grow your business',
+                tag: 'Mechanic',
+                selected: _selected == 'mechanic',
+                onTap: () => _select('mechanic'),
               ),
               const Spacer(),
-              Center(
-                child: Text(
-                  'You can only have one account type per account.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textTertiary,
-                      fontFamily: 'Inter'),
+              // â”€â”€ Help link â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _openInfo,
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('?',
+                          style: AppTypography.body.copyWith(
+                              color: AppColors.textTertiary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18)),
+                      const SizedBox(width: 6),
+                      Text('What\u2019s the difference?',
+                          style: AppTypography.bodySm.copyWith(
+                              color: AppColors.textTertiary)),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
+              // â”€â”€ Next button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _selected != null ? _next : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: double.infinity,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: _selected != null
+                        ? AppColors.primaryGradient
+                        : const LinearGradient(
+                            colors: [Color(0xFF2A2A32), Color(0xFF2A2A32)]),
+                    borderRadius: AppRadius.lgAll,
+                    boxShadow: _selected != null
+                        ? AppShadows.primaryGlow
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text('Next',
+                        style: AppTypography.button.copyWith(
+                            color: _selected != null
+                                ? Colors.white
+                                : AppColors.textTertiary)),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -93,17 +150,96 @@ class AccountTypeScreen extends StatelessWidget {
   }
 }
 
-class _AccountTypeCard extends StatelessWidget {
-  final IconData icon;
-  final String title, subtitle;
-  final bool isPrimary;
+// â”€â”€ Step tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+class _StepTabs extends StatelessWidget {
+  final int currentStep;
+  const _StepTabs({required this.currentStep});
+
+  static const _labels = [
+    'Getting\nStarted',
+    'Your\nDetails',
+    'Contact\nInfo',
+    'Vehicle /\nExpertise',
+    'Your\nIdentity',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: List.generate(_labels.length, (i) {
+        final isActive = i == currentStep;
+        final isDone = i < currentStep;
+        return Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: isActive ? 24 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? AppColors.primary
+                            : isDone
+                                ? AppColors.primary.withValues(alpha: 0.4)
+                                : AppColors.border,
+                        borderRadius: isActive
+                            ? AppRadius.smAll
+                            : AppRadius.fullAll,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(_labels[i],
+                        textAlign: TextAlign.center,
+                        style: AppTypography.caption.copyWith(
+                            color: isActive
+                                ? AppColors.textPrimary
+                                : AppColors.textTertiary,
+                            fontWeight: isActive
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                            fontSize: 10,
+                            height: 1.3)),
+                  ],
+                ),
+              ),
+              if (i < _labels.length - 1)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Container(
+                    width: 8, height: 2,
+                    color: isDone
+                        ? AppColors.primary.withValues(alpha: 0.4)
+                        : AppColors.border,
+                  ),
+                ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+}
+
+// â”€â”€ Option card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+class _OptionCard extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final String subtitle;
+  final String tag;
+  final bool selected;
   final VoidCallback onTap;
 
-  const _AccountTypeCard({
-    required this.icon,
+  const _OptionCard({
+    required this.emoji,
     required this.title,
     required this.subtitle,
-    required this.isPrimary,
+    required this.tag,
+    required this.selected,
     required this.onTap,
   });
 
@@ -112,36 +248,32 @@ class _AccountTypeCard extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: isPrimary ? AppColors.primarySubtle : AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
+          color: selected ? AppColors.primarySubtle : AppColors.surface,
+          borderRadius: AppRadius.lgAll,
           border: Border.all(
-              color: isPrimary
-                  ? AppColors.primary
-                  : AppColors.border,
-              width: isPrimary ? 1.5 : 1),
-          boxShadow: isPrimary
-              ? [BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  blurRadius: 20, offset: const Offset(0, 6))]
-              : null,
+            color: selected ? AppColors.primary : AppColors.border,
+            width: selected ? 1.5 : 1.0,
+          ),
         ),
         child: Row(
           children: [
-            Container(
-              width: 56, height: 56,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 44, height: 44,
               decoration: BoxDecoration(
-                gradient: isPrimary ? AppColors.primaryGradient : null,
-                color: isPrimary ? null : AppColors.surfaceDeep,
-                borderRadius: BorderRadius.circular(16),
+                color: selected
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : AppColors.surfaceCard,
+                borderRadius: AppRadius.mdAll,
               ),
-              child: Icon(icon,
-                  color: isPrimary
-                      ? Colors.white
-                      : AppColors.textSecondary,
-                  size: 26),
+              child: Center(
+                child: Text(emoji,
+                    style: const TextStyle(fontSize: 22)),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -149,28 +281,29 @@ class _AccountTypeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: isPrimary
-                              ? AppColors.primary
-                              : AppColors.textPrimary,
-                          fontFamily: 'Inter')),
-                  const SizedBox(height: 4),
+                      style: AppTypography.h4.copyWith(fontSize: 15)),
+                  const SizedBox(height: 3),
                   Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          height: 1.4,
-                          fontFamily: 'Inter')),
+                      style: AppTypography.bodySm.copyWith(
+                          color: AppColors.textSecondary, fontSize: 12)),
                 ],
               ),
             ),
+            const SizedBox(width: 12),
+            Text(tag,
+                style: AppTypography.bodySm.copyWith(
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.textTertiary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11)),
           ],
         ),
       ),
     );
   }
 }
+
+
 
 
