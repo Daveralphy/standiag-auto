@@ -4,6 +4,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/design_system.dart';
 import '../../core/models/register_state.dart';
 import '../../core/widgets/app_toast.dart';
+import 'register_step_vehicle.dart';
+import 'register_step_expertise.dart';
 
 class RegisterStepContact extends StatefulWidget {
   final RegisterState state;
@@ -98,11 +100,28 @@ class _RegisterStepContactState extends State<RegisterStepContact> {
       _zipCtrl.text.trim(),
       _countryCtrl.text.trim(),
     ].where((s) => s.isNotEmpty).join(', ');
-    widget.onNext(widget.state.copyWith(
+    final updated = widget.state.copyWith(
       phone: _phoneCtrl.text.trim(),
       countryCode: _countryCode,
       address: address,
-    ));
+    );
+    if (updated.accountType == 'mechanic') {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => RegisterStepExpertise(
+          state: updated,
+          onNext: (s) => widget.onNext(s),
+          onBack: () => Navigator.of(context).pop(),
+        ),
+      ));
+    } else {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => RegisterStepVehicle(
+          state: updated,
+          onNext: (s) => widget.onNext(s),
+          onBack: () => Navigator.of(context).pop(),
+        ),
+      ));
+    }
   }
 
   @override

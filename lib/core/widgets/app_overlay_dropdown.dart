@@ -51,7 +51,7 @@ class _AppSearchDropdownState extends State<AppSearchDropdown> {
     super.didUpdateWidget(old);
     if (old.items != widget.items) {
       _filtered = widget.items;
-      if (_open) _rebuild();
+      if (_open) WidgetsBinding.instance.addPostFrameCallback((_) => _rebuild());
     }
   }
 
@@ -109,7 +109,7 @@ class _AppSearchDropdownState extends State<AppSearchDropdown> {
         CompositedTransformFollower(
           link: _link,
           showWhenUnlinked: false,
-          offset: const Offset(0, 56),
+          offset: const Offset(0, 47),
           child: Align(
             alignment: Alignment.topLeft,
             child: SizedBox(
@@ -366,7 +366,7 @@ class _AppMultiSelectDropdownState extends State<AppMultiSelectDropdown> {
         CompositedTransformFollower(
           link: _link,
           showWhenUnlinked: false,
-          offset: const Offset(0, 56),
+          offset: const Offset(0, 47),
           child: Align(
             alignment: Alignment.topLeft,
             child: SizedBox(
@@ -401,7 +401,7 @@ class _AppMultiSelectDropdownState extends State<AppMultiSelectDropdown> {
                               } else {
                                 _temp.add(s);
                               }
-                              _rebuild();
+                              WidgetsBinding.instance.addPostFrameCallback((_) => _rebuild());
                             },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 150),
@@ -602,7 +602,7 @@ class _AppDobDropdownState extends State<AppDobDropdown> {
         CompositedTransformFollower(
           link: _link,
           showWhenUnlinked: false,
-          offset: const Offset(0, 56),
+          offset: const Offset(0, 47),
           child: Align(
             alignment: Alignment.topLeft,
             child: SizedBox(
@@ -804,6 +804,8 @@ class _DobColState extends State<_DobCol> {
     ]);
   }
 }
+
+
 
 
 
