@@ -109,7 +109,7 @@ class _AppSearchDropdownState extends State<AppSearchDropdown> {
         CompositedTransformFollower(
           link: _link,
           showWhenUnlinked: false,
-          offset: const Offset(0, 47),
+          offset: const Offset(0, 56),
           child: Align(
             alignment: Alignment.topLeft,
             child: SizedBox(
@@ -170,6 +170,7 @@ class _AppSearchDropdownState extends State<AppSearchDropdown> {
                                     color: AppColors.textTertiary)))
                         : ListView.separated(
                             shrinkWrap: true,
+                            padding: EdgeInsets.zero,
                             itemCount: _filtered.length,
                             separatorBuilder: (_, __) => const Divider(
                                 height: 1,
@@ -366,7 +367,7 @@ class _AppMultiSelectDropdownState extends State<AppMultiSelectDropdown> {
         CompositedTransformFollower(
           link: _link,
           showWhenUnlinked: false,
-          offset: const Offset(0, 47),
+          offset: const Offset(0, 56),
           child: Align(
             alignment: Alignment.topLeft,
             child: SizedBox(
@@ -602,7 +603,7 @@ class _AppDobDropdownState extends State<AppDobDropdown> {
         CompositedTransformFollower(
           link: _link,
           showWhenUnlinked: false,
-          offset: const Offset(0, 47),
+          offset: const Offset(0, 56),
           child: Align(
             alignment: Alignment.topLeft,
             child: SizedBox(
