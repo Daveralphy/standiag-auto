@@ -46,16 +46,16 @@ flutter:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/standiag-logo.png"
+  image_path: "assets/images/standiag-namelogo.png"
 
 flutter_native_splash:
-  color: "#0B0B0F"
-  image: assets/images/standiag-logo.png
+  color: "#0D0606"
+  image: assets/images/standiag-logo-trans.png
   android: true
   ios: true
   android_12:
-    color: "#0B0B0F"
-    image: assets/images/standiag-logo.png
+    color: "#0D0606"
+    image: assets/images/standiag-logo-trans.png
 
 
 
