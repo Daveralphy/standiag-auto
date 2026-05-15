@@ -37,6 +37,8 @@ class AppColors {
   static const Color advisoryBorder= Color(0x262DB356);
 
   static const Color success       = Color(0xFF2DB356);
+  static const Color warning      = Color(0xFFF59E0B);
+  static const Color warningDark  = Color(0xFFB45309);
   static const Color successDark   = Color(0xFF1A7040);
   static const Color whatsApp      = Color(0xFF25D366);
   static const Color bluetooth     = Color(0xFF1E90FF);
