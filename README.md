@@ -1,30 +1,16 @@
-# StanDiag Auto
+# standiag_auto
 
-> Nigerian vehicle diagnostics & mechanic-connection mobile app.
+A new Flutter project.
 
-StanDiag Auto connects car owners to OBD-II diagnostics, AI-powered fault
-interpretation, and nearby verified mechanics — all in one session.
+## Getting Started
 
-## Features
-- 🔌 OBD-II Bluetooth scanning via ELM327 adapter
-- 🤖 AI fault interpretation powered by GPT-4o
-- 🗺️ Nearby mechanic discovery with call & WhatsApp
-- 🔧 Maintenance schedule tracking
-- 📋 Full scan history per vehicle
+This project is a starting point for a Flutter application.
 
-## Tech Stack
-- Flutter (Dart)
-- Supabase (auth + database)
-- Firebase (push notifications)
-- OpenAI GPT-4o (AI fault analysis)
-- Google Maps Platform
-- Paystack (payments — Phase 2)
+A few resources to get you started if this is your first Flutter project:
 
-## Status
-🚧 In active development — MVP
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-## Setup
-See `/docs/SETUP.md` for local development instructions.
-
----
-Built by Davelop Studio · 2026
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
