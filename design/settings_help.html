@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>StanDiag — Settings & Help</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0D0D0D;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px;font-family:"Inter",sans-serif;-webkit-font-smoothing:antialiased;}
+.stage{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;align-items:flex-start;}
+.phone{width:285px;height:618px;background:#0A0A0A;border-radius:54px;border:1px solid rgba(255,255,255,0.07);position:relative;overflow:hidden;flex-shrink:0;box-shadow:0 48px 120px rgba(0,0,0,0.95);display:flex;flex-direction:column;}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 18px 24px;scrollbar-width:none;}
+.scroll::-webkit-scrollbar{display:none;}
+.sec-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,0.25);letter-spacing:0.8px;text-transform:uppercase;margin:16px 0 4px;}
+</style>
+</head>
+<body>
+<div class="stage">
+
+<!-- ══ SCREEN 1: SETTINGS ══ -->
+<div class="phone">
+  <div style="padding:14px 20px 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;"><span style="font-size:9px;font-weight:600;color:#fff;">9:41</span><div style="display:flex;gap:4px;align-items:center;"><svg width="13" height="10" viewBox="0 0 17 13" fill="none"><rect x="0" y="9" width="3" height="4" rx="1" fill="white"/><rect x="4.5" y="6" width="3" height="7" rx="1" fill="white"/><rect x="9" y="3" width="3" height="10" rx="1" fill="white"/><rect x="13.5" y="0" width="3" height="13" rx="1" fill="white"/></svg><svg width="12" height="9" viewBox="0 0 16 12" fill="none"><circle cx="8" cy="11" r="1.5" fill="white"/><path d="M4.1 7.9 C5.1 6.9 6.5 6.3 8 6.3 C9.5 6.3 10.9 6.9 11.9 7.9" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M1 4.8 C3 2.8 5.9 1.5 8 1.5 C10.1 1.5 13 2.8 15 4.8" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg><svg width="22" height="10" viewBox="0 0 27 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" fill="none" stroke="white" stroke-opacity="0.35" stroke-width="1"/><rect x="1.5" y="1.5" width="20" height="10" rx="2.5" fill="white"/><path d="M23.5 4.5 C24.5 4.5 25.5 5.2 25.5 6.5 C25.5 7.8 24.5 8.5 23.5 8.5" stroke="white" stroke-width="1" fill="none" stroke-opacity="0.4"/></svg></div></div>
+  <div style="padding:10px 18px 0;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <div style="width:30px;height:30px;border-radius:99px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <span style="font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.4px;">Settings</span>
+  </div>
+  <div class="scroll">
+    <div class="sec-lbl">Preferences</div>
+    <div style="display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;">
+    <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-linecap="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+    <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.75);letter-spacing:-0.2px;">Notifications</span>
+  </div>
+    <div style="display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;">
+    <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.5)" stroke-width="1.8"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="rgba(255,255,255,0.5)" stroke-width="1.8"/></svg></div>
+    <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.75);letter-spacing:-0.2px;">Language</span>
+  </div>
+    <div style="display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;">
+    <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="rgba(255,255,255,0.5)" stroke-width="1.8"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+    <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.75);letter-spacing:-0.2px;">Appearance</span>
+  </div>
+    <div style="display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;">
+    <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.75);letter-spacing:-0.2px;">Privacy</span>
+  </div>
+    <div class="sec-lbl">Account</div>
+    <div style="display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;">
+    <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="rgba(255,255,255,0.5)" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(255,255,255,0.5)" stroke-width="1.8"/></svg></div>
+    <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.75);letter-spacing:-0.2px;">Change Password</span>
+  </div>
+    <div style="display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;">
+    <div style="width:32px;height:32px;border-radius:10px;background:rgba(232,40,30,0.08);border:1px solid rgba(232,40,30,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="#E8281E" stroke-width="1.8" stroke-linecap="round"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="#E8281E" stroke-width="1.8" stroke-linecap="round"/><path d="M10 11v6M14 11v6" stroke="#E8281E" stroke-width="1.8" stroke-linecap="round"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#E8281E" stroke-width="1.8"/></svg></div>
+    <span style="font-size:13px;font-weight:500;color:#E8281E;letter-spacing:-0.2px;">Delete Account</span>
+  </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2: HELP & SUPPORT ══ -->
+<div class="phone">
+  <div style="padding:14px 20px 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;"><span style="font-size:9px;font-weight:600;color:#fff;">9:41</span><div style="display:flex;gap:4px;align-items:center;"><svg width="13" height="10" viewBox="0 0 17 13" fill="none"><rect x="0" y="9" width="3" height="4" rx="1" fill="white"/><rect x="4.5" y="6" width="3" height="7" rx="1" fill="white"/><rect x="9" y="3" width="3" height="10" rx="1" fill="white"/><rect x="13.5" y="0" width="3" height="13" rx="1" fill="white"/></svg><svg width="12" height="9" viewBox="0 0 16 12" fill="none"><circle cx="8" cy="11" r="1.5" fill="white"/><path d="M4.1 7.9 C5.1 6.9 6.5 6.3 8 6.3 C9.5 6.3 10.9 6.9 11.9 7.9" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M1 4.8 C3 2.8 5.9 1.5 8 1.5 C10.1 1.5 13 2.8 15 4.8" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg><svg width="22" height="10" viewBox="0 0 27 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" fill="none" stroke="white" stroke-opacity="0.35" stroke-width="1"/><rect x="1.5" y="1.5" width="20" height="10" rx="2.5" fill="white"/><path d="M23.5 4.5 C24.5 4.5 25.5 5.2 25.5 6.5 C25.5 7.8 24.5 8.5 23.5 8.5" stroke="white" stroke-width="1" fill="none" stroke-opacity="0.4"/></svg></div></div>
+  <div style="padding:10px 18px 0;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <div style="width:30px;height:30px;border-radius:99px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <span style="font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.4px;">Help & Support</span>
+  </div>
+  <div class="scroll">
+    <div class="sec-lbl">FAQs</div>
+    <div style="border-radius:14px;border:1px solid rgba(255,255,255,0.07);margin-bottom:8px;overflow:hidden;background:rgba(255,255,255,0.03);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;cursor:pointer;gap:10px;">
+      <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.75);line-height:1.4;flex:1;">How does StanDiag work?</span>
+      <svg style="flex-shrink:0;transform:rotate(180deg);" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div style="display:block;padding:0 14px 13px;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.7;">StanDiag connects car owners with nearby mechanics. Search for mechanics in your area, view their profiles, and call them directly through the app.</div>
+    </div>
+  </div>
+    <div style="border-radius:14px;border:1px solid rgba(255,255,255,0.07);margin-bottom:8px;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;cursor:pointer;gap:10px;">
+      <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.75);line-height:1.4;flex:1;">How do credits work?</span>
+      <svg style="flex-shrink:0;" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div style="display:none;padding:0 14px 13px;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.7;">Credits let you unlock mechanic contact details and run OBD scans. Buy credits in bundles — they never expire so you only pay for what you use.</div>
+    </div>
+  </div>
+    <div style="border-radius:14px;border:1px solid rgba(255,255,255,0.07);margin-bottom:8px;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;cursor:pointer;gap:10px;">
+      <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.75);line-height:1.4;flex:1;">How do I add a vehicle?</span>
+      <svg style="flex-shrink:0;" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div style="display:none;padding:0 14px 13px;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.7;">Go to My Vehicles from the side menu and tap the + Add button at the top right. Fill in your vehicle details and save.</div>
+    </div>
+  </div>
+    <div style="border-radius:14px;border:1px solid rgba(255,255,255,0.07);margin-bottom:8px;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;cursor:pointer;gap:10px;">
+      <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.75);line-height:1.4;flex:1;">What is OBD scanning?</span>
+      <svg style="flex-shrink:0;" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div style="display:none;padding:0 14px 13px;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.7;">OBD (On-Board Diagnostics) scanning reads your car's internal computer. Connect a Bluetooth OBD adapter to your car's OBD port and tap Scan.</div>
+    </div>
+  </div>
+    <div style="border-radius:14px;border:1px solid rgba(255,255,255,0.07);margin-bottom:8px;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;cursor:pointer;gap:10px;">
+      <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.75);line-height:1.4;flex:1;">How do I become a mechanic?</span>
+      <svg style="flex-shrink:0;" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div style="display:none;padding:0 14px 13px;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.7;">Sign up and select Mechanic during registration. Complete your profile with your expertise, workshop address and credentials.</div>
+    </div>
+  </div>
+
+    <!-- Contact -->
+    <div class="sec-lbl">Still need help?</div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button style="flex:1;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.6);font-family:Inter,sans-serif;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="white" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke="white" stroke-width="1.8"/></svg> Email
+      </button>
+      <button style="flex:1;padding:12px;border-radius:14px;border:none;background:linear-gradient(180deg,#F03328 0%,#C41F16 100%);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-size:11.5px;font-weight:700;color:#fff;font-family:Inter,sans-serif;box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.28),0 4px 12px rgba(232,40,30,0.3);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/></svg> Live Chat
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 3: NOTIFICATION SETTINGS ══ -->
+<div class="phone">
+  <div style="padding:14px 20px 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;"><span style="font-size:9px;font-weight:600;color:#fff;">9:41</span><div style="display:flex;gap:4px;align-items:center;"><svg width="13" height="10" viewBox="0 0 17 13" fill="none"><rect x="0" y="9" width="3" height="4" rx="1" fill="white"/><rect x="4.5" y="6" width="3" height="7" rx="1" fill="white"/><rect x="9" y="3" width="3" height="10" rx="1" fill="white"/><rect x="13.5" y="0" width="3" height="13" rx="1" fill="white"/></svg><svg width="12" height="9" viewBox="0 0 16 12" fill="none"><circle cx="8" cy="11" r="1.5" fill="white"/><path d="M4.1 7.9 C5.1 6.9 6.5 6.3 8 6.3 C9.5 6.3 10.9 6.9 11.9 7.9" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M1 4.8 C3 2.8 5.9 1.5 8 1.5 C10.1 1.5 13 2.8 15 4.8" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg><svg width="22" height="10" viewBox="0 0 27 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" fill="none" stroke="white" stroke-opacity="0.35" stroke-width="1"/><rect x="1.5" y="1.5" width="20" height="10" rx="2.5" fill="white"/><path d="M23.5 4.5 C24.5 4.5 25.5 5.2 25.5 6.5 C25.5 7.8 24.5 8.5 23.5 8.5" stroke="white" stroke-width="1" fill="none" stroke-opacity="0.4"/></svg></div></div>
+  <div style="padding:10px 18px 0;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <div style="width:30px;height:30px;border-radius:99px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <span style="font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.4px;">Notifications</span>
+  </div>
+  <div class="scroll">
+    <div class="sec-lbl">Job Updates</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+    <div>
+      <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:2px;">Mechanic found nearby</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);">When a mechanic is available in your area</div>
+    </div>
+    <div style="width:42px;height:24px;border-radius:99px;background:#E8281E;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
+    <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;transform:translateX(18px);box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+  </div>
+  </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+    <div>
+      <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:2px;">Job accepted</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);">When a mechanic accepts your request</div>
+    </div>
+    <div style="width:42px;height:24px;border-radius:99px;background:#E8281E;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
+    <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;transform:translateX(18px);box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+  </div>
+  </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+    <div>
+      <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:2px;">Mechanic en route</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);">Live updates as mechanic heads to you</div>
+    </div>
+    <div style="width:42px;height:24px;border-radius:99px;background:#E8281E;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
+    <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;transform:translateX(18px);box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+  </div>
+  </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+    <div>
+      <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:2px;">Mechanic arrived</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);">When mechanic reaches your location</div>
+    </div>
+    <div style="width:42px;height:24px;border-radius:99px;background:#E8281E;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
+    <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;transform:translateX(18px);box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+  </div>
+  </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+    <div>
+      <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:2px;">Job completed</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);">When a job is marked as done</div>
+    </div>
+    <div style="width:42px;height:24px;border-radius:99px;background:#E8281E;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
+    <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;transform:translateX(18px);box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+  </div>
+  </div>
+    <div class="sec-lbl">General</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+    <div>
+      <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:2px;">Promotional offers</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);">Deals, discounts and credit offers</div>
+    </div>
+    <div style="width:42px;height:24px;border-radius:99px;background:rgba(255,255,255,0.12);position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
+    <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;transform:translateX(2px);box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+  </div>
+  </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+    <div>
+      <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:2px;">App updates</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);">New features and improvements</div>
+    </div>
+    <div style="width:42px;height:24px;border-radius:99px;background:#E8281E;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
+    <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;transform:translateX(18px);box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+  </div>
+  </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
