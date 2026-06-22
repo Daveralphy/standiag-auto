@@ -1,71 +1,43 @@
-﻿import 'package:flutter/material.dart';
+﻿// Entry point for StanDiag Auto.
+// Initialises Firebase, Hive cache, and edge-to-edge system UI
+// before handing off to the root App widget.
+//
+// TODO: Run 'flutterfire configure' to generate firebase_options.dart,
+// then uncomment the Firebase initialisation block below.
 
-void main() {
-  runApp(const MyApp());
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'core/cache/cache_manager.dart';
+import 'shared/widget/system_ui_style.dart';
+import 'app.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // ─── Firebase ─────────────────────────────────────────────────────────────
+  // Uncomment this block after running 'flutterfire configure':
+  //
+  // import 'package:firebase_core/firebase_core.dart';
+  // import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+  // import 'firebase_options.dart';
+  //
+  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // FlutterError.onError = (details) =>
+  //     FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+  // PlatformDispatcher.instance.onError = (error, stack) {
+  //   ErrorHandler.handle(error, stack);
+  //   return true;
+  // };
+  // await FirebaseCrashlytics.instance
+  //     .setCrashlyticsCollectionEnabled(!kDebugMode);
+
+  // ─── Local Cache ──────────────────────────────────────────────────────────
+  await CacheManager.instance.init();
+
+  // ─── System UI ────────────────────────────────────────────────────────────
+  SystemUiStyle.setEdgeToEdge();
+
+  // ─── Run ──────────────────────────────────────────────────────────────────
+  runApp(const ProviderScope(child: StanDiagApp()));
 }
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-

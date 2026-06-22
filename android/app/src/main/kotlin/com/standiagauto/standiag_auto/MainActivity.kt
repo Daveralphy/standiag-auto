@@ -1,4 +1,4 @@
-package com.daveralphy.standiag_auto
+package com.standiagauto.standiag_auto
 
 import io.flutter.embedding.android.FlutterActivity
 

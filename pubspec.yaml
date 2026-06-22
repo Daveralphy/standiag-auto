@@ -1,5 +1,5 @@
 ﻿name: standiag_auto
-description: "A new Flutter project."
+description: "StanDiag Auto — Your mechanic, on demand."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -11,18 +11,73 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # ─── UI ────────────────────────────────────────────────────────────────────
   cupertino_icons: ^1.0.8
+  flutter_svg: ^2.0.10+1          # SVG icons from HTML design files
+
+  # ─── State Management ──────────────────────────────────────────────────────
+  flutter_riverpod: ^2.6.1        # Riverpod — all state management
+  riverpod_annotation: ^2.6.1     # Optional annotations for code gen
+
+  # ─── Navigation ────────────────────────────────────────────────────────────
+  go_router: ^14.6.2              # GoRouter — all navigation
+
+  # ─── Firebase ──────────────────────────────────────────────────────────────
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.3
+  cloud_firestore: ^5.6.6
+  firebase_storage: ^12.4.5
+  firebase_crashlytics: ^4.3.4
+  firebase_messaging: ^15.2.5     # Push notifications for incoming calls
+
+  # ─── Local Cache ───────────────────────────────────────────────────────────
+  hive_flutter: ^1.1.0            # Persistent local cache
+
+  # ─── Maps ──────────────────────────────────────────────────────────────────
+  google_maps_flutter: ^2.10.0    # Map screens
+
+  # ─── Calls ─────────────────────────────────────────────────────────────────
+  agora_rtc_engine: ^6.5.2        # In-app voice calls over data
+
+  # ─── OBD / Bluetooth ───────────────────────────────────────────────────────
+  flutter_blue_plus: ^1.35.3      # Bluetooth for OBD adapter connection
+
+  # ─── Utilities ─────────────────────────────────────────────────────────────
+  intl: ^0.20.2                   # Date and number formatting
+  image_picker: ^1.1.2            # Profile photo upload
+  cached_network_image: ^3.4.1    # Network image caching with placeholders
+  url_launcher: ^6.3.1            # Open links in help & support screen
+  shared_preferences: ^2.3.5      # Simple key-value storage for lightweight prefs
+  connectivity_plus: ^6.1.4       # Detect network connectivity for error handling
+  permission_handler: ^11.4.0     # Bluetooth and microphone permissions
+  geolocator: ^13.0.4             # User location for mechanic search
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^5.0.0
+  build_runner: ^2.4.15           # Code generation for Riverpod annotations
 
 flutter:
   uses-material-design: true
 
+  # ─── Assets ────────────────────────────────────────────────────────────────
+  assets:
+    - assets/images/
 
-
-
-
+  # ─── Fonts ─────────────────────────────────────────────────────────────────
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Inter/Inter-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Inter/Inter-Black.ttf
+          weight: 900
