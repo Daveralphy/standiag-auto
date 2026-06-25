@@ -6,6 +6,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/navigation/route_names.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -83,7 +85,7 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
               padding: const EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal, AppSpacing.md, 0, 0),
               child: GestureDetector(
-                onTap: () => context.pop(),
+                onTap: () => context.go(RouteNames.login),
                 child: Container(
                   width: 32,
                   height: 32,

@@ -313,6 +313,7 @@ class AppStrings {
   static const String buyCreditsWelcomeSub = 'First time only';
   static const String buyCreditsWelcomeClaimed = 'Already claimed';
   static const String buyCreditsChoose = 'Choose a Bundle';
+  static const String buyCreditsConfirm = 'Purchase Credits';
   static const String buyCreditsUnit = 'Credits';
   static const String buyCreditsbestValue = 'Best Value';
   static const String buyCreditsPayPrefix = 'Pay ';

@@ -59,7 +59,7 @@ class _MechanicSignupStepTwoScreenState
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => context.go(RouteNames.mechanicSignupStepOne),
                     child: Container(
                       width: 32,
                       height: 32,

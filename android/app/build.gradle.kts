@@ -11,6 +11,7 @@ android {
     ndkVersion = "27.0.12077973"
     ndkVersion = "27.0.12077973"
     ndkVersion = "27.0.12077973"
+    ndkVersion = "27.0.12077973"
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

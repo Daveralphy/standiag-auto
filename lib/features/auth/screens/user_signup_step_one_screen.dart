@@ -60,7 +60,7 @@ class _UserSignupStepOneScreenState extends State<UserSignupStepOneScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => context.go(RouteNames.profileTypePicker),
                     child: Container(
                       width: 32,
                       height: 32,

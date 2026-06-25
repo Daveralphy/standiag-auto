@@ -1,7 +1,5 @@
-// Onboarding screen — three swipeable pages shown on first launch.
-// Each page has a photo bleeding from the top with gradient fade,
-// a title, subtitle, page dots, and next/skip/get started buttons.
-// Navigates to Profile Type Picker on Get Started.
+// Onboarding screen — 3 swipeable pages.
+// Last page shows "Have an account? Sign in" link below Get Started.
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -35,12 +33,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _OnboardingData(
       image: 'assets/images/onboarding_2.png',
       title: 'Diagnose\nYour Car',
-      subtitle: 'Use our OBD scanner to get a full health report on your vehicle.',
+      subtitle:
+          'Use our OBD scanner to get a full health report on your vehicle.',
     ),
     _OnboardingData(
       image: 'assets/images/onboarding_3.png',
       title: 'Get Back\non the Road',
-      subtitle: 'Connect with a mechanic, agree on a price, and get the job done.',
+      subtitle:
+          'Connect with a mechanic, agree on a price, and get the job done.',
     ),
   ];
 
@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // ─── Swipeable pages ────────────────────────────────────────────
+          // Swipeable pages
           PageView.builder(
             controller: _pageController,
             itemCount: _pages.length,
@@ -85,17 +85,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             itemBuilder: (_, i) => _OnboardingPage(data: _pages[i]),
           ),
 
-          // ─── Bottom controls overlay ─────────────────────────────────────
+          // Bottom controls
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
+            bottom: 0, left: 0, right: 0,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageHorizontal,
-                0,
-                AppSpacing.pageHorizontal,
-                40,
+                AppSpacing.pageHorizontal, 0,
+                AppSpacing.pageHorizontal, 40,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -113,14 +109,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           color: _currentPage == i
                               ? AppColors.primary
                               : AppColors.textDisabled,
-                          borderRadius: BorderRadius.circular(AppRadius.full),
+                          borderRadius:
+                              BorderRadius.circular(AppRadius.full),
                         ),
                       );
                     }),
                   ),
                   const SizedBox(height: 24),
 
-                  // Next / Get Started button
+                  // Get Started / Next button
                   AppButton(
                     label: isLast
                         ? AppStrings.onboardingGetStarted
@@ -129,7 +126,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Skip button — hidden on last page
+                  // Skip on pages 1 & 2, Sign In link on page 3
                   if (!isLast)
                     GestureDetector(
                       onTap: _skip,
@@ -140,6 +137,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: AppTypography.bodySmall,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
+                        ),
+                      ),
+                    )
+                  else
+                    GestureDetector(
+                      onTap: () => context.go(RouteNames.login),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: RichText(
+                          text: TextSpan(
+                            style: AppTypography.bodySmall,
+                            children: const [
+                              TextSpan(text: 'Have an account? '),
+                              TextSpan(
+                                text: 'Sign in',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -153,8 +174,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-// ─── Single Onboarding Page ────────────────────────────────────────────────
-
+// Single page widget
 class _OnboardingPage extends StatelessWidget {
   final _OnboardingData data;
   const _OnboardingPage({required this.data});
@@ -165,9 +185,7 @@ class _OnboardingPage extends StatelessWidget {
       children: [
         // Photo bleeding from top
         Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
+          top: 0, left: 0, right: 0,
           height: MediaQuery.of(context).size.height * 0.55,
           child: Stack(
             children: [
@@ -178,7 +196,6 @@ class _OnboardingPage extends StatelessWidget {
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
               ),
-              // Gradient fade into dark background
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -197,7 +214,7 @@ class _OnboardingPage extends StatelessWidget {
           ),
         ),
 
-        // Title and subtitle at bottom
+        // Title and subtitle
         Positioned(
           bottom: 160,
           left: AppSpacing.pageHorizontal,

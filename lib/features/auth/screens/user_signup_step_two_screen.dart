@@ -56,7 +56,7 @@ class _UserSignupStepTwoScreenState extends State<UserSignupStepTwoScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => context.go(RouteNames.userSignupStepOne),
                     child: Container(
                       width: 32,
                       height: 32,
