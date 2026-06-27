@@ -95,7 +95,7 @@ class _UserSignupStepThreeScreenState
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -140,12 +140,12 @@ class _UserSignupStepThreeScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Secure your\nAccount',
+                    const Text('Secure your\nAccount',
                         style: AppTypography.display,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 6),
-                    Text('Create a username and strong password.',
+                    const Text('Create a username and strong password.',
                         style: AppTypography.body,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),

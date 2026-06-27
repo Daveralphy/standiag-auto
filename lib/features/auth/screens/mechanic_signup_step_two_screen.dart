@@ -73,7 +73,7 @@ class _MechanicSignupStepTwoScreenState
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -120,12 +120,12 @@ class _MechanicSignupStepTwoScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Workshop\nDetails',
+                    const Text('Workshop\nDetails',
                         style: AppTypography.display,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 6),
-                    Text('Tell us where you work.',
+                    const Text('Tell us where you work.',
                         style: AppTypography.body,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),

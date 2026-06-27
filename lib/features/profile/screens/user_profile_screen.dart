@@ -38,7 +38,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => context.go(RouteNames.userHome),
                     child: Container(
                       width: 32, height: 32,
                       decoration: BoxDecoration(
@@ -49,7 +49,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           size: 14, color: AppColors.textPrimary)),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(child: Text('My Profile',
+                  const Expanded(child: Text('My Profile',
                       style: AppTypography.heading3,
                       overflow: TextOverflow.ellipsis, maxLines: 1)),
                   GestureDetector(
@@ -68,17 +68,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     horizontal: AppSpacing.pageHorizontal),
                 child: Column(
                   children: [
-                    AppAvatar(name: 'John Doe', size: 80),
+                    const AppAvatar(name: 'John Doe', size: 80),
                     const SizedBox(height: 12),
-                    Text('John Doe', style: AppTypography.heading2,
+                    const Text('John Doe', style: AppTypography.heading2,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 4),
-                    Text('@johndoe', style: AppTypography.body,
+                    const Text('@johndoe', style: AppTypography.body,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 24),
-                    _InfoRow(label: 'Email', value: 'john@email.com'),
-                    _InfoRow(label: 'Phone', value: '+234 800 000 0000'),
-                    _InfoRow(label: 'Address', value: '14 Park Avenue, Lekki'),
+                    const _InfoRow(label: 'Email', value: 'john@email.com'),
+                    const _InfoRow(label: 'Phone', value: '+234 800 000 0000'),
+                    const _InfoRow(label: 'Address', value: '14 Park Avenue, Lekki'),
                     const SizedBox(height: 24),
                     GestureDetector(
                       onTap: () => context.go(RouteNames.myVehicles),
@@ -89,14 +89,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(AppRadius.card),
                           border: Border.all(color: AppColors.border)),
-                        child: Row(children: [
-                          const Icon(Icons.directions_car_outlined,
+                        child: const Row(children: [
+                          Icon(Icons.directions_car_outlined,
                               color: AppColors.primary, size: 20),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(child: Text('My Vehicles',
                               style: AppTypography.bodyLarge,
                               overflow: TextOverflow.ellipsis, maxLines: 1)),
-                          const Icon(Icons.chevron_right_rounded,
+                          Icon(Icons.chevron_right_rounded,
                               color: AppColors.textMuted, size: 18),
                         ]),
                       ),

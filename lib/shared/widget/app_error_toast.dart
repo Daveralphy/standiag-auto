@@ -182,19 +182,19 @@ class _WarningPainter extends CustomPainter {
       ..lineTo(1.82 * s, 18 * s)
       ..arcToPoint(
         Offset(3.53 * s, 21 * s),
-        radius: Radius.circular(1),
+        radius: const Radius.circular(1),
         clockwise: false,
       )
       ..lineTo(20.47 * s, 21 * s)
       ..arcToPoint(
         Offset(22.18 * s, 18 * s),
-        radius: Radius.circular(1),
+        radius: const Radius.circular(1),
         clockwise: false,
       )
       ..lineTo(13.71 * s, 3.86 * s)
       ..arcToPoint(
         Offset(10.29 * s, 3.86 * s),
-        radius: Radius.circular(1),
+        radius: const Radius.circular(1),
         clockwise: false,
       );
 

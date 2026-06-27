@@ -51,12 +51,12 @@ class _UserJobCompletedScreenState extends State<UserJobCompletedScreen> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                AppAvatar(name: 'John Doe', size: 36),
+                const AppAvatar(name: 'John Doe', size: 36),
                 const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Job Completed', style: AppTypography.heading3,
+                    const Text('Job Completed', style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     Text('Great work!', style: AppTypography.body.copyWith(
                         color: AppColors.success),
@@ -86,10 +86,10 @@ class _UserJobCompletedScreenState extends State<UserJobCompletedScreen> {
                   color: const Color(0x144CAF50),
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: const Color(0x334CAF50))),
-                child: Row(children: [
-                  const Icon(Icons.check_circle_outline_rounded,
+                child: const Row(children: [
+                  Icon(Icons.check_circle_outline_rounded,
                       color: AppColors.success, size: 18),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -110,15 +110,15 @@ class _UserJobCompletedScreenState extends State<UserJobCompletedScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   border: Border.all(color: AppColors.border)),
                 child: Column(children: [
-                  Row(children: [
+                  const Row(children: [
                     AppAvatar(name: 'Kwame Asante', size: 42),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Kwame Asante', style: AppTypography.heading4,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
-                        Row(children: const [
+                        Row(children: [
                           RatingStars(rating: 4.9, starSize: 11),
                           SizedBox(width: 4),
                           Flexible(child: Text('4.9 · 312 jobs',
@@ -129,7 +129,7 @@ class _UserJobCompletedScreenState extends State<UserJobCompletedScreen> {
                     )),
                   ]),
                   const SizedBox(height: 12),
-                  Text('Help Kwame grow by leaving a rating.',
+                  const Text('Help Kwame grow by leaving a rating.',
                       style: AppTypography.bodySmall,
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis, maxLines: 2),

@@ -67,7 +67,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () => context.go(RouteNames.userSettings),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -78,7 +78,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(AppStrings.changePasswordTitle,
+                const Expanded(child: Text(AppStrings.changePasswordTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -91,7 +91,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppStrings.changePasswordSubtitle,
+                    const Text(AppStrings.changePasswordSubtitle,
                         style: AppTypography.body,
                         maxLines: 3, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 24),

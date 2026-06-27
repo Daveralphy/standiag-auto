@@ -49,9 +49,9 @@ class _MechanicEnRouteScreenState extends State<MechanicEnRouteScreen> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                AppAvatar(name: 'Kwame Asante', size: 36),
+                const AppAvatar(name: 'Kwame Asante', size: 36),
                 const SizedBox(width: 10),
-                Expanded(child: Column(
+                const Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('En Route', style: AppTypography.heading3,
@@ -82,9 +82,9 @@ class _MechanicEnRouteScreenState extends State<MechanicEnRouteScreen> {
                   border: Border.all(color: AppColors.border)),
                 child: Column(children: [
                   Row(children: [
-                    AppAvatar(name: 'John Doe', size: 42),
+                    const AppAvatar(name: 'John Doe', size: 42),
                     const SizedBox(width: 10),
-                    Expanded(child: Column(
+                    const Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('John Doe', style: AppTypography.heading4,
@@ -99,7 +99,7 @@ class _MechanicEnRouteScreenState extends State<MechanicEnRouteScreen> {
                         Text('7 min', style: AppTypography.bodyLarge.copyWith(
                             color: AppColors.primary),
                             overflow: TextOverflow.ellipsis, maxLines: 1),
-                        Text('1.2 km', style: AppTypography.caption,
+                        const Text('1.2 km', style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],
                     ),

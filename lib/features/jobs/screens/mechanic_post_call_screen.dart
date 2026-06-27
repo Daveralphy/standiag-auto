@@ -49,9 +49,9 @@ class _MechanicPostCallScreenState extends State<MechanicPostCallScreen> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                AppAvatar(name: 'Kwame Asante', size: 36),
+                const AppAvatar(name: 'Kwame Asante', size: 36),
                 const SizedBox(width: 10),
-                Expanded(child: Column(
+                const Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Call completed', style: AppTypography.heading3,
@@ -80,9 +80,9 @@ class _MechanicPostCallScreenState extends State<MechanicPostCallScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   border: Border.all(color: AppColors.border)),
                 child: Column(children: [
-                  Row(children: [
+                  const Row(children: [
                     AppAvatar(name: 'John Doe', size: 42),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

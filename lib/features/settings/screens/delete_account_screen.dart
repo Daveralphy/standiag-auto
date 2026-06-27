@@ -41,8 +41,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(
                         AppSpacing.pageHorizontal, AppSpacing.md,
                         AppSpacing.pageHorizontal, 0),
                     child: Text(AppStrings.settingsTitle,
@@ -87,7 +87,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                   Align(
                     alignment: Alignment.topRight,
                     child: GestureDetector(
-                      onTap: () => context.pop(),
+                      onTap: () => context.go(RouteNames.userSettings),
                       child: Container(
                         width: 26, height: 26,
                         decoration: BoxDecoration(
@@ -109,12 +109,12 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     child: const Icon(Icons.warning_amber_rounded,
                         color: AppColors.primary, size: 22)),
                   const SizedBox(height: 14),
-                  Text(AppStrings.deleteAccountTitle,
+                  const Text(AppStrings.deleteAccountTitle,
                       style: AppTypography.heading3,
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
-                  Text(AppStrings.deleteAccountMessage,
+                  const Text(AppStrings.deleteAccountMessage,
                       style: AppTypography.bodySmall,
                       textAlign: TextAlign.center,
                       maxLines: 5, overflow: TextOverflow.ellipsis),
@@ -122,7 +122,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                   Row(children: [
                     Expanded(child: AppButton(
                       label: AppStrings.deleteAccountCancel,
-                      onTap: () => context.pop(),
+                      onTap: () => context.go(RouteNames.userSettings),
                       variant: AppButtonVariant.ghost,
                     )),
                     const SizedBox(width: 10),

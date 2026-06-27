@@ -61,9 +61,9 @@ class _UserRateMechanicScreenState extends State<UserRateMechanicScreen> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                AppAvatar(name: 'John Doe', size: 36),
+                const AppAvatar(name: 'John Doe', size: 36),
                 const SizedBox(width: 10),
-                Expanded(child: Column(
+                const Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Rate Mechanic', style: AppTypography.heading3,
@@ -92,9 +92,9 @@ class _UserRateMechanicScreenState extends State<UserRateMechanicScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.card),
                 border: Border.all(color: AppColors.border)),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Row(children: [
+                const Row(children: [
                   AppAvatar(name: 'Kwame Asante', size: 46),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -107,7 +107,7 @@ class _UserRateMechanicScreenState extends State<UserRateMechanicScreen> {
                   )),
                 ]),
                 const SizedBox(height: 16),
-                Text('Tap a star to rate',
+                const Text('Tap a star to rate',
                     style: AppTypography.bodySmall,
                     overflow: TextOverflow.ellipsis, maxLines: 1),
                 const SizedBox(height: 12),

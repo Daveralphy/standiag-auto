@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/navigation/route_names.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -36,7 +38,7 @@ class _JobHistoryScreenState extends State<JobHistoryScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () => context.go(RouteNames.mechanicHome),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -47,7 +49,7 @@ class _JobHistoryScreenState extends State<JobHistoryScreen> {
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(AppStrings.jobHistoryTitle,
+                const Expanded(child: Text(AppStrings.jobHistoryTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),

@@ -53,8 +53,8 @@ class _InAppCallScreenState extends State<InAppCallScreen> {
         child: Column(
           children: [
             // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal, AppSpacing.md,
                   AppSpacing.pageHorizontal, 0),
               child: Row(
@@ -73,9 +73,9 @@ class _InAppCallScreenState extends State<InAppCallScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AppAvatar(name: 'Kwame Asante', size: 100),
+                  const AppAvatar(name: 'Kwame Asante', size: 100),
                   const SizedBox(height: 20),
-                  Text('Kwame Asante',
+                  const Text('Kwame Asante',
                       style: AppTypography.heading1,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
@@ -109,10 +109,10 @@ class _InAppCallScreenState extends State<InAppCallScreen> {
                     onTap: () => context.go(RouteNames.userJobCompleted),
                     child: Container(
                       width: 64, height: 64,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
                             color: Color(0x66E8281E),
                             blurRadius: 20,

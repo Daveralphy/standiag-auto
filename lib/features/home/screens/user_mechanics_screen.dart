@@ -74,7 +74,7 @@ class _UserMechanicsScreenState extends State<UserMechanicsScreen> {
               ),
               child: Row(
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

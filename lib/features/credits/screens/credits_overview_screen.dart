@@ -39,7 +39,7 @@ class _CreditsOverviewScreenState extends State<CreditsOverviewScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () => context.go(RouteNames.userHome),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -50,7 +50,7 @@ class _CreditsOverviewScreenState extends State<CreditsOverviewScreen> {
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(AppStrings.creditsTitle,
+                const Expanded(child: Text(AppStrings.creditsTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
                 // History icon
@@ -95,7 +95,7 @@ class _CreditsOverviewScreenState extends State<CreditsOverviewScreen> {
                               overflow: TextOverflow.ellipsis, maxLines: 1),
                           const SizedBox(height: 8),
                           Row(children: [
-                            Text('48',
+                            const Text('48',
                                 style: AppTypography.balanceDisplay,
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
                             const SizedBox(width: 6),
@@ -123,11 +123,11 @@ class _CreditsOverviewScreenState extends State<CreditsOverviewScreen> {
                             letterSpacing: 0.8),
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 10),
-                    _CreditRule(
+                    const _CreditRule(
                         label: AppStrings.creditsContactMechanic,
                         cost: AppStrings.creditsContactCost),
                     const SizedBox(height: 6),
-                    _CreditRule(
+                    const _CreditRule(
                         label: AppStrings.creditsOBDScan,
                         cost: AppStrings.creditsScanCost),
                     const SizedBox(height: 20),

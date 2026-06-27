@@ -65,7 +65,7 @@ class _MechanicCardScreenState extends State<MechanicCardScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => context.go(RouteNames.searching),
                     child: Container(
                       width: 32, height: 32,
                       decoration: BoxDecoration(
@@ -78,7 +78,7 @@ class _MechanicCardScreenState extends State<MechanicCardScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  const Expanded(
                     child: Text('Mechanic Found',
                         style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -116,18 +116,18 @@ class _MechanicCardScreenState extends State<MechanicCardScreen> {
                 children: [
                   Row(
                     children: [
-                      AppAvatar(name: 'Kwame Asante', size: 46),
+                      const AppAvatar(name: 'Kwame Asante', size: 46),
                       const SizedBox(width: 12),
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Kwame Asante',
                                 style: AppTypography.heading4,
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
-                            const SizedBox(height: 3),
+                            SizedBox(height: 3),
                             Row(
-                              children: const [
+                              children: [
                                 RatingStars(rating: 4.9, starSize: 12),
                                 SizedBox(width: 4),
                                 Flexible(
@@ -138,9 +138,9 @@ class _MechanicCardScreenState extends State<MechanicCardScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
+                            SizedBox(height: 6),
                             Row(
-                              children: const [
+                              children: [
                                 Flexible(child: ExpertiseTag(label: 'Engine')),
                                 SizedBox(width: 4),
                                 Flexible(child: ExpertiseTag(label: 'Transmission')),

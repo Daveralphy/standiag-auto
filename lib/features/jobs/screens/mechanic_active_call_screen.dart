@@ -48,8 +48,8 @@ class _MechanicActiveCallScreenState extends State<MechanicActiveCallScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal, AppSpacing.md,
                   AppSpacing.pageHorizontal, 0),
               child: Text('StanDiag Call',
@@ -60,9 +60,9 @@ class _MechanicActiveCallScreenState extends State<MechanicActiveCallScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AppAvatar(name: 'John Doe', size: 100),
+                  const AppAvatar(name: 'John Doe', size: 100),
                   const SizedBox(height: 20),
-                  Text('John Doe',
+                  const Text('John Doe',
                       style: AppTypography.heading1,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
@@ -90,10 +90,10 @@ class _MechanicActiveCallScreenState extends State<MechanicActiveCallScreen> {
                     onTap: () => context.go(RouteNames.mechanicPostCall),
                     child: Container(
                       width: 64, height: 64,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(color: Color(0x66E8281E), blurRadius: 20),
                         ],
                       ),

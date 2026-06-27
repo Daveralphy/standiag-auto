@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/navigation/route_names.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -36,7 +38,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () => context.go(RouteNames.userHome),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -47,7 +49,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(AppStrings.scanHistoryTitle,
+                const Expanded(child: Text(AppStrings.scanHistoryTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -119,7 +121,7 @@ class _ScanCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis, maxLines: 1),
           ],
         )),
-        Text('/10', style: AppTypography.caption,
+        const Text('/10', style: AppTypography.caption,
             overflow: TextOverflow.ellipsis, maxLines: 1),
       ]),
     );

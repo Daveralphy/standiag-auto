@@ -118,22 +118,22 @@ class MechanicCardSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const AppSkeleton.circle(size: 46),
-          const SizedBox(width: 12),
+          AppSkeleton.circle(size: 46),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AppSkeleton.wide(height: 13, radius: AppRadius.xs),
-                const SizedBox(height: 6),
+                AppSkeleton.wide(height: 13, radius: AppRadius.xs),
+                SizedBox(height: 6),
                 AppSkeleton(width: 80, height: 10, radius: AppRadius.xs),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Row(
                   children: [
                     AppSkeleton(width: 50, height: 18, radius: AppRadius.full),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     AppSkeleton(width: 60, height: 18, radius: AppRadius.full),
                   ],
                 ),
@@ -152,23 +152,23 @@ class TransactionRowSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           AppSkeleton(width: 36, height: 36, radius: AppRadius.sm),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AppSkeleton.wide(height: 12, radius: AppRadius.xs),
-                const SizedBox(height: 5),
+                AppSkeleton.wide(height: 12, radius: AppRadius.xs),
+                SizedBox(height: 5),
                 AppSkeleton(width: 80, height: 10, radius: AppRadius.xs),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           AppSkeleton(width: 40, height: 13, radius: AppRadius.xs),
         ],
       ),
@@ -190,17 +190,17 @@ class VehicleCardSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppSkeleton.wide(height: 13, radius: AppRadius.xs),
-          const SizedBox(height: 6),
+          AppSkeleton.wide(height: 13, radius: AppRadius.xs),
+          SizedBox(height: 6),
           AppSkeleton(width: 120, height: 10, radius: AppRadius.xs),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
             children: [
               AppSkeleton(width: 60, height: 18, radius: AppRadius.full),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               AppSkeleton(width: 50, height: 18, radius: AppRadius.full),
             ],
           ),
@@ -223,13 +223,13 @@ class CreditsBalanceSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.creditsCard),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSkeleton(width: 80, height: 10, radius: AppRadius.xs),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           AppSkeleton(width: 140, height: 44, radius: AppRadius.sm),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           AppSkeleton(width: 110, height: 36, radius: AppRadius.full),
         ],
       ),
@@ -243,16 +243,16 @@ class ProfileHeaderSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
-        const AppSkeleton.circle(size: 36),
-        const SizedBox(width: 10),
+        AppSkeleton.circle(size: 36),
+        SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AppSkeleton(width: 120, height: 14, radius: AppRadius.xs),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               AppSkeleton(width: 80, height: 10, radius: AppRadius.xs),
             ],
           ),

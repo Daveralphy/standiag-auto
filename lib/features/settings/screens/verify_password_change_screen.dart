@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/navigation/route_names.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -67,7 +69,7 @@ class _VerifyPasswordChangeScreenState
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () => context.go(RouteNames.userSettings),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -78,7 +80,7 @@ class _VerifyPasswordChangeScreenState
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(AppStrings.verifyChangeTitle,
+                const Expanded(child: Text(AppStrings.verifyChangeTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -98,12 +100,12 @@ class _VerifyPasswordChangeScreenState
                     child: const Icon(Icons.mail_outline_rounded,
                         color: AppColors.primary, size: 26)),
                   const SizedBox(height: 20),
-                  Text(AppStrings.verifyChangeCheckEmail,
+                  const Text(AppStrings.verifyChangeCheckEmail,
                       style: AppTypography.heading2,
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
-                  Text(AppStrings.verifyChangeSubtitle,
+                  const Text(AppStrings.verifyChangeSubtitle,
                       style: AppTypography.body,
                       textAlign: TextAlign.center,
                       maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -125,7 +127,7 @@ class _VerifyPasswordChangeScreenState
                   ),
                   const SizedBox(height: 24),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Text("Didn't receive it? ",
+                    const Text("Didn't receive it? ",
                         style: AppTypography.bodySmall,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     Text(AppStrings.otpResend,
@@ -149,8 +151,8 @@ class _VerifyPasswordChangeScreenState
                         if (!mounted) return;
                         setState(() => _isLoading = false);
                         if (!context.mounted) return;
-                        context.pop();
-                        context.pop();
+                        context.go(RouteNames.userSettings);
+                        context.go(RouteNames.userSettings);
                       });
                     },
                     isLoading: _isLoading,

@@ -130,8 +130,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   if (!isLast)
                     GestureDetector(
                       onTap: _skip,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
                         child: Text(
                           AppStrings.onboardingSkip,
                           style: AppTypography.bodySmall,
@@ -146,9 +146,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: RichText(
-                          text: TextSpan(
+                          text: const TextSpan(
                             style: AppTypography.bodySmall,
-                            children: const [
+                            children: [
                               TextSpan(text: 'Have an account? '),
                               TextSpan(
                                 text: 'Sign in',

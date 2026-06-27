@@ -49,7 +49,7 @@ class _MechanicHomeScreenState extends State<MechanicHomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -118,13 +118,13 @@ class _MechanicHomeScreenState extends State<MechanicHomeScreen> {
                                   const Icon(Icons.qr_code_scanner_rounded,
                                       color: Colors.white, size: 28),
                                   const SizedBox(height: 12),
-                                  Text(
+                                  const Text(
                                     'Scan Customer',
                                     style: AppTypography.heading2,
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                   ),
-                                  Text(
+                                  const Text(
                                     'Vehicle',
                                     style: AppTypography.heading2,
                                     overflow: TextOverflow.ellipsis,
@@ -146,8 +146,8 @@ class _MechanicHomeScreenState extends State<MechanicHomeScreen> {
                         const SizedBox(height: 24),
 
                         // ─── Job Requests section ────────────────────────
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
                               horizontal: AppSpacing.pageHorizontal),
                           child: Text(
                             'Job Requests',
@@ -157,11 +157,11 @@ class _MechanicHomeScreenState extends State<MechanicHomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 14),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
                               horizontal: AppSpacing.pageHorizontal),
                           child: Column(
-                            children: const [
+                            children: [
                               MechanicCardSkeleton(),
                               SizedBox(height: 10),
                               MechanicCardSkeleton(),

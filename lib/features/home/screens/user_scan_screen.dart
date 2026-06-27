@@ -66,7 +66,7 @@ class _UserScanScreenState extends State<UserScanScreen>
                   ),
                   child: Row(
                     children: [
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -132,15 +132,15 @@ class _UserScanScreenState extends State<UserScanScreen>
                         ),
                       ),
                       const SizedBox(height: 32),
-                      Text(
+                      const Text(
                         AppStrings.homeTapToScan,
                         style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                       const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
                             horizontal: AppSpacing.xxl),
                         child: Text(
                           'Connect your OBD adapter to your car\'s OBD-II port first.',

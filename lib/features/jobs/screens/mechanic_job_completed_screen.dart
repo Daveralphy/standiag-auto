@@ -50,12 +50,12 @@ class _MechanicJobCompletedScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                AppAvatar(name: 'Kwame Asante', size: 36),
+                const AppAvatar(name: 'Kwame Asante', size: 36),
                 const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Job Completed', style: AppTypography.heading3,
+                    const Text('Job Completed', style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     Text('Well done!', style: AppTypography.body.copyWith(
                         color: AppColors.success),
@@ -84,10 +84,10 @@ class _MechanicJobCompletedScreenState
                   color: const Color(0x144CAF50),
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: const Color(0x334CAF50))),
-                child: Row(children: [
-                  const Icon(Icons.check_circle_outline_rounded,
+                child: const Row(children: [
+                  Icon(Icons.check_circle_outline_rounded,
                       color: AppColors.success, size: 18),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -106,9 +106,9 @@ class _MechanicJobCompletedScreenState
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   border: Border.all(color: AppColors.border)),
                 child: Column(children: [
-                  Row(children: [
+                  const Row(children: [
                     AppAvatar(name: 'John Doe', size: 42),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -121,7 +121,7 @@ class _MechanicJobCompletedScreenState
                     )),
                   ]),
                   const SizedBox(height: 12),
-                  Text('Customer rating', style: AppTypography.bodySmall,
+                  const Text('Customer rating', style: AppTypography.bodySmall,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
                   Row(

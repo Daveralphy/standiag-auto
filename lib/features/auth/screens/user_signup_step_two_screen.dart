@@ -73,7 +73,7 @@ class _UserSignupStepTwoScreenState extends State<UserSignupStepTwoScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -120,12 +120,12 @@ class _UserSignupStepTwoScreenState extends State<UserSignupStepTwoScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Contact\nDetails',
+                    const Text('Contact\nDetails',
                         style: AppTypography.display,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 6),
-                    Text('How can we reach you?',
+                    const Text('How can we reach you?',
                         style: AppTypography.body,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/navigation/route_names.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -36,7 +38,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () => context.go(RouteNames.userSettings),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -47,7 +49,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(AppStrings.helpTitle,
+                const Expanded(child: Text(AppStrings.helpTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -60,7 +62,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('FAQs', style: AppTypography.heading4,
+                    const Text('FAQs', style: AppTypography.heading4,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 12),
                     ...[
@@ -71,17 +73,17 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       'How do I rate a mechanic?',
                     ].map((q) => _FaqItem(question: q)),
                     const SizedBox(height: 24),
-                    Text(AppStrings.helpStillNeed,
+                    const Text(AppStrings.helpStillNeed,
                         style: AppTypography.heading4,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 12),
-                    _ContactItem(
+                    const _ContactItem(
                       icon: Icons.mail_outline_rounded,
                       label: AppStrings.helpEmail,
                       value: AppStrings.supportEmail,
                     ),
                     const SizedBox(height: 8),
-                    _ContactItem(
+                    const _ContactItem(
                       icon: Icons.chat_bubble_outline_rounded,
                       label: AppStrings.helpLiveChat,
                       value: 'Chat with us now',
@@ -133,7 +135,7 @@ class _FaqItemState extends State<_FaqItem> {
             ]),
             if (_expanded) ...[
               const SizedBox(height: 8),
-              Text('Tap the Mechanics tab and set your search radius. '
+              const Text('Tap the Mechanics tab and set your search radius. '
                   'Nearby mechanics will appear on the map.',
                   style: AppTypography.bodySmall,
                   overflow: TextOverflow.ellipsis, maxLines: 5),

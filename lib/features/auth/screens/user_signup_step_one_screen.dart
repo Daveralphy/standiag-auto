@@ -77,7 +77,7 @@ class _UserSignupStepOneScreenState extends State<UserSignupStepOneScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -132,14 +132,14 @@ class _UserSignupStepOneScreenState extends State<UserSignupStepOneScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Tell us about\nyourself',
                       style: AppTypography.display,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    Text(
+                    const Text(
                       'Fill in your personal details to get started.',
                       style: AppTypography.body,
                       maxLines: 2,
@@ -181,11 +181,11 @@ class _UserSignupStepOneScreenState extends State<UserSignupStepOneScreen> {
                       child: GestureDetector(
                         onTap: () => context.go(RouteNames.login),
                         child: RichText(
-                          text: TextSpan(
+                          text: const TextSpan(
                             style: AppTypography.body,
                             children: [
                               TextSpan(text: AppStrings.signUpAlreadyHave),
-                              const TextSpan(
+                              TextSpan(
                                 text: 'Log In',
                                 style: TextStyle(
                                   color: AppColors.primary,

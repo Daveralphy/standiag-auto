@@ -66,7 +66,7 @@ class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => context.go(RouteNames.userMechanics),
                     child: Container(
                       width: 32, height: 32,
                       decoration: BoxDecoration(
@@ -79,7 +79,7 @@ class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  const Expanded(
                     child: Text('Search Radius',
                         style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -117,7 +117,7 @@ class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(
+                      const Expanded(
                         child: Text('Search Radius',
                             style: AppTypography.heading3,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -146,7 +146,7 @@ class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('0.5 km', style: AppTypography.caption,

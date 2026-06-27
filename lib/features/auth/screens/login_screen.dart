@@ -63,14 +63,14 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ─── Header ───────────────────────────────────────────────────
-              Text(
+              const Text(
                 AppStrings.login,
                 style: AppTypography.display,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
               const SizedBox(height: 6),
-              Text(
+              const Text(
                 'Welcome back to StanDiag Auto.',
                 style: AppTypography.body,
                 overflow: TextOverflow.ellipsis,
@@ -129,11 +129,11 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
 
               // ─── OR divider ───────────────────────────────────────────────
-              Row(
+              const Row(
                 children: [
-                  const Expanded(child: Divider(color: AppColors.borderSubtle)),
+                  Expanded(child: Divider(color: AppColors.borderSubtle)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       AppStrings.loginOrDivider,
                       style: AppTypography.caption,
@@ -141,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       maxLines: 1,
                     ),
                   ),
-                  const Expanded(child: Divider(color: AppColors.borderSubtle)),
+                  Expanded(child: Divider(color: AppColors.borderSubtle)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -171,13 +171,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: GestureDetector(
                   onTap: () => context.go(RouteNames.profileTypePicker),
                   child: RichText(
-                    text: TextSpan(
+                    text: const TextSpan(
                       style: AppTypography.body,
                       children: [
                         TextSpan(text: AppStrings.loginNoAccount),
                         TextSpan(
                           text: AppStrings.loginSignUp,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
                           ),

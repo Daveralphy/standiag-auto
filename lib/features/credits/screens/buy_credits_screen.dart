@@ -4,6 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/navigation/route_names.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -50,7 +52,7 @@ class _BuyCreditsScreenState extends State<BuyCreditsScreen> {
                   AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () => context.go(RouteNames.userCredits),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -61,7 +63,7 @@ class _BuyCreditsScreenState extends State<BuyCreditsScreen> {
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(AppStrings.buyCreditsTitle,
+                const Expanded(child: Text(AppStrings.buyCreditsTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -83,13 +85,13 @@ class _BuyCreditsScreenState extends State<BuyCreditsScreen> {
                         borderRadius: BorderRadius.circular(AppRadius.card),
                         border: Border.all(color: AppColors.border)),
                       child: Row(children: [
-                        Expanded(child: Column(
+                        const Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(AppStrings.creditsBalance,
                                 style: AppTypography.caption,
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Text('48 credits',
                                 style: AppTypography.heading3,
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -203,7 +205,7 @@ class _BuyCreditsScreenState extends State<BuyCreditsScreen> {
                         if (!context.mounted) return;
                                 if (mounted) {
                                   setState(() => _isLoading = false);
-                                  context.pop();
+                                  context.go(RouteNames.userCredits);
                                 }
                               });
                             }

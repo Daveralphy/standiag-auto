@@ -52,7 +52,7 @@ class _MechanicProfileOwnScreenState extends State<MechanicProfileOwnScreen> {
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text('My Profile',
+                const Expanded(child: Text('My Profile',
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
                 GestureDetector(
@@ -64,32 +64,32 @@ class _MechanicProfileOwnScreenState extends State<MechanicProfileOwnScreen> {
               ]),
             ),
             const SizedBox(height: 24),
-            Expanded(
+            const Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                     horizontal: AppSpacing.pageHorizontal),
                 child: Column(children: [
                   AppAvatar(name: 'Kwame Asante', size: 80),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Text('Kwame Asante', style: AppTypography.heading2,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Row(mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       RatingStars(rating: 4.9),
                       SizedBox(width: 6),
                       Flexible(child: Text('4.9 · 312 jobs',
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1)),
                     ]),
-                  const SizedBox(height: 12),
-                  Wrap(spacing: 6, runSpacing: 6, children: const [
+                  SizedBox(height: 12),
+                  Wrap(spacing: 6, runSpacing: 6, children: [
                     ExpertiseTag(label: 'Engine Repair'),
                     ExpertiseTag(label: 'Transmission'),
                     ExpertiseTag(label: 'Electrical'),
                     ExpertiseTag(label: 'Brakes'),
                   ]),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   _InfoRow(label: 'Workshop', value: '14 Park Avenue, Lekki'),
                   _InfoRow(label: 'Experience', value: '8 years'),
                   _InfoRow(label: 'Phone', value: '+234 800 000 0000'),

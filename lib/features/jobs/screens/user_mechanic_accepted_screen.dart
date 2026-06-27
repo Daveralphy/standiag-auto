@@ -51,7 +51,7 @@ class _UserMechanicAcceptedScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: GestureDetector(
-                onTap: () => context.pop(),
+                onTap: () => context.go(RouteNames.userHome),
                 child: Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(
@@ -81,10 +81,10 @@ class _UserMechanicAcceptedScreenState
                       color: const Color(0x144CAF50),
                       borderRadius: BorderRadius.circular(AppRadius.xl),
                       border: Border.all(color: const Color(0x334CAF50))),
-                    child: Row(children: [
-                      const Icon(Icons.check_circle_outline_rounded,
+                    child: const Row(children: [
+                      Icon(Icons.check_circle_outline_rounded,
                           color: AppColors.success, size: 18),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Expanded(child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -100,12 +100,12 @@ class _UserMechanicAcceptedScreenState
                   ),
                   const SizedBox(height: 14),
                   Row(children: [
-                    AppAvatar(name: 'Kwame Asante', size: 42),
+                    const AppAvatar(name: 'Kwame Asante', size: 42),
                     const SizedBox(width: 10),
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Kwame Asante', style: AppTypography.heading4,
+                        const Text('Kwame Asante', style: AppTypography.heading4,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                         Text('7 min away · 1.2 km',
                             style: AppTypography.caption.copyWith(

@@ -85,7 +85,7 @@ class _SearchingScreenState extends State<SearchingScreen>
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => context.go(RouteNames.radiusSelector),
                     child: Container(
                       width: 32, height: 32,
                       decoration: BoxDecoration(
@@ -98,7 +98,7 @@ class _SearchingScreenState extends State<SearchingScreen>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  const Expanded(
                     child: Text('Searching...',
                         style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -148,7 +148,7 @@ class _SearchingScreenState extends State<SearchingScreen>
             right: AppSpacing.pageHorizontal,
             child: Column(
               children: [
-                Text('Searching for mechanics nearby...',
+                const Text('Searching for mechanics nearby...',
                     style: AppTypography.body,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis, maxLines: 2),

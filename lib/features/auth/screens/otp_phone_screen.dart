@@ -124,7 +124,7 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Text(
+                    const Text(
                       AppStrings.otpTitle,
                       style: AppTypography.heading2,
                       textAlign: TextAlign.center,
@@ -132,7 +132,7 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
                       maxLines: 1,
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    const Text(
                       AppStrings.otpSubtitlePhone,
                       style: AppTypography.body,
                       textAlign: TextAlign.center,
@@ -161,7 +161,7 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
+                        const Text(
                           "Didn't receive it? ",
                           style: AppTypography.bodySmall,
                           overflow: TextOverflow.ellipsis,

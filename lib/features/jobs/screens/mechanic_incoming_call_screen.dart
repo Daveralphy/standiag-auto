@@ -51,8 +51,8 @@ class _MechanicIncomingCallScreenState
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal, AppSpacing.md,
                   AppSpacing.pageHorizontal, 0),
               child: Text('Incoming Call',
@@ -74,17 +74,17 @@ class _MechanicIncomingCallScreenState
                         border: Border.all(
                             color: AppColors.primaryBorder, width: 2),
                       ),
-                      child: Center(
+                      child: const Center(
                         child: AppAvatar(name: 'John Doe', size: 96),
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text('John Doe',
+                  const Text('John Doe',
                       style: AppTypography.heading1,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
-                  Text('StanDiag Call · Incoming',
+                  const Text('StanDiag Call · Incoming',
                       style: AppTypography.body,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                 ],
@@ -114,7 +114,7 @@ class _MechanicIncomingCallScreenState
                               color: AppColors.textMuted, size: 28),
                         ),
                         const SizedBox(height: 8),
-                        Text('Decline',
+                        const Text('Decline',
                             style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],
@@ -127,10 +127,10 @@ class _MechanicIncomingCallScreenState
                       children: [
                         Container(
                           width: 64, height: 64,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: AppColors.success,
                             shape: BoxShape.circle,
-                            boxShadow: const [
+                            boxShadow: [
                               BoxShadow(
                                 color: Color(0x664CAF50),
                                 blurRadius: 20,
@@ -141,7 +141,7 @@ class _MechanicIncomingCallScreenState
                               color: Colors.white, size: 28),
                         ),
                         const SizedBox(height: 8),
-                        Text('Accept',
+                        const Text('Accept',
                             style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],

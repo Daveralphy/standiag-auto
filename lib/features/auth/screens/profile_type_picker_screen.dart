@@ -107,9 +107,9 @@ class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
                       children: [
                         // ─── Title ──────────────────────────────────────────
                         RichText(
-                          text: TextSpan(
+                          text: const TextSpan(
                             style: AppTypography.display,
-                            children: const [
+                            children: [
                               TextSpan(text: 'Who are '),
                               TextSpan(
                                 text: 'you?',
@@ -121,7 +121,7 @@ class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 6),
-                        Text(
+                        const Text(
                           AppStrings.profileTypeSubtitle,
                           style: AppTypography.bodySmall,
                           maxLines: 2,

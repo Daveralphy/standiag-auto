@@ -74,6 +74,12 @@ class CacheKeys {
   /// Timestamp of when each cache key was last populated.
   /// Used to check TTL without reading the full cached value.
   /// Pattern: '$cacheKey_timestamp' — e.g. 'scan_history_timestamp'.
+  /// All settings as a single map (persists full SettingsModel).
+  static const String settings = 'settings';
+
+  /// Timestamp of the last home screen data fetch.
+  static const String homeLastFetch = 'home_last_fetch';
+
   static String timestampKey(String key) => '${key}_timestamp';
 }
 

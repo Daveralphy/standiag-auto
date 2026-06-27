@@ -41,7 +41,7 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
                   AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () => context.go(RouteNames.mechanicCard),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -52,7 +52,7 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text('Mechanic Profile',
+                const Expanded(child: Text('Mechanic Profile',
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -70,44 +70,44 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(AppRadius.card),
                         border: Border.all(color: AppColors.border)),
-                      child: Column(children: [
+                      child: const Column(children: [
                         AppAvatar(name: 'Kwame Asante', size: 72),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         Text('Kwame Asante',
                             style: AppTypography.heading2,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Row(mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             RatingStars(rating: 4.9),
                             SizedBox(width: 6),
                             Flexible(child: Text('4.9 · 312 jobs · 8 yrs',
                                 style: AppTypography.caption,
                                 overflow: TextOverflow.ellipsis, maxLines: 1)),
                           ]),
-                        const SizedBox(height: 12),
-                        Wrap(spacing: 6, runSpacing: 6, children: const [
+                        SizedBox(height: 12),
+                        Wrap(spacing: 6, runSpacing: 6, children: [
                           ExpertiseTag(label: 'Engine Repair'),
                           ExpertiseTag(label: 'Transmission'),
                           ExpertiseTag(label: 'Electrical'),
                           ExpertiseTag(label: 'Brakes'),
                           ExpertiseTag(label: 'AC Repair'),
                         ]),
-                        const SizedBox(height: 12),
-                        const Divider(color: AppColors.borderSubtle),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
+                        Divider(color: AppColors.borderSubtle),
+                        SizedBox(height: 12),
                         Row(children: [
-                          const Icon(Icons.location_on_outlined,
+                          Icon(Icons.location_on_outlined,
                               size: 14, color: AppColors.textMuted),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           Expanded(child: Text('14 Park Avenue, Lekki',
                               style: AppTypography.bodySmall,
                               overflow: TextOverflow.ellipsis, maxLines: 1)),
                         ]),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         Row(children: [
-                          const StatusDot(isOnline: true, size: 8),
-                          const SizedBox(width: 6),
+                          StatusDot(isOnline: true, size: 8),
+                          SizedBox(width: 6),
                           Text('Online · 1.2 km away',
                               style: AppTypography.bodySmall,
                               overflow: TextOverflow.ellipsis, maxLines: 1),

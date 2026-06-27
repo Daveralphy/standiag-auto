@@ -51,12 +51,12 @@ class _UserMechanicArrivedScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                AppAvatar(name: 'John Doe', size: 36),
+                const AppAvatar(name: 'John Doe', size: 36),
                 const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Mechanic Arrived', style: AppTypography.heading3,
+                    const Text('Mechanic Arrived', style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     Text("He's here", style: AppTypography.body.copyWith(
                         color: AppColors.success),
@@ -85,10 +85,10 @@ class _UserMechanicArrivedScreenState
                   color: const Color(0x144CAF50),
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: const Color(0x334CAF50))),
-                child: Row(children: [
-                  const Icon(Icons.location_on_rounded,
+                child: const Row(children: [
+                  Icon(Icons.location_on_rounded,
                       color: AppColors.success, size: 18),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

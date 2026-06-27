@@ -73,7 +73,7 @@ class _MechanicSignupStepOneScreenState
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -120,12 +120,12 @@ class _MechanicSignupStepOneScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Tell us about\nyourself',
+                    const Text('Tell us about\nyourself',
                         style: AppTypography.display,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 6),
-                    Text('Fill in your personal details to get started.',
+                    const Text('Fill in your personal details to get started.',
                         style: AppTypography.body,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),

@@ -48,7 +48,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                Expanded(child: Column(
+                const Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Tracking', style: AppTypography.heading3,
@@ -77,12 +77,12 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.card),
                 border: Border.all(color: AppColors.border)),
               child: Row(children: [
-                AppAvatar(name: 'Kwame Asante', size: 42),
+                const AppAvatar(name: 'Kwame Asante', size: 42),
                 const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Kwame Asante', style: AppTypography.heading4,
+                    const Text('Kwame Asante', style: AppTypography.heading4,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     Text('7 min away · 1.2 km',
                         style: AppTypography.caption.copyWith(

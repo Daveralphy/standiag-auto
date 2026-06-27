@@ -123,7 +123,7 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Text(
+                    const Text(
                       AppStrings.otpTitle,
                       style: AppTypography.heading2,
                       textAlign: TextAlign.center,
@@ -131,7 +131,7 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                       maxLines: 1,
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    const Text(
                       AppStrings.otpSubtitleEmail,
                       style: AppTypography.body,
                       textAlign: TextAlign.center,
@@ -160,7 +160,7 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
+                        const Text(
                           "Didn't receive it? ",
                           style: AppTypography.bodySmall,
                           overflow: TextOverflow.ellipsis,
