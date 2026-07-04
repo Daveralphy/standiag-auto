@@ -1,16 +1,16 @@
 // Onboarding screen — 3 swipeable pages.
-// Last page shows "Have an account? Sign in" link below Get Started.
+// Photo bleeds from top (65% of screen height) with gradient fade.
+// Dots + Skip sit at the top of the content area.
+// Headline, subline, and button at the bottom.
+// Screen 3 shows "Have an account? Sign in" below the button.
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
-import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
-import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -27,20 +27,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const List<_OnboardingData> _pages = [
     _OnboardingData(
       image: 'assets/images/onboarding_1.png',
-      title: 'Find a Mechanic\nNearby',
-      subtitle: 'Discover qualified mechanics in your area instantly.',
+      headline: 'Help is one',
+      accent: 'tap away.',
+      subline:
+          'Describe your issue and get matched with a verified mechanic nearby in seconds.',
     ),
     _OnboardingData(
       image: 'assets/images/onboarding_2.png',
-      title: 'Diagnose\nYour Car',
-      subtitle:
-          'Use our OBD scanner to get a full health report on your vehicle.',
+      headline: 'Your mechanic',
+      accent: 'is near.',
+      subline:
+          'See verified mechanics around you, ratings, and real-time distance. Pick who you trust.',
     ),
     _OnboardingData(
       image: 'assets/images/onboarding_3.png',
-      title: 'Get Back\non the Road',
-      subtitle:
-          'Connect with a mechanic, agree on a price, and get the job done.',
+      headline: 'Fixed. Rated.',
+      accent: 'Done.',
+      subline:
+          'Pay securely in-app and rate your mechanic. Quality you can trust, every time.',
     ),
   ];
 
@@ -67,105 +71,215 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  void _skip() => context.go(RouteNames.profileTypePicker);
-
   @override
   Widget build(BuildContext context) {
     final bool isLast = _currentPage == _pages.length - 1;
+    final data = _pages[_currentPage];
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Swipeable pages
+          // ─── Swipeable photo layer ─────────────────────────────────────
           PageView.builder(
             controller: _pageController,
             itemCount: _pages.length,
             onPageChanged: (i) => setState(() => _currentPage = i),
-            itemBuilder: (_, i) => _OnboardingPage(data: _pages[i]),
+            itemBuilder: (_, i) => _PhotoLayer(image: _pages[i].image),
           ),
 
-          // Bottom controls
-          Positioned(
-            bottom: 0, left: 0, right: 0,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageHorizontal, 0,
-                AppSpacing.pageHorizontal, 40,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Page dots
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_pages.length, (i) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        width: _currentPage == i ? 20 : 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: _currentPage == i
-                              ? AppColors.primary
-                              : AppColors.textDisabled,
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.full),
+          // ─── Content layer ─────────────────────────────────────────────
+          SafeArea(
+            child: Column(
+              children: [
+                // Top nav — dots + skip
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(26, 14, 26, 0),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Dots centered
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_pages.length, (i) {
+                          final bool active = i == _currentPage;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: active ? 28 : 8,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: active
+                                  ? AppColors.primary
+                                  : const Color(0x38FFFFFF),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.full),
+                              boxShadow: active
+                                  ? [
+                                      BoxShadow(
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.9),
+                                        blurRadius: 10,
+                                      ),
+                                      BoxShadow(
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.35),
+                                        blurRadius: 22,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                          );
+                        }),
+                      ),
+
+                      // Skip — right aligned
+                      if (!isLast)
+                        Positioned(
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () =>
+                                context.go(RouteNames.profileTypePicker),
+                            child: Text(
+                              'Skip',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: const Color(0x80FFFFFF),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
                         ),
-                      );
-                    }),
+                    ],
                   ),
-                  const SizedBox(height: 24),
+                ),
 
-                  // Get Started / Next button
-                  AppButton(
-                    label: isLast
-                        ? AppStrings.onboardingGetStarted
-                        : AppStrings.onboardingNext,
-                    onTap: _next,
-                  ),
-                  const SizedBox(height: 12),
+                // Spacer pushes bottom content down
+                const Spacer(),
 
-                  // Skip on pages 1 & 2, Sign In link on page 3
-                  if (!isLast)
-                    GestureDetector(
-                      onTap: _skip,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          AppStrings.onboardingSkip,
-                          style: AppTypography.bodySmall,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+                // Bottom — headline, subline, button, sign in
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(26, 0, 26, 32),
+                  child: Column(
+                    children: [
+                      // Headline
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 30,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1.1,
+                            letterSpacing: -1.5,
+                          ),
+                          children: [
+                            TextSpan(text: '${data.headline}\n'),
+                            TextSpan(
+                              text: data.accent,
+                              style: const TextStyle(
+                                  color: AppColors.primary),
+                            ),
+                          ],
                         ),
                       ),
-                    )
-                  else
-                    GestureDetector(
-                      onTap: () => context.go(RouteNames.login),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: RichText(
-                          text: const TextSpan(
-                            style: AppTypography.bodySmall,
-                            children: [
-                              TextSpan(text: 'Have an account? '),
-                              TextSpan(
-                                text: 'Sign in',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                      const SizedBox(height: 10),
+
+                      // Subline
+                      Text(
+                        data.subline,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0x52FFFFFF),
+                          height: 1.65,
+                          letterSpacing: -0.1,
+                        ),
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 22),
+
+                      // Primary button
+                      GestureDetector(
+                        onTap: _next,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 17),
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.full),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFFF03328), Color(0xFFC41F16)],
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x99820F0A),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                              BoxShadow(
+                                color: Color(0x40C81E14),
+                                blurRadius: 16,
+                                offset: Offset(0, 6),
+                              ),
+                              BoxShadow(
+                                color: Color(0x1AE8281E),
+                                blurRadius: 24,
+                                offset: Offset(0, 10),
                               ),
                             ],
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                           child: Text(
+                             isLast ? 'Get Started' : 'Next',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              ),
+
+                      // Sign in link — screen 3 only
+                      if (isLast)
+                        GestureDetector(
+                          onTap: () => context.go(RouteNames.login),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 18),
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: const TextSpan(
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400,
+                                  color: Color(0x38FFFFFF),
+                                  letterSpacing: -0.1,
+                                ),
+                                children: [
+                                  TextSpan(text: 'Have an account? '),
+                                  TextSpan(
+                                    text: 'Sign in',
+                                    style:
+                                        TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -174,23 +288,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-// Single page widget
-class _OnboardingPage extends StatelessWidget {
-  final _OnboardingData data;
-  const _OnboardingPage({required this.data});
+// ─── Photo Layer ─────────────────────────────────────────────────────────────
+
+class _PhotoLayer extends StatelessWidget {
+  final String image;
+  const _PhotoLayer({required this.image});
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Photo bleeding from top
         Positioned(
-          top: 0, left: 0, right: 0,
-          height: MediaQuery.of(context).size.height * 0.55,
+          top: 0,
+          left: 0,
+          right: 0,
+          height: MediaQuery.of(context).size.height * 0.65,
           child: Stack(
             children: [
               Image.asset(
-                data.image,
+                image,
                 width: double.infinity,
                 height: double.infinity,
                 fit: BoxFit.cover,
@@ -203,37 +319,12 @@ class _OnboardingPage extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Color(0x80000000),
+                      Color(0xB3000000),
                       AppColors.background,
                     ],
-                    stops: [0.4, 0.7, 1.0],
+                    stops: [0.35, 0.65, 1.0],
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-
-        // Title and subtitle
-        Positioned(
-          bottom: 160,
-          left: AppSpacing.pageHorizontal,
-          right: AppSpacing.pageHorizontal,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                data.title,
-                style: AppTypography.display,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                data.subtitle,
-                style: AppTypography.body,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -243,13 +334,17 @@ class _OnboardingPage extends StatelessWidget {
   }
 }
 
+// ─── Data ────────────────────────────────────────────────────────────────────
+
 class _OnboardingData {
   final String image;
-  final String title;
-  final String subtitle;
+  final String headline;
+  final String accent;
+  final String subline;
   const _OnboardingData({
     required this.image,
-    required this.title,
-    required this.subtitle,
+    required this.headline,
+    required this.accent,
+    required this.subline,
   });
 }

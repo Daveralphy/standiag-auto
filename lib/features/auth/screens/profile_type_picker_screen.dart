@@ -1,21 +1,13 @@
-// Profile Type Picker — shown after onboarding or after tapping
-// "Create Account" / "Get Started".
-// User selects Car Owner or Mechanic before signing up.
-// Photo bleeds from top with gradient fade into dark background.
-// "Who are you?" title with "you?" in red.
-// Two selectable cards — tapping one activates it with red border.
-// Continue button activates once a type is selected.
+// Profile Type Picker — photo bleeds top 180px, "Who are you?" headline,
+// two selectable cards (Car Owner / Mechanic), Continue button at bottom.
+// Back button top-left navigates to login.
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
-import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_strings.dart';
-import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
-import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
 enum _ProfileType { carOwner, mechanic }
@@ -29,7 +21,7 @@ class ProfileTypePickerScreen extends StatefulWidget {
 }
 
 class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
-  _ProfileType? _selected;
+  _ProfileType _selected = _ProfileType.carOwner;
 
   @override
   void initState() {
@@ -38,7 +30,6 @@ class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
   }
 
   void _continue() {
-    if (_selected == null) return;
     if (_selected == _ProfileType.carOwner) {
       context.go(RouteNames.userSignupStepOne);
     } else {
@@ -52,31 +43,27 @@ class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // ─── Photo bleeding from top ─────────────────────────────────────
+          // ─── Photo bleed top ─────────────────────────────────────────
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 240,
+            top: 0, left: 0, right: 0,
+            height: 180,
             child: Stack(
               children: [
                 Image.asset(
-                  // Uses onboarding_1 image as the background photo
                   'assets/images/onboarding_1.png',
                   width: double.infinity,
-                  height: 240,
+                  height: double.infinity,
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
                 ),
-                // Gradient fade to dark
                 Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.transparent,
-                        Color(0x80000000),
+                        Color(0x000A0A0A),
+                        Color(0x800A0A0A),
                         AppColors.background,
                       ],
                       stops: [0.0, 0.5, 1.0],
@@ -87,77 +74,128 @@ class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
             ),
           ),
 
-          // ─── Safe area content ───────────────────────────────────────────
+          // ─── Full layout ─────────────────────────────────────────────
           SafeArea(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Space for photo area
-                const SizedBox(height: 160),
-
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.pageHorizontal,
-                      0,
-                      AppSpacing.pageHorizontal,
-                      32,
+                // Back button — top left
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                  child: GestureDetector(
+                    onTap: () => context.go(RouteNames.login),
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0x12FFFFFF),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0x14FFFFFF)),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 14, color: Colors.white),
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ─── Title ──────────────────────────────────────────
-                        RichText(
-                          text: const TextSpan(
-                            style: AppTypography.display,
-                            children: [
-                              TextSpan(text: 'Who are '),
-                              TextSpan(
-                                text: 'you?',
-                                style: TextStyle(color: AppColors.primary),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Bottom content
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Headline
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.8,
+                            height: 1.1,
+                          ),
+                          children: [
+                            TextSpan(text: 'Who are ',
+                                style: TextStyle(color: Colors.white)),
+                            TextSpan(text: 'you?',
+                                style: TextStyle(color: AppColors.primary)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Choose your account type to get started',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 15,
+                          color: Color(0x59FFFFFF),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Car Owner card
+                      _TypeCard(
+                        title: 'Car Owner',
+                        subtitle: 'I need a mechanic',
+                        selected: _selected == _ProfileType.carOwner,
+                        onTap: () => setState(
+                            () => _selected = _ProfileType.carOwner),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Mechanic card
+                      _TypeCard(
+                        title: 'Mechanic',
+                        subtitle: 'I fix cars',
+                        selected: _selected == _ProfileType.mechanic,
+                        onTap: () => setState(
+                            () => _selected = _ProfileType.mechanic),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Continue button
+                      GestureDetector(
+                        onTap: _continue,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.full),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color(0xFFF03328),
+                                Color(0xFFC41F16)
+                              ],
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x38E8281E),
+                                blurRadius: 20,
+                                offset: Offset(0, 6),
                               ),
                             ],
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          child: const Center(
+                            child: Text('Continue',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  letterSpacing: -0.3,
+                                )),
+                          ),
                         ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          AppStrings.profileTypeSubtitle,
-                          style: AppTypography.bodySmall,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 22),
-
-                        // ─── Car Owner card ──────────────────────────────────
-                        _TypeCard(
-                          title: AppStrings.profileTypeCarOwner,
-                          subtitle: AppStrings.profileTypeCarOwnerSub,
-                          isSelected: _selected == _ProfileType.carOwner,
-                          onTap: () =>
-                              setState(() => _selected = _ProfileType.carOwner),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // ─── Mechanic card ───────────────────────────────────
-                        _TypeCard(
-                          title: AppStrings.profileTypeMechanic,
-                          subtitle: AppStrings.profileTypeMechanicSub,
-                          isSelected: _selected == _ProfileType.mechanic,
-                          onTap: () =>
-                              setState(() => _selected = _ProfileType.mechanic),
-                        ),
-
-                        const Spacer(),
-
-                        // ─── Continue button ─────────────────────────────────
-                        AppButton(
-                          label: AppStrings.profileTypeContinue,
-                          // Disabled until a type is selected
-                          onTap: _selected != null ? _continue : null,
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -169,18 +207,16 @@ class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
   }
 }
 
-// ─── Type Card ─────────────────────────────────────────────────────────────
-
 class _TypeCard extends StatelessWidget {
   final String title;
   final String subtitle;
-  final bool isSelected;
+  final bool selected;
   final VoidCallback onTap;
 
   const _TypeCard({
     required this.title,
     required this.subtitle,
-    required this.isSelected,
+    required this.selected,
     required this.onTap,
   });
 
@@ -190,15 +226,15 @@ class _TypeCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(22),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primarySubtle
+          color: selected
+              ? const Color(0x0FE8281E)
               : const Color(0x08FFFFFF),
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-            width: isSelected ? 1.5 : 1,
+            color: selected ? AppColors.primary : const Color(0x14FFFFFF),
+            width: 1.5,
           ),
         ),
         child: Row(
@@ -209,41 +245,46 @@ class _TypeCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: AppTypography.heading3.copyWith(
-                      color: isSelected
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: selected
+                          ? Colors.white
+                          : const Color(0x80FFFFFF),
+                      letterSpacing: -0.4,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: AppTypography.bodyXSmall,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13,
+                      color: selected
+                          ? const Color(0x80FFFFFF)
+                          : const Color(0x40FFFFFF),
+                    ),
                   ),
                 ],
               ),
             ),
-            // Selection indicator circle
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 22,
-              height: 22,
+              width: 24, height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSelected ? AppColors.primary : Colors.transparent,
+                color: selected ? AppColors.primary : Colors.transparent,
                 border: Border.all(
-                  color: isSelected
+                  color: selected
                       ? AppColors.primary
-                      : AppColors.borderActive,
+                      : const Color(0x26FFFFFF),
                   width: 1.5,
                 ),
               ),
-              child: isSelected
-                  ? const Icon(Icons.check, size: 13, color: Colors.white)
+              child: selected
+                  ? const Icon(Icons.check_rounded,
+                      size: 14, color: Colors.white)
                   : null,
             ),
           ],

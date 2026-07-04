@@ -72,31 +72,40 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: RouteNames.splashOne,
     redirect: (BuildContext context, GoRouterState state) {
       final bool isAuthenticated = authState.valueOrNull != null;
-      final bool isAuthRoute = state.matchedLocation.startsWith('/signup') ||
+      final bool isOnboardingRoute =
+          state.matchedLocation == RouteNames.splashOne ||
+          state.matchedLocation == RouteNames.splashTwo ||
+          state.matchedLocation == RouteNames.onboarding;
+      final bool isAuthRoute =
+          state.matchedLocation.startsWith('/signup') ||
           state.matchedLocation == RouteNames.login ||
           state.matchedLocation == RouteNames.otpPhone ||
           state.matchedLocation == RouteNames.otpEmail ||
           state.matchedLocation == RouteNames.profileTypePicker ||
-          state.matchedLocation == RouteNames.splashOne ||
-          state.matchedLocation == RouteNames.splashTwo ||
-          state.matchedLocation == RouteNames.onboarding;
+          isOnboardingRoute;
+
+      // Authenticated user should never see onboarding or auth screens
+      if (isAuthenticated && isAuthRoute) return RouteNames.userHome;
+
+      // Unauthenticated user trying to access app screens
       if (!isAuthenticated && !isAuthRoute) return RouteNames.login;
+
       return null;
     },
     routes: [
-      GoRoute(path: RouteNames.splashOne, builder: (_, __) => const SplashOneScreen()),
-      GoRoute(path: RouteNames.splashTwo, builder: (_, __) => const SplashTwoScreen()),
-      GoRoute(path: RouteNames.onboarding, builder: (_, __) => const OnboardingScreen()),
-      GoRoute(path: RouteNames.profileTypePicker, builder: (_, __) => const ProfileTypePickerScreen()),
-      GoRoute(path: RouteNames.login, builder: (_, __) => const LoginScreen()),
-      GoRoute(path: RouteNames.otpPhone, builder: (_, __) => const OtpPhoneScreen()),
-      GoRoute(path: RouteNames.otpEmail, builder: (_, __) => const OtpEmailScreen()),
-      GoRoute(path: RouteNames.userSignupStepOne, builder: (_, __) => const UserSignupStepOneScreen()),
-      GoRoute(path: RouteNames.userSignupStepTwo, builder: (_, __) => const UserSignupStepTwoScreen()),
-      GoRoute(path: RouteNames.userSignupStepThree, builder: (_, __) => const UserSignupStepThreeScreen()),
-      GoRoute(path: RouteNames.mechanicSignupStepOne, builder: (_, __) => const MechanicSignupStepOneScreen()),
-      GoRoute(path: RouteNames.mechanicSignupStepTwo, builder: (_, __) => const MechanicSignupStepTwoScreen()),
-      GoRoute(path: RouteNames.mechanicSignupStepThree, builder: (_, __) => const MechanicSignupStepThreeScreen()),
+      GoRoute(path: RouteNames.splashOne, pageBuilder: (_, __) => NoTransitionPage(child: const SplashOneScreen())),
+      GoRoute(path: RouteNames.splashTwo, pageBuilder: (_, __) => NoTransitionPage(child: const SplashTwoScreen())),
+      GoRoute(path: RouteNames.onboarding, pageBuilder: (_, __) => NoTransitionPage(child: const OnboardingScreen())),
+      GoRoute(path: RouteNames.profileTypePicker, pageBuilder: (_, __) => NoTransitionPage(child: const ProfileTypePickerScreen())),
+      GoRoute(path: RouteNames.login, pageBuilder: (_, __) => NoTransitionPage(child: const LoginScreen())),
+      GoRoute(path: RouteNames.otpPhone, builder: (_, __) => OtpPhoneScreen()), // ignore: prefer_const_constructors
+      GoRoute(path: RouteNames.otpEmail, builder: (_, __) => OtpEmailScreen()), // ignore: prefer_const_constructors
+      GoRoute(path: RouteNames.userSignupStepOne, pageBuilder: (_, __) => NoTransitionPage(child: const UserSignupStepOneScreen())),
+      GoRoute(path: RouteNames.userSignupStepTwo, pageBuilder: (_, __) => NoTransitionPage(child: const UserSignupStepTwoScreen())),
+      GoRoute(path: RouteNames.userSignupStepThree, pageBuilder: (_, __) => NoTransitionPage(child: const UserSignupStepThreeScreen())),
+      GoRoute(path: RouteNames.mechanicSignupStepOne, pageBuilder: (_, __) => NoTransitionPage(child: const MechanicSignupStepOneScreen())),
+      GoRoute(path: RouteNames.mechanicSignupStepTwo, pageBuilder: (_, __) => NoTransitionPage(child: const MechanicSignupStepTwoScreen())),
+      GoRoute(path: RouteNames.mechanicSignupStepThree, pageBuilder: (_, __) => NoTransitionPage(child: const MechanicSignupStepThreeScreen())),
       GoRoute(path: RouteNames.userHome, builder: (_, __) => const UserHomeScreen()),
       GoRoute(path: RouteNames.userScan, builder: (_, __) => const UserScanScreen()),
       GoRoute(path: RouteNames.userMechanics, builder: (_, __) => const UserMechanicsScreen()),

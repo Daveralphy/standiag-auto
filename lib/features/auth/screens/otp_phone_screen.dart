@@ -1,20 +1,14 @@
-// OTP Phone screen — 6-digit code sent to phone number.
-// Back button, phone icon, description, 6 OTP boxes,
-// resend link with countdown timer, Verify button.
+// OTP Phone screen — 6-digit code sent to phone.
+// Photo bleed top, headline, 6 OTP boxes, resend row, Verify button,
+// "Don't have an account? Sign up" link at bottom.
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/navigation/route_names.dart';
-
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
-import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_strings.dart';
-import '../../../core/constants/app_typography.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../shared/widget/app_button.dart';
+import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
 class OtpPhoneScreen extends StatefulWidget {
@@ -28,7 +22,7 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
   final List<TextEditingController> _controllers =
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
-  int _countdown = 45;
+  int _countdown = 59;
   Timer? _timer;
   bool _isLoading = false;
 
@@ -49,11 +43,6 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
     });
   }
 
-  void _resend() {
-    setState(() => _countdown = 45);
-    _startCountdown();
-  }
-
   @override
   void dispose() {
     for (final c in _controllers) {
@@ -66,181 +55,253 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
     super.dispose();
   }
 
-  void _verify() {
-    setState(() => _isLoading = true);
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _isLoading = false);
-    });
+  String get _countdownLabel {
+    final m = _countdown ~/ 60;
+    final s = _countdown % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.pageHorizontal, AppSpacing.md, 0, 0),
-              child: GestureDetector(
-                onTap: () => context.go(RouteNames.login),
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: const Color(0x12FFFFFF),
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    size: 14,
-                    color: AppColors.textPrimary,
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0, left: 0, right: 0,
+            height: MediaQuery.of(context).size.height * 0.30,
+            child: Stack(
+              children: [
+                Image.asset('assets/images/onboarding_1.png',
+                    width: double.infinity, height: double.infinity,
+                    fit: BoxFit.cover, alignment: Alignment.topCenter),
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0x80000000), Colors.transparent,
+                        Color(0xA60A0A0A), AppColors.background,
+                      ],
+                      stops: [0.0, 0.0, 0.7, 1.0],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.pageHorizontal),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 24),
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: AppColors.primarySubtle,
-                        borderRadius: BorderRadius.circular(AppRadius.xl2),
-                        border: Border.all(color: AppColors.primaryBorder),
-                      ),
-                      child: const Icon(
-                        Icons.phone_android_rounded,
-                        color: AppColors.primary,
-                        size: 26,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      AppStrings.otpTitle,
-                      style: AppTypography.heading2,
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      AppStrings.otpSubtitlePhone,
-                      style: AppTypography.body,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(6, (i) {
-                        return _OtpBox(
-                          controller: _controllers[i],
-                          focusNode: _focusNodes[i],
-                          onChanged: (val) {
-                            if (val.isNotEmpty && i < 5) {
-                              _focusNodes[i + 1].requestFocus();
-                            }
-                            if (val.isEmpty && i > 0) {
-                              _focusNodes[i - 1].requestFocus();
-                            }
-                          },
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Didn't receive it? ",
-                          style: AppTypography.bodySmall,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: GestureDetector(
+                      onTap: () => context.go(RouteNames.login),
+                      child: Container(
+                        width: 26, height: 26,
+                        decoration: BoxDecoration(
+                          color: const Color(0x12FFFFFF),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0x14FFFFFF)),
                         ),
-                        GestureDetector(
-                          onTap: _countdown == 0 ? _resend : null,
-                          child: Text(
-                            AppStrings.otpResend,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: _countdown == 0
-                                  ? AppColors.primary
-                                  : AppColors.primaryBorder,
-                              fontWeight: FontWeight.w700,
+                        child: const Center(child: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 11, color: Colors.white)),
+                      ),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            fontFamily: 'Inter', fontSize: 30,
+                            fontWeight: FontWeight.w900, color: Colors.white,
+                            height: 1.12, letterSpacing: -1,
+                          ),
+                          children: [
+                            TextSpan(text: 'Verify your\n'),
+                            TextSpan(text: 'phone number.',
+                                style: TextStyle(color: AppColors.primary)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'A 6-digit code has been sent to your phone.',
+                        style: TextStyle(
+                          fontFamily: 'Inter', fontSize: 15,
+                          color: Color(0x47FFFFFF), height: 1.5,
+                        ),
+                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 14),
+
+                      // OTP boxes
+                      Row(
+                        children: List.generate(6, (i) {
+                          return Expanded(
+                            child: Container(
+                              height: 46,
+                              margin: EdgeInsets.only(right: i < 5 ? 6 : 0),
+                              decoration: BoxDecoration(
+                                color: const Color(0x0AFFFFFF),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: const Color(0x17FFFFFF)),
+                              ),
+                              child: TextField(
+                                controller: _controllers[i],
+                                focusNode: _focusNodes[i],
+                                textAlign: TextAlign.center,
+                                keyboardType: TextInputType.number,
+                                maxLength: 1,
+                                style: const TextStyle(
+                                  fontFamily: 'Inter', fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  counterText: '',
+                                ),
+                                cursorColor: AppColors.primary,
+                                onChanged: (val) {
+                                  if (val.isNotEmpty && i < 5) {
+                                    _focusNodes[i + 1].requestFocus();
+                                  }
+                                  if (val.isEmpty && i > 0) {
+                                    _focusNodes[i - 1].requestFocus();
+                                  }
+                                },
+                              ),
                             ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Resend row
+                      Center(
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                              fontFamily: 'Inter', fontSize: 11,
+                              color: Color(0x33FFFFFF),
+                            ),
+                            children: [
+                              const TextSpan(
+                                  text: "Didn't receive a code? "),
+                              TextSpan(
+                                text: 'Resend',
+                                style: TextStyle(
+                                  color: _countdown == 0
+                                      ? AppColors.primary
+                                      : const Color(0x33FFFFFF),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              TextSpan(
+                                  text: ' in $_countdownLabel'),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          Formatters.countdown(_countdown),
-                          style: AppTypography.bodySmall,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+                      ),
+                      const SizedBox(height: 28),
+
+                      _PrimaryButton(
+                        label: 'Verify',
+                        onTap: () {
+                          setState(() => _isLoading = true);
+                          Future.delayed(const Duration(seconds: 2), () {
+                            if (mounted) setState(() => _isLoading = false);
+                          });
+                        },
+                        isLoading: _isLoading,
+                      ),
+                      const SizedBox(height: 10),
+
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => context.go(RouteNames.profileTypePicker),
+                          child: RichText(
+                            text: const TextSpan(
+                              style: TextStyle(
+                                fontFamily: 'Inter', fontSize: 12,
+                                color: Color(0x4DFFFFFF),
+                              ),
+                              children: [
+                                TextSpan(text: "Don't have an account? "),
+                                TextSpan(text: 'Sign up',
+                                    style: TextStyle(color: Colors.white,
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    AppButton(
-                      label: AppStrings.otpVerify,
-                      onTap: _verify,
-                      isLoading: _isLoading,
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _OtpBox extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final ValueChanged<String> onChanged;
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  final bool isLoading;
 
-  const _OtpBox({
-    required this.controller,
-    required this.focusNode,
-    required this.onChanged,
+  const _PrimaryButton({
+    required this.label,
+    required this.onTap,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 38,
-      height: 48,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        color: const Color(0x0AFFFFFF),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.borderActive),
-      ),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        maxLength: 1,
-        style: AppTypography.heading3,
-        cursorColor: AppColors.primary,
-        onChanged: onChanged,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          counterText: '',
+    return GestureDetector(
+      onTap: isLoading ? null : onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [Color(0xFFF03328), Color(0xFFC41F16)],
+          ),
+          boxShadow: const [
+            BoxShadow(color: Color(0x99820F0A), blurRadius: 8,
+                offset: Offset(0, 4)),
+            BoxShadow(color: Color(0x40C81E14), blurRadius: 16,
+                offset: Offset(0, 6)),
+          ],
+        ),
+        child: Center(
+          child: isLoading
+              ? const SizedBox(
+                  width: 18, height: 18,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2))
+              : Text(label,
+                  style: const TextStyle(
+                    fontFamily: 'Inter', fontSize: 14,
+                    fontWeight: FontWeight.w700, color: Colors.white,
+                    letterSpacing: -0.3,
+                  )),
         ),
       ),
     );
