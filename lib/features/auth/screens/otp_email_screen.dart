@@ -1,6 +1,3 @@
-// OTP Email screen — 6-digit code sent to email address.
-// Identical structure to OTP phone screen but with email-specific copy.
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -59,6 +56,7 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
@@ -88,29 +86,43 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
           SafeArea(
             child: Column(
               children: [
+                // Top row — back left, skip right
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap: () => context.go(RouteNames.login),
-                      child: Container(
-                        width: 26, height: 26,
-                        decoration: BoxDecoration(
-                          color: const Color(0x12FFFFFF),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0x14FFFFFF)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () =>
+                            context.go(RouteNames.userSignupStepThree),
+                        child: Container(
+                          width: 36, height: 36,
+                          decoration: BoxDecoration(
+                            color: const Color(0x12FFFFFF),
+                            shape: BoxShape.circle,
+                            border:
+                                Border.all(color: const Color(0x14FFFFFF)),
+                          ),
+                          child: const Center(child: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              size: 13, color: Colors.white)),
                         ),
-                        child: const Center(child: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 11, color: Colors.white)),
                       ),
-                    ),
+                      GestureDetector(
+                        onTap: () => context.go(RouteNames.userHome),
+                        child: const Text('Skip for now',
+                            style: TextStyle(
+                              fontFamily: 'Inter', fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0x59FFFFFF),
+                            )),
+                      ),
+                    ],
                   ),
                 ),
                 const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
+                SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -123,30 +135,30 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                           ),
                           children: [
                             TextSpan(text: 'Verify your\n'),
-                            TextSpan(text: 'email address.',
+                            TextSpan(text: 'email.',
                                 style: TextStyle(color: AppColors.primary)),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       const Text(
-                        'A 6-digit code has been sent to your email address.',
+                        'Enter the 6-digit code sent to your email address. You can skip and verify later.',
                         style: TextStyle(
                           fontFamily: 'Inter', fontSize: 15,
                           color: Color(0x47FFFFFF), height: 1.5,
                         ),
-                        maxLines: 2, overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 28),
                       Row(
                         children: List.generate(6, (i) => Expanded(
                           child: Container(
-                            height: 46,
-                            margin: EdgeInsets.only(right: i < 5 ? 6 : 0),
+                            height: 56,
+                            margin: EdgeInsets.only(right: i < 5 ? 8 : 0),
                             decoration: BoxDecoration(
                               color: const Color(0x0AFFFFFF),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0x17FFFFFF)),
+                              border:
+                                  Border.all(color: const Color(0x17FFFFFF)),
                             ),
                             child: TextField(
                               controller: _controllers[i],
@@ -155,8 +167,9 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                               keyboardType: TextInputType.number,
                               maxLength: 1,
                               style: const TextStyle(
-                                fontFamily: 'Inter', fontSize: 18,
-                                fontWeight: FontWeight.w700, color: Colors.white,
+                                fontFamily: 'Inter', fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
                               ),
                               decoration: const InputDecoration(
                                 border: InputBorder.none,
@@ -175,18 +188,20 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                           ),
                         )),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       Center(
                         child: RichText(
                           text: TextSpan(
                             style: const TextStyle(
-                              fontFamily: 'Inter', fontSize: 11,
-                              color: Color(0x33FFFFFF),
+                              fontFamily: 'Inter', fontSize: 14,
+                              color: Color(0x4DFFFFFF),
                             ),
                             children: [
                               const TextSpan(text: "Didn't receive a code? "),
                               TextSpan(
-                                text: 'Resend',
+                                text: _countdown == 0
+                                    ? 'Resend'
+                                    : 'Resend in $_countdownLabel',
                                 style: TextStyle(
                                   color: _countdown == 0
                                       ? AppColors.primary
@@ -194,28 +209,35 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              TextSpan(text: ' in $_countdownLabel'),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 28),
                       GestureDetector(
                         onTap: _isLoading ? null : () {
                           setState(() => _isLoading = true);
                           Future.delayed(const Duration(seconds: 2), () {
-                            if (mounted) setState(() => _isLoading = false);
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                              context.go(RouteNames.userHome);
+                            }
                           });
                         },
                         child: Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.full),
                             gradient: const LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Color(0xFFF03328), Color(0xFFC41F16)],
+                              colors: [
+                                Color(0xFFF03328),
+                                Color(0xFFC41F16)
+                              ],
                             ),
                             boxShadow: const [
                               BoxShadow(color: Color(0x99820F0A),
@@ -227,28 +249,13 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                                 ? const SizedBox(width: 18, height: 18,
                                     child: CircularProgressIndicator(
                                         color: Colors.white, strokeWidth: 2))
-                                : const Text('Verify',
-                                    style: TextStyle(fontFamily: 'Inter',
-                                      fontSize: 14, fontWeight: FontWeight.w700,
-                                      color: Colors.white, letterSpacing: -0.3)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Center(
-                        child: GestureDetector(
-                          onTap: () => context.go(RouteNames.profileTypePicker),
-                          child: RichText(
-                            text: const TextSpan(
-                              style: TextStyle(fontFamily: 'Inter',
-                                  fontSize: 12, color: Color(0x4DFFFFFF)),
-                              children: [
-                                TextSpan(text: "Don't have an account? "),
-                                TextSpan(text: 'Sign up',
-                                    style: TextStyle(color: Colors.white,
-                                        fontWeight: FontWeight.w600)),
-                              ],
-                            ),
+                                : const Text('Verify Email',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter', fontSize: 17,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      letterSpacing: -0.3,
+                                    )),
                           ),
                         ),
                       ),

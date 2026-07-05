@@ -201,29 +201,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Login with phone — only for existing users
-                  Center(
-                    child: GestureDetector(
-                      onTap: () => context.go(RouteNames.otpPhone),
-                      child: RichText(
-                        text: const TextSpan(
-                          style: TextStyle(
-                            fontFamily: 'Inter', fontSize: 15,
-                            color: Color(0x4DFFFFFF),
-                          ),
-                          children: [
-                            TextSpan(text: 'Login with '),
-                            TextSpan(text: 'phone number',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
                   // Sign up
                   Center(
                     child: GestureDetector(

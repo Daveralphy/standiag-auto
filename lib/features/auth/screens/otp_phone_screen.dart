@@ -1,7 +1,3 @@
-// OTP Phone screen — 6-digit code sent to phone.
-// Photo bleed top, headline, 6 OTP boxes, resend row, Verify button,
-// "Don't have an account? Sign up" link at bottom.
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -45,12 +41,8 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
+    for (final c in _controllers) { c.dispose(); }
+    for (final f in _focusNodes) { f.dispose(); }
     _timer?.cancel();
     super.dispose();
   }
@@ -64,6 +56,7 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
@@ -93,29 +86,42 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
           SafeArea(
             child: Column(
               children: [
+                // Top row — back left, skip right
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap: () => context.go(RouteNames.login),
-                      child: Container(
-                        width: 26, height: 26,
-                        decoration: BoxDecoration(
-                          color: const Color(0x12FFFFFF),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0x14FFFFFF)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.go(RouteNames.userSignupStepThree),
+                        child: Container(
+                          width: 36, height: 36,
+                          decoration: BoxDecoration(
+                            color: const Color(0x12FFFFFF),
+                            shape: BoxShape.circle,
+                            border:
+                                Border.all(color: const Color(0x14FFFFFF)),
+                          ),
+                          child: const Center(child: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              size: 13, color: Colors.white)),
                         ),
-                        child: const Center(child: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 11, color: Colors.white)),
                       ),
-                    ),
+                      GestureDetector(
+                        onTap: () => context.go(RouteNames.userHome),
+                        child: const Text('Skip for now',
+                            style: TextStyle(
+                              fontFamily: 'Inter', fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0x59FFFFFF),
+                            )),
+                      ),
+                    ],
                   ),
                 ),
                 const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
+                SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -133,74 +139,68 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       const Text(
-                        'A 6-digit code has been sent to your phone.',
+                        'Enter the 6-digit code sent to your phone number. You can skip and verify later.',
                         style: TextStyle(
                           fontFamily: 'Inter', fontSize: 15,
                           color: Color(0x47FFFFFF), height: 1.5,
                         ),
-                        maxLines: 2, overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 14),
-
-                      // OTP boxes
+                      const SizedBox(height: 28),
                       Row(
-                        children: List.generate(6, (i) {
-                          return Expanded(
-                            child: Container(
-                              height: 46,
-                              margin: EdgeInsets.only(right: i < 5 ? 6 : 0),
-                              decoration: BoxDecoration(
-                                color: const Color(0x0AFFFFFF),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                    color: const Color(0x17FFFFFF)),
-                              ),
-                              child: TextField(
-                                controller: _controllers[i],
-                                focusNode: _focusNodes[i],
-                                textAlign: TextAlign.center,
-                                keyboardType: TextInputType.number,
-                                maxLength: 1,
-                                style: const TextStyle(
-                                  fontFamily: 'Inter', fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  counterText: '',
-                                ),
-                                cursorColor: AppColors.primary,
-                                onChanged: (val) {
-                                  if (val.isNotEmpty && i < 5) {
-                                    _focusNodes[i + 1].requestFocus();
-                                  }
-                                  if (val.isEmpty && i > 0) {
-                                    _focusNodes[i - 1].requestFocus();
-                                  }
-                                },
-                              ),
+                        children: List.generate(6, (i) => Expanded(
+                          child: Container(
+                            height: 56,
+                            margin: EdgeInsets.only(right: i < 5 ? 8 : 0),
+                            decoration: BoxDecoration(
+                              color: const Color(0x0AFFFFFF),
+                              borderRadius: BorderRadius.circular(12),
+                              border:
+                                  Border.all(color: const Color(0x17FFFFFF)),
                             ),
-                          );
-                        }),
+                            child: TextField(
+                              controller: _controllers[i],
+                              focusNode: _focusNodes[i],
+                              textAlign: TextAlign.center,
+                              keyboardType: TextInputType.number,
+                              maxLength: 1,
+                              style: const TextStyle(
+                                fontFamily: 'Inter', fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                counterText: '',
+                              ),
+                              cursorColor: AppColors.primary,
+                              onChanged: (val) {
+                                if (val.isNotEmpty && i < 5) {
+                                  _focusNodes[i + 1].requestFocus();
+                                }
+                                if (val.isEmpty && i > 0) {
+                                  _focusNodes[i - 1].requestFocus();
+                                }
+                              },
+                            ),
+                          ),
+                        )),
                       ),
-                      const SizedBox(height: 12),
-
-                      // Resend row
+                      const SizedBox(height: 16),
                       Center(
                         child: RichText(
                           text: TextSpan(
                             style: const TextStyle(
-                              fontFamily: 'Inter', fontSize: 11,
-                              color: Color(0x33FFFFFF),
+                              fontFamily: 'Inter', fontSize: 14,
+                              color: Color(0x4DFFFFFF),
                             ),
                             children: [
-                              const TextSpan(
-                                  text: "Didn't receive a code? "),
+                              const TextSpan(text: "Didn't receive a code? "),
                               TextSpan(
-                                text: 'Resend',
+                                text: _countdown == 0
+                                    ? 'Resend'
+                                    : 'Resend in $_countdownLabel',
                                 style: TextStyle(
                                   color: _countdown == 0
                                       ? AppColors.primary
@@ -208,42 +208,53 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              TextSpan(
-                                  text: ' in $_countdownLabel'),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 28),
-
-                      _PrimaryButton(
-                        label: 'Verify',
-                        onTap: () {
+                      GestureDetector(
+                        onTap: _isLoading ? null : () {
                           setState(() => _isLoading = true);
                           Future.delayed(const Duration(seconds: 2), () {
-                            if (mounted) setState(() => _isLoading = false);
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                              context.go(RouteNames.userHome);
+                            }
                           });
                         },
-                        isLoading: _isLoading,
-                      ),
-                      const SizedBox(height: 10),
-
-                      Center(
-                        child: GestureDetector(
-                          onTap: () => context.go(RouteNames.profileTypePicker),
-                          child: RichText(
-                            text: const TextSpan(
-                              style: TextStyle(
-                                fontFamily: 'Inter', fontSize: 12,
-                                color: Color(0x4DFFFFFF),
-                              ),
-                              children: [
-                                TextSpan(text: "Don't have an account? "),
-                                TextSpan(text: 'Sign up',
-                                    style: TextStyle(color: Colors.white,
-                                        fontWeight: FontWeight.w600)),
+                        child: Container(
+                          width: double.infinity,
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.full),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color(0xFFF03328),
+                                Color(0xFFC41F16)
                               ],
                             ),
+                            boxShadow: const [
+                              BoxShadow(color: Color(0x99820F0A),
+                                  blurRadius: 8, offset: Offset(0, 4)),
+                            ],
+                          ),
+                          child: Center(
+                            child: _isLoading
+                                ? const SizedBox(width: 18, height: 18,
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2))
+                                : const Text('Verify Phone',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter', fontSize: 17,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      letterSpacing: -0.3,
+                                    )),
                           ),
                         ),
                       ),
@@ -254,55 +265,6 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PrimaryButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final bool isLoading;
-
-  const _PrimaryButton({
-    required this.label,
-    required this.onTap,
-    this.isLoading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: isLoading ? null : onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.full),
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter, end: Alignment.bottomCenter,
-            colors: [Color(0xFFF03328), Color(0xFFC41F16)],
-          ),
-          boxShadow: const [
-            BoxShadow(color: Color(0x99820F0A), blurRadius: 8,
-                offset: Offset(0, 4)),
-            BoxShadow(color: Color(0x40C81E14), blurRadius: 16,
-                offset: Offset(0, 6)),
-          ],
-        ),
-        child: Center(
-          child: isLoading
-              ? const SizedBox(
-                  width: 18, height: 18,
-                  child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2))
-              : Text(label,
-                  style: const TextStyle(
-                    fontFamily: 'Inter', fontSize: 14,
-                    fontWeight: FontWeight.w700, color: Colors.white,
-                    letterSpacing: -0.3,
-                  )),
-        ),
       ),
     );
   }
