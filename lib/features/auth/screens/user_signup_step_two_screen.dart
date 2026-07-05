@@ -114,11 +114,11 @@ class _UserSignupStepTwoScreenState extends State<UserSignupStepTwoScreen> {
                     ],
                   ),
                 ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                      Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       RichText(
                         text: const TextSpan(
@@ -172,6 +172,7 @@ class _UserSignupStepTwoScreenState extends State<UserSignupStepTwoScreen> {
                       ),
                     ],
                   ),
+                ),
                 ),
               ],
             ),

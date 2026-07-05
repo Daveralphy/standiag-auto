@@ -93,11 +93,11 @@ class _MechanicSignupStepOneScreenState
                       const Expanded(child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const _StepDot(active: true),
-                          const SizedBox(width: 5),
-                          const _StepDot(active: false),
-                          const SizedBox(width: 5),
-                          const _StepDot(active: false),
+                          _StepDot(active: true),
+                          SizedBox(width: 5),
+                          _StepDot(active: false),
+                          SizedBox(width: 5),
+                          _StepDot(active: false),
                         ],
                       )),
                       const SizedBox(width: 28,
@@ -108,11 +108,11 @@ class _MechanicSignupStepOneScreenState
                     ],
                   ),
                 ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                      Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       RichText(
                         text: const TextSpan(
@@ -168,6 +168,7 @@ class _MechanicSignupStepOneScreenState
                       ),
                     ],
                   ),
+                ),
                 ),
               ],
             ),

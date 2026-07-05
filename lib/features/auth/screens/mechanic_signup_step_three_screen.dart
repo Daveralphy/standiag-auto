@@ -101,11 +101,11 @@ class _MechanicSignupStepThreeScreenState
                       const Expanded(child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const _StepDot(active: false),
-                            const SizedBox(width: 5),
-                            const _StepDot(active: false),
-                            const SizedBox(width: 5),
-                            const _StepDot(active: true),
+                            _StepDot(active: false),
+                            SizedBox(width: 5),
+                            _StepDot(active: false),
+                            SizedBox(width: 5),
+                            _StepDot(active: true),
                           ],
                         ),
                       ),
@@ -123,14 +123,12 @@ class _MechanicSignupStepThreeScreenState
                   ),
                 ),
 
-                const Spacer(),
-
-                // Bottom content
-                SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       RichText(
                         text: const TextSpan(
                           style: TextStyle(
@@ -203,14 +201,14 @@ class _MechanicSignupStepThreeScreenState
                         onTap: () {
                           setState(() => _isLoading = true);
                           Future.delayed(const Duration(seconds: 2), () {
-                            if (mounted) {
-                              setState(() => _isLoading = false);
-                              context.go(RouteNames.otpEmail);
-                            }
+                            if (!mounted) return;
+                            setState(() => _isLoading = false);
+                            context.go(RouteNames.otpEmail);
                           });
                         },
                       ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],

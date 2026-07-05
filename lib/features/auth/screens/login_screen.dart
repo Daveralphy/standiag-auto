@@ -155,7 +155,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: () {
                       setState(() => _isLoading = true);
                       Future.delayed(const Duration(seconds: 2), () {
-                        if (mounted) setState(() => _isLoading = false);
+                        if (!mounted) return;
+                            setState(() => _isLoading = false);
+                            context.go(RouteNames.userHome);
                       });
                     },
                   ),

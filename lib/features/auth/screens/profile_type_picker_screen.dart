@@ -99,11 +99,11 @@ class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
                   ),
                 ),
 
-                const Spacer(),
+                const Spacer(flex: 2),
 
                 // Bottom content
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,

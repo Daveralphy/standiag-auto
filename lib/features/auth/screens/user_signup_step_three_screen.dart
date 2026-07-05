@@ -115,11 +115,11 @@ class _UserSignupStepThreeScreenState
                     ],
                   ),
                 ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                      Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       RichText(
                         text: const TextSpan(
@@ -192,16 +192,16 @@ class _UserSignupStepThreeScreenState
                         onTap: () {
                           setState(() => _isLoading = true);
                           Future.delayed(const Duration(seconds: 2), () {
-                            if (mounted) {
-                              setState(() => _isLoading = false);
-                              context.go(RouteNames.otpEmail);
-                            }
+                            if (!mounted) return;
+                            setState(() => _isLoading = false);
+                            context.go(RouteNames.otpEmail);
                           });
                         },
                         isLoading: _isLoading,
                       ),
                     ],
                   ),
+                ),
                 ),
               ],
             ),

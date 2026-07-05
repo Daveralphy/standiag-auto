@@ -110,11 +110,11 @@ class _MechanicSignupStepTwoScreenState
                       const Expanded(child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const _StepDot(active: false),
-                          const SizedBox(width: 5),
-                          const _StepDot(active: true),
-                          const SizedBox(width: 5),
-                          const _StepDot(active: false),
+                          _StepDot(active: false),
+                          SizedBox(width: 5),
+                          _StepDot(active: true),
+                          SizedBox(width: 5),
+                          _StepDot(active: false),
                         ],
                       )),
                       const SizedBox(width: 28,
@@ -125,9 +125,7 @@ class _MechanicSignupStepTwoScreenState
                     ],
                   ),
                 ),
-                const Spacer(),
                 Expanded(
-                  flex: 3,
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
                     child: Column(
@@ -152,7 +150,7 @@ class _MechanicSignupStepTwoScreenState
                             color: Color(0x47FFFFFF), height: 1.5),
                           maxLines: 2, overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 22),
 
                         // Workshop address
                         _FloatingField(
@@ -162,7 +160,7 @@ class _MechanicSignupStepTwoScreenState
                           suffix: const Icon(Icons.location_on_outlined,
                               color: AppColors.primary, size: 16),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 22),
 
                         // Expertise tags
                         Stack(
@@ -177,7 +175,7 @@ class _MechanicSignupStepTwoScreenState
                                 child: RichText(
                                   text: TextSpan(
                                     style: const TextStyle(
-                                      fontFamily: 'Inter', fontSize: 9.5,
+                                      fontFamily: 'Inter', fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                       color: Color(0x66FFFFFF),
                                     ),
@@ -198,7 +196,7 @@ class _MechanicSignupStepTwoScreenState
                             ),
                             Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                              padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
                               decoration: BoxDecoration(
                                 color: const Color(0x0AFFFFFF),
                                 borderRadius: BorderRadius.circular(12),
@@ -206,7 +204,7 @@ class _MechanicSignupStepTwoScreenState
                                     color: const Color(0x1AFFFFFF)),
                               ),
                               child: Wrap(
-                                spacing: 5, runSpacing: 5,
+                                spacing: 8, runSpacing: 8,
                                 children: _allExpertise.map((e) {
                                   final selected =
                                       _selectedExpertise.contains(e);
@@ -216,7 +214,7 @@ class _MechanicSignupStepTwoScreenState
                                       duration: const Duration(
                                           milliseconds: 200),
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
+                                          horizontal: 12, vertical: 8),
                                       decoration: BoxDecoration(
                                         color: selected
                                             ? AppColors.primarySubtle
@@ -232,7 +230,7 @@ class _MechanicSignupStepTwoScreenState
                                       child: Text(e,
                                           style: TextStyle(
                                             fontFamily: 'Inter',
-                                            fontSize: 10,
+                                            fontSize: 13,
                                             fontWeight: FontWeight.w600,
                                             color: selected
                                                 ? AppColors.primary
@@ -245,7 +243,7 @@ class _MechanicSignupStepTwoScreenState
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 22),
 
                         // Years of experience
                         _FloatingField(

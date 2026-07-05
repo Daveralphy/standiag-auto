@@ -15,9 +15,7 @@ class OtpEmailScreen extends StatefulWidget {
 }
 
 class _OtpEmailScreenState extends State<OtpEmailScreen> {
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  final List<String> _digits = List.filled(6, '');
   int _countdown = 59;
   Timer? _timer;
   bool _isLoading = false;
@@ -41,8 +39,6 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
 
   @override
   void dispose() {
-    for (final c in _controllers) { c.dispose(); }
-    for (final f in _focusNodes) { f.dispose(); }
     _timer?.cancel();
     super.dispose();
   }
@@ -53,16 +49,37 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
+  void _onKey(String key) {
+    setState(() {
+      if (key == '⌫') {
+        for (int i = 5; i >= 0; i--) {
+          if (_digits[i].isNotEmpty) {
+            _digits[i] = '';
+            break;
+          }
+        }
+      } else {
+        for (int i = 0; i < 6; i++) {
+          if (_digits[i].isEmpty) {
+            _digits[i] = key;
+            break;
+          }
+        }
+      }
+    });
+  }
+
+  bool get _isFull => _digits.every((d) => d.isNotEmpty);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
           Positioned(
             top: 0, left: 0, right: 0,
-            height: MediaQuery.of(context).size.height * 0.30,
+            height: MediaQuery.of(context).size.height * 0.25,
             child: Stack(
               children: [
                 Image.asset('assets/images/onboarding_1.png',
@@ -86,22 +103,20 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
           SafeArea(
             child: Column(
               children: [
-                // Top row — back left, skip right
+                // Top row
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: () =>
-                            context.go(RouteNames.userSignupStepThree),
+                        onTap: () => context.go(RouteNames.userSignupStepThree),
                         child: Container(
                           width: 36, height: 36,
                           decoration: BoxDecoration(
                             color: const Color(0x12FFFFFF),
                             shape: BoxShape.circle,
-                            border:
-                                Border.all(color: const Color(0x14FFFFFF)),
+                            border: Border.all(color: const Color(0x14FFFFFF)),
                           ),
                           child: const Center(child: Icon(
                               Icons.arrow_back_ios_new_rounded,
@@ -109,7 +124,7 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => context.go(RouteNames.userHome),
+                        onTap: () => context.go(RouteNames.otpPhone),
                         child: const Text('Skip for now',
                             style: TextStyle(
                               fontFamily: 'Inter', fontSize: 14,
@@ -120,9 +135,10 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                     ],
                   ),
                 ),
-                const Spacer(),
-                SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+
+                // Headline + subtitle + boxes
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -142,48 +158,39 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Enter the 6-digit code sent to your email address. You can skip and verify later.',
+                        'Enter the 6-digit code sent to your email. You can skip and verify later.',
                         style: TextStyle(
                           fontFamily: 'Inter', fontSize: 15,
                           color: Color(0x47FFFFFF), height: 1.5,
                         ),
                       ),
                       const SizedBox(height: 28),
+                      // OTP boxes
                       Row(
                         children: List.generate(6, (i) => Expanded(
                           child: Container(
                             height: 56,
                             margin: EdgeInsets.only(right: i < 5 ? 8 : 0),
                             decoration: BoxDecoration(
-                              color: const Color(0x0AFFFFFF),
+                              color: _digits[i].isNotEmpty
+                                  ? const Color(0x14E8281E)
+                                  : const Color(0x0AFFFFFF),
                               borderRadius: BorderRadius.circular(12),
-                              border:
-                                  Border.all(color: const Color(0x17FFFFFF)),
+                              border: Border.all(
+                                color: _digits[i].isNotEmpty
+                                    ? AppColors.primary
+                                    : const Color(0x17FFFFFF),
+                              ),
                             ),
-                            child: TextField(
-                              controller: _controllers[i],
-                              focusNode: _focusNodes[i],
-                              textAlign: TextAlign.center,
-                              keyboardType: TextInputType.number,
-                              maxLength: 1,
-                              style: const TextStyle(
-                                fontFamily: 'Inter', fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                            child: Center(
+                              child: Text(
+                                _digits[i],
+                                style: const TextStyle(
+                                  fontFamily: 'Inter', fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
                               ),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                counterText: '',
-                              ),
-                              cursorColor: AppColors.primary,
-                              onChanged: (val) {
-                                if (val.isNotEmpty && i < 5) {
-                                  _focusNodes[i + 1].requestFocus();
-                                }
-                                if (val.isEmpty && i > 0) {
-                                  _focusNodes[i - 1].requestFocus();
-                                }
-                              },
                             ),
                           ),
                         )),
@@ -213,36 +220,40 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 28),
+                    ],
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Custom number keypad
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: Column(
+                    children: [
+                      // Verify button
                       GestureDetector(
-                        onTap: _isLoading ? null : () {
+                        onTap: (_isFull && !_isLoading) ? () {
                           setState(() => _isLoading = true);
                           Future.delayed(const Duration(seconds: 2), () {
-                            if (mounted) {
-                              setState(() => _isLoading = false);
-                              context.go(RouteNames.userHome);
-                            }
+                            if (!mounted) return;
+                            setState(() => _isLoading = false);
+                            context.go(RouteNames.otpPhone);
                           });
-                        },
-                        child: Container(
+                        } : null,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
                           width: double.infinity,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.full),
-                            gradient: const LinearGradient(
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0xFFF03328),
-                                Color(0xFFC41F16)
-                              ],
+                              colors: _isFull
+                                  ? [const Color(0xFFF03328), const Color(0xFFC41F16)]
+                                  : [const Color(0xFF3A3A3A), const Color(0xFF2A2A2A)],
                             ),
-                            boxShadow: const [
-                              BoxShadow(color: Color(0x99820F0A),
-                                  blurRadius: 8, offset: Offset(0, 4)),
-                            ],
                           ),
                           child: Center(
                             child: _isLoading
@@ -259,6 +270,9 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      // Keypad grid
+                      _Keypad(onKey: _onKey),
                     ],
                   ),
                 ),
@@ -267,6 +281,58 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _Keypad extends StatelessWidget {
+  final void Function(String) onKey;
+  const _Keypad({required this.onKey});
+
+  @override
+  Widget build(BuildContext context) {
+    final keys = [
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+      ['7', '8', '9'],
+      ['', '0', '⌫'],
+    ];
+    return Column(
+      children: keys.map((row) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          children: row.map((k) => Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: k.isEmpty
+                  ? const SizedBox()
+                  : GestureDetector(
+                      onTap: () => onKey(k),
+                      child: Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: k == '⌫'
+                              ? const Color(0x0FFFFFFF)
+                              : const Color(0x14FFFFFF),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Center(
+                          child: k == '⌫'
+                              ? const Icon(Icons.backspace_outlined,
+                                  color: Colors.white, size: 20)
+                              : Text(k,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter', fontSize: 22,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  )),
+                        ),
+                      ),
+                    ),
+            ),
+          )).toList(),
+        ),
+      )).toList(),
     );
   }
 }

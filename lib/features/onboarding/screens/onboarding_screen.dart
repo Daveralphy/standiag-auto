@@ -95,60 +95,68 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 // Top nav — dots + skip
                 Padding(
                   padding: const EdgeInsets.fromLTRB(26, 14, 26, 0),
-                  child: Stack(
-                    alignment: Alignment.center,
+                  child: Row(
                     children: [
-                      // Dots centered
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_pages.length, (i) {
-                          final bool active = i == _currentPage;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            width: active ? 28 : 8,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: active
-                                  ? AppColors.primary
-                                  : const Color(0x38FFFFFF),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.full),
-                              boxShadow: active
-                                  ? [
-                                      BoxShadow(
-                                        color: AppColors.primary
-                                            .withValues(alpha: 0.9),
-                                        blurRadius: 10,
-                                      ),
-                                      BoxShadow(
-                                        color: AppColors.primary
-                                            .withValues(alpha: 0.35),
-                                        blurRadius: 22,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                          );
-                        }),
-                      ),
-
-                      // Skip — right aligned
+                      // Left placeholder to balance skip button
                       if (!isLast)
-                        Positioned(
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: () =>
-                                context.go(RouteNames.profileTypePicker),
-                            child: Text(
-                              'Skip',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: const Color(0x80FFFFFF),
-                                fontWeight: FontWeight.w500,
+                        const SizedBox(width: 48)
+                      else
+                        const SizedBox(width: 48),
+                      // Dots centered
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(_pages.length, (i) {
+                            final bool active = i == _currentPage;
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: active ? 28 : 8,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: active
+                                    ? AppColors.primary
+                                    : const Color(0x38FFFFFF),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.full),
+                                boxShadow: active
+                                    ? [
+                                        BoxShadow(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.9),
+                                          blurRadius: 10,
+                                        ),
+                                        BoxShadow(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.35),
+                                          blurRadius: 22,
+                                        ),
+                                      ]
+                                    : null,
                               ),
-                            ),
-                          ),
+                            );
+                          }),
                         ),
+                      ),
+                      // Skip — right side
+                      SizedBox(
+                        width: 48,
+                        child: !isLast
+                            ? GestureDetector(
+                                onTap: () =>
+                                    context.go(RouteNames.login),
+                                child: Text(
+                                  'Skip',
+                                  textAlign: TextAlign.right,
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: const Color(0x80FFFFFF),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              )
+                            : const SizedBox(),
+                      ),
                     ],
                   ),
                 ),
