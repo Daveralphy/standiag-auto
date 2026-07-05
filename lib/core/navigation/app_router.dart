@@ -42,7 +42,6 @@ import '../../features/profile/screens/mechanic_profile_screen.dart' show Mechan
 import '../../features/mechanics/screens/radius_selector_screen.dart';
 import '../../features/mechanics/screens/searching_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
-import '../../features/onboarding/screens/splash_one_screen.dart';
 import '../../features/onboarding/screens/splash_two_screen.dart';
 import '../../features/profile/screens/add_vehicle_screen.dart';
 import '../../features/profile/screens/job_history_screen.dart';
@@ -93,7 +92,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: RouteNames.splashOne, pageBuilder: (_, __) => NoTransitionPage(child: const SplashOneScreen())),
+      GoRoute(path: RouteNames.splashOne, pageBuilder: (_, __) => NoTransitionPage(child: const SplashTwoScreen())),
       GoRoute(path: RouteNames.splashTwo, pageBuilder: (_, __) => NoTransitionPage(child: const SplashTwoScreen())),
       GoRoute(path: RouteNames.onboarding, pageBuilder: (_, __) => NoTransitionPage(child: const OnboardingScreen())),
       GoRoute(path: RouteNames.profileTypePicker, pageBuilder: (_, __) => NoTransitionPage(child: const ProfileTypePickerScreen())),

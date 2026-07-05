@@ -51,6 +51,7 @@ dependencies:
   connectivity_plus: ^6.1.4       # Detect network connectivity for error handling
   permission_handler: ^11.4.0     # Bluetooth and microphone permissions
   geolocator: ^13.0.4             # User location for mechanic search
+  flutter_launcher_icons: ^0.14.1
 
 dev_dependencies:
   flutter_test:
