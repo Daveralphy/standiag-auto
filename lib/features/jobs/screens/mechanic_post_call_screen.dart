@@ -11,7 +11,9 @@ import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MechanicPostCallScreen extends StatefulWidget {
   const MechanicPostCallScreen({super.key});
@@ -30,13 +32,37 @@ class _MechanicPostCallScreenState extends State<MechanicPostCallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const LatLng mechanicLocation = LatLng(6.5282, 3.3822);
+    const LatLng userLocation = LatLng(6.5244, 3.3792);
+
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
       body: Stack(
         children: [
-          Container(color: AppColors.mapBackground,
-              child: const Center(child: Icon(Icons.map_outlined,
-                  size: 80, color: AppColors.borderSubtle))),
+          LiveMapCanvas(
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(6.5265, 3.3810),
+              zoom: 14.2,
+            ),
+            markers: {
+              buildMapMarker(
+                markerId: 'mechanic-location',
+                position: mechanicLocation,
+                icon: buildMechanicMarkerIcon(),
+                infoWindowTitle: 'You',
+              ),
+              buildMapMarker(
+                markerId: 'user-location',
+                position: userLocation,
+                icon: buildUserMarkerIcon(),
+                infoWindowTitle: 'John Doe',
+              ),
+            },
+            enableCurrentLocation: true,
+            showCurrentLocationButton: false,
+            showZoomControls: false,
+            showCompass: false,
+          ),
 
           Positioned(top: 0, left: 0, right: 0, height: 140,
             child: Container(decoration: const BoxDecoration(

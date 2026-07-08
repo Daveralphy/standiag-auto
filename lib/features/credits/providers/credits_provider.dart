@@ -1,7 +1,12 @@
 // Credits provider — owns the user's credit balance and transaction history.
-// Balance is cached in Hive and updated after every debit/credit.
+// Balance and history are updated through Firestore transactions.
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/cache/cache_keys.dart';
+import '../../../core/cache/cache_manager.dart';
+import '../../../core/errors/error_handler.dart';
 
 import '../models/credits_model.dart';
 
@@ -43,33 +48,100 @@ class CreditsNotifier extends StateNotifier<CreditsState> {
   Future<void> fetchBalance(String userId) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // TODO: read credits field from Firestore users/{userId}
-      await Future.delayed(const Duration(milliseconds: 300));
-      state = state.copyWith(isLoading: false, balance: 48);
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+      if (!snapshot.exists) {
+        throw StateError('User not found');
+      }
+
+      final balance = (snapshot.data()?['credits'] as num?)?.toInt() ?? 0;
+      await CacheManager.instance.write(
+        box: CacheKeys.creditsBox,
+        key: CacheKeys.creditsBalance,
+        value: balance,
+      );
+      state = state.copyWith(isLoading: false, balance: balance);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: ErrorHandler.handle(e, StackTrace.current).message,
+      );
     }
   }
 
   Future<void> fetchHistory(String userId) async {
     try {
-      // TODO: fetch from Firestore credits_history where userId == userId
-      state = state.copyWith(history: []);
+      final query = await FirebaseFirestore.instance
+          .collection('credits_history')
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .get();
+      final history = query.docs.map(CreditsModel.fromFirestore).toList();
+      await CacheManager.instance.write(
+        box: CacheKeys.creditsBox,
+        key: CacheKeys.creditsHistory,
+        value: history.map((transaction) => transaction.toFirestore()).toList(),
+      );
+      state = state.copyWith(history: history);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(
+        error: ErrorHandler.handle(e, StackTrace.current).message,
+      );
     }
   }
 
   Future<bool> deduct(String userId, int amount, String reason,
       {String? jobId}) async {
-    // Uses Firestore atomic transaction to prevent race conditions
     try {
-      // TODO: Firestore transaction: read balance, check sufficient, deduct, write history
-      if (state.balance < amount) return false;
-      state = state.copyWith(balance: state.balance - amount);
+      if (state.balance < amount) {
+        state = state.copyWith(
+          error: ErrorHandler.handle(
+            StateError('Insufficient credits'),
+            StackTrace.current,
+          ).message,
+        );
+        return false;
+      }
+
+      final firestore = FirebaseFirestore.instance;
+      await firestore.runTransaction((transaction) async {
+        final userRef = firestore.collection('users').doc(userId);
+        final snapshot = await transaction.get(userRef);
+        final currentBalance = (snapshot.data()?['credits'] as num?)?.toInt() ?? 0;
+        if (currentBalance < amount) {
+          throw StateError('Insufficient credits');
+        }
+
+        transaction.update(userRef, {'credits': currentBalance - amount});
+        final historyRef = firestore.collection('credits_history').doc();
+        transaction.set(
+          historyRef,
+          CreditsModel(
+            id: historyRef.id,
+            userId: userId,
+            type: TransactionType.debit,
+            amount: amount,
+            reason: reason,
+            relatedJobId: jobId,
+            createdAt: DateTime.now(),
+          ).toFirestore(),
+        );
+      });
+
+      final nextBalance = state.balance - amount;
+      state = state.copyWith(balance: nextBalance);
+      await CacheManager.instance.write(
+        box: CacheKeys.creditsBox,
+        key: CacheKeys.creditsBalance,
+        value: nextBalance,
+      );
       return true;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(
+        error: ErrorHandler.handle(e, StackTrace.current).message,
+      );
       return false;
     }
   }
@@ -77,14 +149,40 @@ class CreditsNotifier extends StateNotifier<CreditsState> {
   Future<void> purchase(String userId, int amount) async {
     state = state.copyWith(isPurchasing: true, error: null);
     try {
-      // TODO: integrate payment gateway, then atomic Firestore transaction to add credits
-      await Future.delayed(const Duration(seconds: 2));
+      final firestore = FirebaseFirestore.instance;
+      await firestore.runTransaction((transaction) async {
+        final userRef = firestore.collection('users').doc(userId);
+        final snapshot = await transaction.get(userRef);
+        final currentBalance = (snapshot.data()?['credits'] as num?)?.toInt() ?? 0;
+
+        transaction.update(userRef, {'credits': currentBalance + amount});
+        final historyRef = firestore.collection('credits_history').doc();
+        transaction.set(
+          historyRef,
+          CreditsModel(
+            id: historyRef.id,
+            userId: userId,
+            type: TransactionType.credit,
+            amount: amount,
+            reason: 'Purchased credits',
+            createdAt: DateTime.now(),
+          ).toFirestore(),
+        );
+      });
       state = state.copyWith(
         isPurchasing: false,
         balance: state.balance + amount,
       );
+      await CacheManager.instance.write(
+        box: CacheKeys.creditsBox,
+        key: CacheKeys.creditsBalance,
+        value: state.balance,
+      );
     } catch (e) {
-      state = state.copyWith(isPurchasing: false, error: e.toString());
+      state = state.copyWith(
+        isPurchasing: false,
+        error: ErrorHandler.handle(e, StackTrace.current).message,
+      );
     }
   }
 }

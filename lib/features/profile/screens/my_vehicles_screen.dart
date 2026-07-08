@@ -1,6 +1,8 @@
 // My Vehicles screen — list of user's registered vehicles with add button.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -9,24 +11,40 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/profile/providers/profile_provider.dart';
+import '../../../shared/widget/app_error_toast.dart';
+import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class MyVehiclesScreen extends StatefulWidget {
+class MyVehiclesScreen extends ConsumerStatefulWidget {
   const MyVehiclesScreen({super.key});
 
   @override
-  State<MyVehiclesScreen> createState() => _MyVehiclesScreenState();
+  ConsumerState<MyVehiclesScreen> createState() => _MyVehiclesScreenState();
 }
 
-class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
+class _MyVehiclesScreenState extends ConsumerState<MyVehiclesScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) return;
+      ref.read(profileProvider.notifier).fetchVehicles(userId);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<ProfileState>(profileProvider, (_, next) {
+      if (next.error != null) {
+        AppErrorToast.showMessage(context, next.error!);
+      }
+    });
+
+    final state = ref.watch(profileProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -37,7 +55,13 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userProfile),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.userProfile);
+                    }
+                  },
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -52,7 +76,7 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.addVehicle),
+                  onTap: () => context.push(RouteNames.addVehicle),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
@@ -69,18 +93,26 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.pageHorizontal),
-                itemCount: 2,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, i) => _VehicleCard(
-                  make: i == 0 ? 'Toyota' : 'Honda',
-                  model: i == 0 ? 'Corolla 2019' : 'Civic 2021',
-                  plate: i == 0 ? 'ABC-123-XY' : 'DEF-456-ZA',
-                  fuelType: i == 0 ? 'Petrol' : 'Petrol',
-                ),
-              ),
+              child: state.isLoading && state.vehicles.isEmpty
+                  ? ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal),
+                      itemCount: 4,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (_, __) => const VehicleCardSkeleton(),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal),
+                      itemCount: state.vehicles.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (_, i) => _VehicleCard(
+                        make: state.vehicles[i].make,
+                        model: state.vehicles[i].displayName,
+                        plate: state.vehicles[i].plateNumber,
+                        fuelType: state.vehicles[i].fuelType,
+                      ),
+                    ),
             ),
           ],
         ),

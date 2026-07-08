@@ -1,6 +1,7 @@
 // Mechanic Drawer screen — side drawer for mechanics.
 // Shows profile summary, navigation links, and logout option.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,6 +29,12 @@ class _MechanicDrawerScreenState extends State<MechanicDrawerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authUser = FirebaseAuth.instance.currentUser;
+    final displayName = authUser?.displayName?.trim().isNotEmpty == true
+        ? authUser!.displayName!.trim()
+        : (authUser?.email?.split('@').first ?? 'Mechanic');
+    final email = authUser?.email ?? '';
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
@@ -39,16 +46,16 @@ class _MechanicDrawerScreenState extends State<MechanicDrawerScreen> {
                   AppSpacing.pageHorizontal, AppSpacing.xl),
               child: Row(
                 children: [
-                  const AppAvatar(name: 'Kwame Asante', size: 52),
+                  AppAvatar(name: displayName, size: 52),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Kwame Asante',
+                        Text(displayName,
                             style: AppTypography.heading3,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
-                        Text('@kwameasante',
+                        Text(email.isNotEmpty ? email : '@mechanic',
                             style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],
@@ -70,7 +77,7 @@ class _MechanicDrawerScreenState extends State<MechanicDrawerScreen> {
                   _DrawerItem(
                     icon: Icons.person_outline_rounded,
                     label: AppStrings.drawerProfile,
-                    onTap: () => context.go(RouteNames.mechanicProfileView),
+                    onTap: () => context.push(RouteNames.mechanicProfileView),
                   ),
                   _DrawerItem(
                     icon: Icons.work_outline_rounded,
@@ -107,7 +114,12 @@ class _MechanicDrawerScreenState extends State<MechanicDrawerScreen> {
               child: _DrawerItem(
                 icon: Icons.logout_rounded,
                 label: AppStrings.drawerLogOut,
-                onTap: () => context.go(RouteNames.onboarding),
+                onTap: () async {
+                  await FirebaseAuth.instance.signOut();
+                  if (context.mounted) {
+                    context.go(RouteNames.login);
+                  }
+                },
                 isDestructive: true,
               ),
             ),

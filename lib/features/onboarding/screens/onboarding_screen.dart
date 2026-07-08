@@ -9,6 +9,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
+import '../../../core/cache/cache_keys.dart';
+import '../../../core/cache/cache_manager.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/system_ui_style.dart';
@@ -67,8 +69,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      context.go(RouteNames.profileTypePicker);
+      _completeOnboarding(RouteNames.profileTypePicker);
     }
+  }
+
+  Future<void> _completeOnboarding(String route) async {
+    await CacheManager.instance.write(
+      box: CacheKeys.settingsBox,
+      key: CacheKeys.onboardingSeen,
+      value: true,
+    );
+    if (!mounted) return;
+    context.go(route);
   }
 
   @override
@@ -144,7 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: !isLast
                             ? GestureDetector(
                                 onTap: () =>
-                                    context.go(RouteNames.login),
+                                            _completeOnboarding(RouteNames.login),
                                 child: Text(
                                   'Skip',
                                   textAlign: TextAlign.right,
@@ -245,7 +257,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                            child: Text(
                              isLast ? 'Get Started' : 'Next',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 15,
                               fontWeight: FontWeight.w700,

@@ -1,6 +1,7 @@
 // User Drawer screen — side drawer for car owners.
 // Shows profile summary, navigation links, and logout option.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,6 +29,12 @@ class _UserDrawerScreenState extends State<UserDrawerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authUser = FirebaseAuth.instance.currentUser;
+    final displayName = authUser?.displayName?.trim().isNotEmpty == true
+        ? authUser!.displayName!.trim()
+        : (authUser?.email?.split('@').first ?? 'User');
+    final email = authUser?.email ?? '';
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
@@ -40,16 +47,16 @@ class _UserDrawerScreenState extends State<UserDrawerScreen> {
                   AppSpacing.pageHorizontal, AppSpacing.xl),
               child: Row(
                 children: [
-                  const AppAvatar(name: 'John Doe', size: 52),
+                  AppAvatar(name: displayName, size: 52),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('John Doe',
+                        Text(displayName,
                             style: AppTypography.heading3,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
-                        Text('@johndoe',
+                        Text(email.isNotEmpty ? email : '@user',
                             style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],
@@ -73,7 +80,7 @@ class _UserDrawerScreenState extends State<UserDrawerScreen> {
                   _DrawerItem(
                     icon: Icons.person_outline_rounded,
                     label: AppStrings.drawerProfile,
-                    onTap: () => context.go(RouteNames.userProfile),
+                    onTap: () => context.push(RouteNames.userProfile),
                   ),
                   _DrawerItem(
                     icon: Icons.directions_car_outlined,
@@ -117,7 +124,12 @@ class _UserDrawerScreenState extends State<UserDrawerScreen> {
               child: _DrawerItem(
                 icon: Icons.logout_rounded,
                 label: AppStrings.drawerLogOut,
-                onTap: () => context.go(RouteNames.onboarding),
+                onTap: () async {
+                  await FirebaseAuth.instance.signOut();
+                  if (context.mounted) {
+                    context.go(RouteNames.login);
+                  }
+                },
                 isDestructive: true,
               ),
             ),

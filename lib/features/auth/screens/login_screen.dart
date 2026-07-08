@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,29 +16,233 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _usernameController = TextEditingController();
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _showPassword = false;
   bool _isLoading = false;
+
+  // Field-level errors
+  String? _emailError;
+  String? _passwordError;
+
+  // Top toast
+  OverlayEntry? _toastEntry;
+  late AnimationController _toastController;
+  late Animation<Offset> _toastSlide;
 
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    _toastController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _toastSlide = Tween<Offset>(
+      begin: const Offset(0, -1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _toastController,
+      curve: Curves.easeOutCubic,
+    ));
   }
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
+    _toastController.dispose();
+    _toastEntry?.remove();
     super.dispose();
+  }
+
+  // ─── Show top toast ──────────────────────────────────────────────────
+  void _showToast(String message) {
+    _toastEntry?.remove();
+    _toastEntry = OverlayEntry(
+      builder: (_) => SafeArea(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: SlideTransition(
+              position: _toastSlide,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 13),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A0A0A),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0x59E8281E)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x99000000),
+                        blurRadius: 20,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline_rounded,
+                          color: AppColors.primary, size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          message,
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_toastEntry!);
+    _toastController.forward(from: 0);
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      _toastController.reverse().then((_) {
+        _toastEntry?.remove();
+        _toastEntry = null;
+      });
+    });
+  }
+
+  // ─── Resolve email ───────────────────────────────────────────────────
+  Future<String?> _resolveEmail(String input) async {
+    final trimmed = input.trim();
+    if (trimmed.contains('@')) return trimmed;
+    final snap = await FirebaseFirestore.instance
+        .collection('users')
+        .where('username', isEqualTo: trimmed)
+        .limit(1)
+        .get()
+        .timeout(const Duration(seconds: 5));
+    if (snap.docs.isEmpty) return null;
+    return snap.docs.first.data()['email'] as String?;
+  }
+
+  // ─── Sign in ─────────────────────────────────────────────────────────
+  Future<void> _signIn() async {
+    // Clear field errors
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
+    });
+
+    final input = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    // Field-level validation
+    bool hasError = false;
+    if (input.isEmpty) {
+      setState(() => _emailError = 'Please enter your username or email');
+      hasError = true;
+    }
+    if (password.isEmpty) {
+      setState(() => _passwordError = 'Please enter your password');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Resolve to email
+      final email = await _resolveEmail(input);
+
+      if (email == null) {
+        if (mounted) {
+          setState(() => _emailError = 'No account found with that username');
+        }
+        return;
+      }
+
+      // Sign in
+      final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      ).timeout(const Duration(seconds: 15));
+
+      final uid = cred.user!.uid;
+
+      // Get user type with a timeout so it never hangs
+      String type = 'car_owner';
+      try {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .get()
+            .timeout(const Duration(seconds: 5));
+        type = userDoc.data()?['type'] as String? ?? 'car_owner';
+      } catch (_) {
+        // If Firestore times out just default to car_owner
+        type = 'car_owner';
+      }
+
+      if (mounted) {
+        if (type == 'mechanic') {
+          context.go(RouteNames.mechanicHome);
+        } else {
+          context.go(RouteNames.userHome);
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        switch (e.code) {
+          case 'wrong-password':
+          case 'invalid-credential':
+            setState(() => _passwordError = 'Incorrect password');
+            break;
+          case 'user-not-found':
+            setState(() => _emailError = 'No account found with this email');
+            break;
+          case 'invalid-email':
+            setState(() => _emailError = 'Invalid email address');
+            break;
+          case 'user-disabled':
+            _showToast('This account has been disabled.');
+            break;
+          case 'too-many-requests':
+            _showToast('Too many attempts. Please try again later.');
+            break;
+          case 'network-request-failed':
+            _showToast('No internet connection.');
+            break;
+          default:
+            _showToast('Sign in failed. Please try again.');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showToast('Something went wrong. Please try again.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Allow the scaffold to resize when keyboard appears
       resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.background,
       body: Stack(
@@ -66,19 +273,18 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // Content — no back button, fully scrollable
+          // Content
           SafeArea(
             child: SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top space to push content below image
                   SizedBox(
                       height: MediaQuery.of(context).size.height * 0.22),
 
-                  // Headline
                   RichText(
                     text: const TextSpan(
                       style: TextStyle(
@@ -103,12 +309,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 28),
 
-                  // Username or Email
+                  // Email / Username
                   _FloatingField(
                     label: 'Username or Email',
                     hint: 'Enter your username or email',
-                    controller: _usernameController,
+                    controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    enabled: !_isLoading,
+                    errorText: _emailError,
+                    onChanged: (_) {
+                      if (_emailError != null) {
+                        setState(() => _emailError = null);
+                      }
+                    },
                   ),
                   const SizedBox(height: 22),
 
@@ -118,6 +331,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     hint: 'Enter your password',
                     controller: _passwordController,
                     obscureText: !_showPassword,
+                    enabled: !_isLoading,
+                    errorText: _passwordError,
+                    onChanged: (_) {
+                      if (_passwordError != null) {
+                        setState(() => _passwordError = null);
+                      }
+                    },
                     suffix: GestureDetector(
                       onTap: () =>
                           setState(() => _showPassword = !_showPassword),
@@ -152,14 +372,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   _PrimaryButton(
                     label: 'Sign In',
                     isLoading: _isLoading,
-                    onTap: () {
-                      setState(() => _isLoading = true);
-                      Future.delayed(const Duration(seconds: 2), () {
-                        if (!mounted) return;
-                            setState(() => _isLoading = false);
-                            context.go(RouteNames.userHome);
-                      });
-                    },
+                    onTap: _signIn,
                   ),
 
                   // Divider
@@ -234,12 +447,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
+// ─── Floating field with inline error ─────────────────────────────────────
+
 class _FloatingField extends StatelessWidget {
   final String label;
   final String hint;
   final TextEditingController controller;
   final TextInputType keyboardType;
   final bool obscureText;
+  final bool enabled;
+  final String? errorText;
+  final ValueChanged<String>? onChanged;
   final Widget? suffix;
 
   const _FloatingField({
@@ -248,36 +466,51 @@ class _FloatingField extends StatelessWidget {
     required this.controller,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
+    this.enabled = true,
+    this.errorText,
+    this.onChanged,
     this.suffix,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasError = errorText != null;
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      enabled: enabled,
+      onChanged: onChanged,
       style: const TextStyle(
         fontFamily: 'Inter', fontSize: 16,
         color: Colors.white, fontWeight: FontWeight.w400,
       ),
       decoration: InputDecoration(
         labelText: label,
-        hintText: hint,
-        labelStyle: const TextStyle(
+        hintText: hasError ? errorText : hint,
+        labelStyle: TextStyle(
           fontFamily: 'Inter', fontSize: 15,
-          color: Color(0x66FFFFFF), fontWeight: FontWeight.w400,
+          color: hasError
+              ? AppColors.primary.withValues(alpha: 0.8)
+              : const Color(0x66FFFFFF),
+          fontWeight: FontWeight.w400,
         ),
-        floatingLabelStyle: const TextStyle(
+        floatingLabelStyle: TextStyle(
           fontFamily: 'Inter', fontSize: 13,
-          color: AppColors.primary, fontWeight: FontWeight.w600,
+          color: hasError ? AppColors.primary : AppColors.primary,
+          fontWeight: FontWeight.w600,
         ),
-        hintStyle: const TextStyle(
-          fontFamily: 'Inter', fontSize: 15,
-          color: Color(0x40FFFFFF), fontWeight: FontWeight.w400,
+        hintStyle: TextStyle(
+          fontFamily: 'Inter', fontSize: 14,
+          color: hasError
+              ? AppColors.primary.withValues(alpha: 0.7)
+              : const Color(0x40FFFFFF),
+          fontWeight: hasError ? FontWeight.w500 : FontWeight.w400,
         ),
         filled: true,
-        fillColor: const Color(0x0AFFFFFF),
+        fillColor: hasError
+            ? const Color(0x0DE8281E)
+            : const Color(0x0AFFFFFF),
         contentPadding: const EdgeInsets.symmetric(
             horizontal: 16, vertical: 18),
         suffixIcon: suffix != null
@@ -289,21 +522,43 @@ class _FloatingField extends StatelessWidget {
             minWidth: 40, minHeight: 48),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0x1AFFFFFF)),
+          borderSide: BorderSide(
+            color: hasError
+                ? AppColors.primary
+                : const Color(0x1AFFFFFF),
+            width: hasError ? 1.5 : 1,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0x1AFFFFFF)),
+          borderSide: BorderSide(
+            color: hasError
+                ? AppColors.primary
+                : const Color(0x1AFFFFFF),
+            width: hasError ? 1.5 : 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: const BorderSide(
+              color: AppColors.primary, width: 1.5),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0x0AFFFFFF)),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+              color: AppColors.primary, width: 1.5),
         ),
       ),
       cursorColor: AppColors.primary,
     );
   }
 }
+
+// ─── Remaining widgets ─────────────────────────────────────────────────────
 
 class _PrimaryButton extends StatelessWidget {
   final String label;
@@ -411,66 +666,41 @@ class _GooglePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final s = size.width / 24.0;
     canvas.scale(s, s);
-
     final blue = Paint()..color = const Color(0xFF4285F4);
-    canvas.drawPath(
-      Path()
-        ..moveTo(22.56, 12.25)
-        ..cubicTo(22.56, 11.47, 22.49, 10.72, 22.36, 10.0)
-        ..lineTo(12.0, 10.0)
-        ..lineTo(12.0, 14.26)
-        ..lineTo(17.92, 14.26)
-        ..cubicTo(17.66, 15.63, 16.88, 16.79, 15.71, 17.57)
-        ..lineTo(15.71, 20.34)
-        ..lineTo(19.28, 20.34)
-        ..cubicTo(21.36, 18.42, 22.56, 15.6, 22.56, 12.25)
-        ..close(),
-      blue,
-    );
-
+    canvas.drawPath(Path()
+      ..moveTo(22.56, 12.25)
+      ..cubicTo(22.56, 11.47, 22.49, 10.72, 22.36, 10.0)
+      ..lineTo(12.0, 10.0)..lineTo(12.0, 14.26)..lineTo(17.92, 14.26)
+      ..cubicTo(17.66, 15.63, 16.88, 16.79, 15.71, 17.57)
+      ..lineTo(15.71, 20.34)..lineTo(19.28, 20.34)
+      ..cubicTo(21.36, 18.42, 22.56, 15.6, 22.56, 12.25)..close(), blue);
     final green = Paint()..color = const Color(0xFF34A853);
-    canvas.drawPath(
-      Path()
-        ..moveTo(12.0, 23.0)
-        ..cubicTo(14.97, 23.0, 17.46, 22.02, 19.28, 20.34)
-        ..lineTo(15.71, 17.57)
-        ..cubicTo(14.73, 18.23, 13.48, 18.63, 12.0, 18.63)
-        ..cubicTo(9.14, 18.63, 6.71, 16.7, 5.84, 14.1)
-        ..lineTo(2.18, 14.1)
-        ..lineTo(2.18, 16.94)
-        ..cubicTo(3.99, 20.53, 7.7, 23.0, 12.0, 23.0)
-        ..close(),
-      green,
-    );
-
+    canvas.drawPath(Path()
+      ..moveTo(12.0, 23.0)
+      ..cubicTo(14.97, 23.0, 17.46, 22.02, 19.28, 20.34)
+      ..lineTo(15.71, 17.57)
+      ..cubicTo(14.73, 18.23, 13.48, 18.63, 12.0, 18.63)
+      ..cubicTo(9.14, 18.63, 6.71, 16.7, 5.84, 14.1)
+      ..lineTo(2.18, 14.1)..lineTo(2.18, 16.94)
+      ..cubicTo(3.99, 20.53, 7.7, 23.0, 12.0, 23.0)..close(), green);
     final yellow = Paint()..color = const Color(0xFFFBBC05);
-    canvas.drawPath(
-      Path()
-        ..moveTo(5.84, 14.09)
-        ..cubicTo(5.62, 13.43, 5.49, 12.73, 5.49, 12.0)
-        ..cubicTo(5.49, 11.27, 5.62, 10.57, 5.84, 9.91)
-        ..lineTo(5.84, 7.07)
-        ..lineTo(2.18, 7.07)
-        ..cubicTo(1.43, 8.55, 1.0, 10.22, 1.0, 12.0)
-        ..cubicTo(1.0, 13.78, 1.43, 15.45, 2.18, 16.93)
-        ..lineTo(5.84, 14.09)
-        ..close(),
-      yellow,
-    );
-
+    canvas.drawPath(Path()
+      ..moveTo(5.84, 14.09)
+      ..cubicTo(5.62, 13.43, 5.49, 12.73, 5.49, 12.0)
+      ..cubicTo(5.49, 11.27, 5.62, 10.57, 5.84, 9.91)
+      ..lineTo(5.84, 7.07)..lineTo(2.18, 7.07)
+      ..cubicTo(1.43, 8.55, 1.0, 10.22, 1.0, 12.0)
+      ..cubicTo(1.0, 13.78, 1.43, 15.45, 2.18, 16.93)
+      ..lineTo(5.84, 14.09)..close(), yellow);
     final red = Paint()..color = const Color(0xFFEA4335);
-    canvas.drawPath(
-      Path()
-        ..moveTo(12.0, 5.38)
-        ..cubicTo(13.62, 5.38, 15.06, 5.94, 16.21, 7.02)
-        ..lineTo(19.36, 3.87)
-        ..cubicTo(17.45, 2.09, 14.97, 1.0, 12.0, 1.0)
-        ..cubicTo(7.7, 1.0, 3.99, 3.47, 2.18, 7.07)
-        ..lineTo(5.84, 9.91)
-        ..cubicTo(6.71, 7.31, 9.14, 5.38, 12.0, 5.38)
-        ..close(),
-      red,
-    );
+    canvas.drawPath(Path()
+      ..moveTo(12.0, 5.38)
+      ..cubicTo(13.62, 5.38, 15.06, 5.94, 16.21, 7.02)
+      ..lineTo(19.36, 3.87)
+      ..cubicTo(17.45, 2.09, 14.97, 1.0, 12.0, 1.0)
+      ..cubicTo(7.7, 1.0, 3.99, 3.47, 2.18, 7.07)
+      ..lineTo(5.84, 9.91)
+      ..cubicTo(6.71, 7.31, 9.14, 5.38, 12.0, 5.38)..close(), red);
   }
 
   @override

@@ -94,11 +94,11 @@ class _UserSignupStepThreeScreenState
                       const Expanded(child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const _StepDot(active: false),
-                            const SizedBox(width: 5),
-                            const _StepDot(active: false),
-                            const SizedBox(width: 5),
-                            const _StepDot(active: true),
+                            _StepDot(active: false),
+                            SizedBox(width: 5),
+                            _StepDot(active: false),
+                            SizedBox(width: 5),
+                            _StepDot(active: true),
                           ],
                         ),
                       ),
@@ -194,6 +194,7 @@ class _UserSignupStepThreeScreenState
                           Future.delayed(const Duration(seconds: 2), () {
                             if (!mounted) return;
                             setState(() => _isLoading = false);
+                            if (!context.mounted) return;
                             context.go(RouteNames.otpEmail);
                           });
                         },

@@ -1,6 +1,7 @@
 // Appearance screen — theme and text size settings.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/route_names.dart';
@@ -10,18 +11,17 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/providers/settings_provider.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class AppearanceScreen extends StatefulWidget {
+class AppearanceScreen extends ConsumerStatefulWidget {
   const AppearanceScreen({super.key});
 
   @override
-  State<AppearanceScreen> createState() => _AppearanceScreenState();
+  ConsumerState<AppearanceScreen> createState() => _AppearanceScreenState();
 }
 
-class _AppearanceScreenState extends State<AppearanceScreen> {
-  String _theme = 'Dark';
-  double _textSize = 2;
+class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
 
   @override
   void initState() {
@@ -31,6 +31,8 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -70,10 +72,10 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 12),
                     Row(children: ['Dark', 'Light'].map((t) {
-                      final isSelected = t == _theme;
+                      final isSelected = t == settings.theme;
                       return Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _theme = t),
+                          onTap: () => ref.read(settingsProvider.notifier).setTheme(t),
                           child: Container(
                             margin: EdgeInsets.only(
                                 right: t == 'Dark' ? 8 : 0),
@@ -112,11 +114,11 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                         trackHeight: 3,
                       ),
                       child: Slider(
-                        value: _textSize,
+                        value: settings.textSize,
                         min: 1,
                         max: 5,
                         divisions: 4,
-                        onChanged: (v) => setState(() => _textSize = v),
+                        onChanged: (v) => ref.read(settingsProvider.notifier).setTextSize(v),
                       ),
                     ),
                     const Center(child: Text(AppStrings.appearanceDefault,

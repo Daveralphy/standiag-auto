@@ -239,6 +239,8 @@ class AppStrings {
   static const String statusCompleted = 'Completed';
   static const String statusInProgress = 'In Progress';
   static const String closeJob = 'Close Job';
+    static const String errorLoadData = 'Unable to load data';
+    static const String errorTryAgain = 'Try again';
 
   // ─── Settings ──────────────────────────────────────────────────────────────
 

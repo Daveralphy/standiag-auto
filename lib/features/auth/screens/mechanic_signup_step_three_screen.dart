@@ -203,6 +203,7 @@ class _MechanicSignupStepThreeScreenState
                           Future.delayed(const Duration(seconds: 2), () {
                             if (!mounted) return;
                             setState(() => _isLoading = false);
+                            if (!context.mounted) return;
                             context.go(RouteNames.otpEmail);
                           });
                         },

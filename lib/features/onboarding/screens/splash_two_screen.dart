@@ -1,6 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/cache/cache_keys.dart';
+import '../../../core/cache/cache_manager.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/system_ui_style.dart';
@@ -26,16 +30,56 @@ class _SplashTwoScreenState extends State<SplashTwoScreen>
       duration: const Duration(milliseconds: 900),
     )..repeat();
 
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (!mounted) return;
-      context.go(RouteNames.onboarding);
-    });
+    Future.delayed(const Duration(milliseconds: 2500), _routeNext);
   }
 
   @override
   void dispose() {
     _spinController.dispose();
     super.dispose();
+  }
+
+  Future<void> _routeNext() async {
+    final onboardingSeen = !CacheManager.instance.isExpired(
+          box: CacheKeys.settingsBox,
+          key: CacheKeys.onboardingSeen,
+          ttl: const Duration(days: 3650),
+        ) &&
+        (CacheManager.instance.read<bool>(
+              box: CacheKeys.settingsBox,
+              key: CacheKeys.onboardingSeen,
+              fromJson: (json) => json as bool,
+            ) ??
+            false);
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (!mounted) return;
+
+    if (!onboardingSeen) {
+      context.go(RouteNames.onboarding);
+      return;
+    }
+
+    if (user == null) {
+      context.go(RouteNames.login);
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .timeout(const Duration(seconds: 5));
+      final type = doc.data()?['type'] as String? ?? 'car_owner';
+      if (!mounted) return;
+      context.go(type == 'mechanic'
+          ? RouteNames.mechanicHome
+          : RouteNames.userHome);
+    } catch (_) {
+      if (!mounted) return;
+      context.go(RouteNames.userHome);
+    }
   }
 
   @override

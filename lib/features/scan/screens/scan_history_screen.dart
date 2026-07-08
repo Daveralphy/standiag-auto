@@ -1,74 +1,116 @@
 // Scan History screen — list of past OBD scans for the user.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../core/navigation/route_names.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/navigation/route_names.dart';
+import '../providers/scan_provider.dart';
+import '../../../shared/widget/app_error_toast.dart';
+import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class ScanHistoryScreen extends StatefulWidget {
+class ScanHistoryScreen extends ConsumerStatefulWidget {
   const ScanHistoryScreen({super.key});
 
   @override
-  State<ScanHistoryScreen> createState() => _ScanHistoryScreenState();
+  ConsumerState<ScanHistoryScreen> createState() => _ScanHistoryScreenState();
 }
 
-class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
+class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) {
+        return;
+      }
+      ref.read(scanProvider.notifier).fetchHistory(userId);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<ScanState>(scanProvider, (_, next) {
+      if (next.error != null) {
+        AppErrorToast.showMessage(context, next.error!);
+      }
+    });
+
+    final state = ref.watch(scanProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
-                  AppSpacing.md, AppSpacing.pageHorizontal, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageHorizontal,
+                AppSpacing.md,
+                AppSpacing.pageHorizontal,
+                0,
+              ),
               child: Row(children: [
                 GestureDetector(
                   onTap: () => context.go(RouteNames.userHome),
                   child: Container(
-                    width: 32, height: 32,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: const Color(0x12FFFFFF),
                       borderRadius: BorderRadius.circular(AppRadius.full),
-                      border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 14, color: AppColors.textPrimary)),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 14,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.scanHistoryTitle,
+                const Expanded(
+                  child: Text(
+                    AppStrings.scanHistoryTitle,
                     style: AppTypography.heading3,
-                    overflow: TextOverflow.ellipsis, maxLines: 1)),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
               ]),
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.pageHorizontal),
-                itemCount: 4,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, i) => _ScanCard(
-                  vehicle: ['Toyota Corolla 2019', 'Toyota Corolla 2019',
-                      'Honda Civic 2021', 'Honda Civic 2021'][i],
-                  score: [8, 6, 9, 7][i],
-                  date: ['29 May 2026', '20 Apr 2026',
-                      '10 Mar 2026', '5 Jan 2026'][i],
-                ),
-              ),
+              child: state.isScanning && state.history.isEmpty
+                  ? ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.pageHorizontal,
+                      ),
+                      itemCount: 4,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (_, __) => const _ScanCardSkeleton(),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.pageHorizontal,
+                      ),
+                      itemCount: state.history.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (_, i) => _ScanCard(
+                        vehicle: state.history[i].vehicleId,
+                        score: state.history[i].healthScore,
+                        date: state.history[i].createdAt.toIso8601String(),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -83,7 +125,9 @@ class _ScanCard extends StatelessWidget {
   final String date;
 
   const _ScanCard({
-    required this.vehicle, required this.score, required this.date,
+    required this.vehicle,
+    required this.score,
+    required this.date,
   });
 
   Color get _scoreColor {
@@ -99,31 +143,84 @@ class _ScanCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.border)),
+        border: Border.all(color: AppColors.border),
+      ),
       child: Row(children: [
         Container(
-          width: 44, height: 44,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: _scoreColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
-            border: Border.all(color: _scoreColor.withValues(alpha: 0.3))),
-          child: Center(child: Text('$score',
+            border: Border.all(color: _scoreColor.withValues(alpha: 0.3)),
+          ),
+          child: Center(
+            child: Text(
+              '$score',
               style: AppTypography.heading3.copyWith(color: _scoreColor),
-              overflow: TextOverflow.ellipsis, maxLines: 1))),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(vehicle, style: AppTypography.bodyLarge,
-                overflow: TextOverflow.ellipsis, maxLines: 1),
-            const SizedBox(height: 3),
-            Text(date, style: AppTypography.caption,
-                overflow: TextOverflow.ellipsis, maxLines: 1),
-          ],
-        )),
-        const Text('/10', style: AppTypography.caption,
-            overflow: TextOverflow.ellipsis, maxLines: 1),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                vehicle,
+                style: AppTypography.bodyLarge,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                date,
+                style: AppTypography.caption,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ],
+          ),
+        ),
+        const Text('/10',
+            style: AppTypography.caption,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1),
       ]),
+    );
+  }
+}
+
+class _ScanCardSkeleton extends StatelessWidget {
+  const _ScanCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl2),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Row(
+        children: [
+          AppSkeleton(width: 44, height: 44, radius: AppRadius.full),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppSkeleton.wide(height: 12),
+                SizedBox(height: 6),
+                AppSkeleton(width: 80, height: 10),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

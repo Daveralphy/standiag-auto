@@ -1,27 +1,26 @@
 // Language screen — select app language.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../core/navigation/route_names.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/navigation/route_names.dart';
+import '../../settings/providers/settings_provider.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class LanguageScreen extends StatefulWidget {
+class LanguageScreen extends ConsumerStatefulWidget {
   const LanguageScreen({super.key});
 
   @override
-  State<LanguageScreen> createState() => _LanguageScreenState();
+  ConsumerState<LanguageScreen> createState() => _LanguageScreenState();
 }
 
-class _LanguageScreenState extends State<LanguageScreen> {
-  String _selected = 'English';
-
+class _LanguageScreenState extends ConsumerState<LanguageScreen> {
   static const List<String> _languages = [
     'English', 'French', 'Yoruba', 'Igbo', 'Hausa', 'Pidgin',
   ];
@@ -34,6 +33,8 @@ class _LanguageScreenState extends State<LanguageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -70,9 +71,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
                     color: AppColors.borderSubtle, height: 1),
                 itemBuilder: (_, i) {
                   final lang = _languages[i];
-                  final isSelected = lang == _selected;
+                  final isSelected = lang == settings.language;
                   return GestureDetector(
-                    onTap: () => setState(() => _selected = lang),
+                    onTap: () => ref.read(settingsProvider.notifier).setLanguage(lang),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Row(children: [

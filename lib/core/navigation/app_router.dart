@@ -42,6 +42,7 @@ import '../../features/profile/screens/mechanic_profile_screen.dart'
 import '../../features/mechanics/screens/radius_selector_screen.dart';
 import '../../features/mechanics/screens/searching_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
+import '../../features/onboarding/screens/splash_one_screen.dart';
 import '../../features/onboarding/screens/splash_two_screen.dart';
 import '../../features/profile/screens/add_vehicle_screen.dart';
 import '../../features/profile/screens/job_history_screen.dart';
@@ -60,17 +61,41 @@ import '../../features/settings/screens/notification_settings_screen.dart';
 import '../../features/settings/screens/privacy_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/settings/screens/verify_password_change_screen.dart';
+import '../../shared/providers/auth_provider.dart';
 import 'route_names.dart';
 
-final routerProvider = Provider<GoRouter>((_) {
+final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: RouteNames.splashOne,
-    // TODO: restore auth guard after home screens are built
+        redirect: (_, state) {
+            final location = state.matchedLocation;
+            const publicRoutes = {
+                RouteNames.splashOne,
+                RouteNames.splashTwo,
+                RouteNames.onboarding,
+                RouteNames.profileTypePicker,
+                RouteNames.login,
+                RouteNames.otpPhone,
+                RouteNames.otpEmail,
+                RouteNames.userSignupStepOne,
+                RouteNames.userSignupStepTwo,
+                RouteNames.userSignupStepThree,
+                RouteNames.mechanicSignupStepOne,
+                RouteNames.mechanicSignupStepTwo,
+                RouteNames.mechanicSignupStepThree,
+            };
+
+            final isAuthenticated = ref.watch(currentUserProvider) != null;
+            if (!isAuthenticated && !publicRoutes.contains(location)) {
+                return RouteNames.login;
+            }
+            return null;
+        },
     routes: [
       GoRoute(
         path: RouteNames.splashOne,
         pageBuilder: (_, __) =>
-            const NoTransitionPage(child: SplashTwoScreen()),
+        const NoTransitionPage(child: SplashOneScreen()),
       ),
       GoRoute(
         path: RouteNames.splashTwo,
@@ -131,17 +156,18 @@ final routerProvider = Provider<GoRouter>((_) {
             const NoTransitionPage(child: MechanicSignupStepThreeScreen()),
       ),
       GoRoute(path: RouteNames.userHome,
-          builder: (_, __) => const UserHomeScreen()),
+          pageBuilder: (_, __) => const NoTransitionPage(child: UserHomeScreen())),
       GoRoute(path: RouteNames.userScan,
-          builder: (_, __) => const UserScanScreen()),
+          pageBuilder: (_, __) => const NoTransitionPage(child: UserScanScreen())),
       GoRoute(path: RouteNames.userMechanics,
-          builder: (_, __) => const UserMechanicsScreen()),
+          pageBuilder: (_, __) => const NoTransitionPage(child: UserMechanicsScreen())),
       GoRoute(path: RouteNames.mechanicHome,
-          builder: (_, __) => const MechanicHomeScreen()),
+          pageBuilder: (_, __) => const NoTransitionPage(child: MechanicHomeScreen())),
       GoRoute(path: RouteNames.mechanicScan,
-          builder: (_, __) => const MechanicScanScreen()),
+          pageBuilder: (_, __) => const NoTransitionPage(child: MechanicScanScreen())),
       GoRoute(path: RouteNames.mechanicUsers,
-          builder: (_, __) => const MechanicUsersScreen()),
+          pageBuilder: (_, __) => const NoTransitionPage(child: MechanicUsersScreen())),
+
       GoRoute(path: RouteNames.radiusSelector,
           builder: (_, __) => const RadiusSelectorScreen()),
       GoRoute(path: RouteNames.searching,

@@ -12,7 +12,9 @@ import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
+import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class UserMechanicAcceptedScreen extends StatefulWidget {
   const UserMechanicAcceptedScreen({super.key});
@@ -32,13 +34,43 @@ class _UserMechanicAcceptedScreenState
 
   @override
   Widget build(BuildContext context) {
+    const LatLng userLocation = LatLng(6.5244, 3.3792);
+    const LatLng mechanicLocation = LatLng(6.5280, 3.3820);
+
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
       body: Stack(
         children: [
-          Container(color: AppColors.mapBackground,
-              child: const Center(child: Icon(Icons.map_outlined,
-                  size: 80, color: AppColors.borderSubtle))),
+          LiveMapCanvas(
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(6.5244, 3.3792),
+              zoom: 13.4,
+            ),
+            markers: {
+              buildMapMarker(
+                markerId: 'user-location',
+                position: userLocation,
+                icon: buildUserMarkerIcon(),
+                infoWindowTitle: 'Your location',
+              ),
+              buildMapMarker(
+                markerId: 'mechanic-location',
+                position: mechanicLocation,
+                icon: buildMechanicMarkerIcon(),
+                infoWindowTitle: 'Kwame Asante',
+              ),
+            },
+            polylines: {
+              buildDashedRoutePolyline(
+                polylineId: 'accepted-route',
+                points: [userLocation, mechanicLocation],
+              ),
+            },
+            enableCurrentLocation: true,
+            showCurrentLocationButton: false,
+            showZoomControls: false,
+            showCompass: false,
+          ),
 
           Positioned(top: 0, left: 0, right: 0, height: 140,
             child: Container(decoration: const BoxDecoration(

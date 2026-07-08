@@ -1,6 +1,8 @@
 // Add Vehicle screen — form to register a new vehicle with typeahead fields.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/route_names.dart';
@@ -10,18 +12,21 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/profile/models/vehicle_model.dart';
+import '../../../features/profile/providers/profile_provider.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_text_field.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class AddVehicleScreen extends StatefulWidget {
+class AddVehicleScreen extends ConsumerStatefulWidget {
   const AddVehicleScreen({super.key});
 
   @override
-  State<AddVehicleScreen> createState() => _AddVehicleScreenState();
+  ConsumerState<AddVehicleScreen> createState() => _AddVehicleScreenState();
 }
 
-class _AddVehicleScreenState extends State<AddVehicleScreen> {
+class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   final _makeController = TextEditingController();
   final _modelController = TextEditingController();
   final _yearController = TextEditingController();
@@ -51,6 +56,12 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<ProfileState>(profileProvider, (_, next) {
+      if (next.error != null) {
+        AppErrorToast.showMessage(context, next.error!);
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -121,13 +132,25 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
                     AppButton(
                       label: AppStrings.addVehicleSave,
                       onTap: () {
+                        final userId = FirebaseAuth.instance.currentUser?.uid;
+                        if (userId == null) return;
                         setState(() => _isLoading = true);
-                        Future.delayed(const Duration(seconds: 1), () {
-                        if (!context.mounted) return;
-                          if (mounted) {
-                            setState(() => _isLoading = false);
-                            context.go(RouteNames.myVehicles);
-                          }
+                        ref.read(profileProvider.notifier).addVehicle(
+                              VehicleModel(
+                                id: '',
+                                ownerId: userId,
+                                make: _makeController.text.trim(),
+                                model: _modelController.text.trim(),
+                                year: _yearController.text.trim(),
+                                type: _typeController.text.trim(),
+                                colour: _colourController.text.trim(),
+                                plateNumber: _plateController.text.trim(),
+                                fuelType: _fuelController.text.trim(),
+                              ),
+                            ).then((_) {
+                          if (!context.mounted) return;
+                          setState(() => _isLoading = false);
+                          context.go(RouteNames.myVehicles);
                         });
                       },
                       isLoading: _isLoading,

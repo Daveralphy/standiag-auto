@@ -2,14 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../core/navigation/route_names.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
 class HelpSupportScreen extends StatefulWidget {
@@ -26,6 +26,14 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     SystemUiStyle.applyDark();
   }
 
+  Future<void> _openSupportEmail() async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: AppStrings.supportEmail,
+    );
+    await launchUrl(uri);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,13 +42,18 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
-                  AppSpacing.md, AppSpacing.pageHorizontal, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageHorizontal,
+                AppSpacing.md,
+                AppSpacing.pageHorizontal,
+                0,
+              ),
               child: Row(children: [
                 GestureDetector(
                   onTap: () => context.go(RouteNames.userSettings),
                   child: Container(
-                    width: 32, height: 32,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: const Color(0x12FFFFFF),
                       borderRadius: BorderRadius.circular(AppRadius.full),
@@ -71,22 +84,24 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       'What is the OBD scanner?',
                       'How do I add a vehicle?',
                       'How do I rate a mechanic?',
-                    ].map((q) => _FaqItem(question: q)),
+                    ].map((question) => _FaqItem(question: question)),
                     const SizedBox(height: 24),
                     const Text(AppStrings.helpStillNeed,
                         style: AppTypography.heading4,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 12),
-                    const _ContactItem(
+                    _ContactItem(
                       icon: Icons.mail_outline_rounded,
                       label: AppStrings.helpEmail,
                       value: AppStrings.supportEmail,
+                      onTap: _openSupportEmail,
                     ),
                     const SizedBox(height: 8),
-                    const _ContactItem(
+                    _ContactItem(
                       icon: Icons.chat_bubble_outline_rounded,
                       label: AppStrings.helpLiveChat,
                       value: 'Chat with us now',
+                      onTap: _openSupportEmail,
                     ),
                   ],
                 ),
@@ -151,34 +166,41 @@ class _ContactItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback onTap;
 
   const _ContactItem({
-    required this.icon, required this.label, required this.value,
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl2),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.border)),
-      child: Row(children: [
-        Icon(icon, color: AppColors.primary, size: 20),
-        const SizedBox(width: 12),
-        Expanded(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: AppTypography.bodyLarge,
-                overflow: TextOverflow.ellipsis, maxLines: 1),
-            Text(value, style: AppTypography.caption,
-                overflow: TextOverflow.ellipsis, maxLines: 1),
-          ],
-        )),
-        const Icon(Icons.chevron_right_rounded,
-            color: AppColors.textDisabled, size: 18),
-      ]),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.xl2),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: AppColors.border)),
+        child: Row(children: [
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 12),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: AppTypography.bodyLarge,
+                  overflow: TextOverflow.ellipsis, maxLines: 1),
+              Text(value, style: AppTypography.caption,
+                  overflow: TextOverflow.ellipsis, maxLines: 1),
+            ],
+          )),
+          const Icon(Icons.chevron_right_rounded,
+              color: AppColors.textDisabled, size: 18),
+        ]),
+      ),
     );
   }
 }

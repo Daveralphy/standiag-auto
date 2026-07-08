@@ -1,6 +1,7 @@
 // Privacy screen — data sharing and privacy toggles.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/route_names.dart';
@@ -10,18 +11,17 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/providers/settings_provider.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class PrivacyScreen extends StatefulWidget {
+class PrivacyScreen extends ConsumerStatefulWidget {
   const PrivacyScreen({super.key});
 
   @override
-  State<PrivacyScreen> createState() => _PrivacyScreenState();
+  ConsumerState<PrivacyScreen> createState() => _PrivacyScreenState();
 }
 
-class _PrivacyScreenState extends State<PrivacyScreen> {
-  bool _shareLocation = true;
-  bool _shareAnalytics = false;
+class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
 
   @override
   void initState() {
@@ -31,6 +31,8 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -66,14 +68,14 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                   _ToggleItem(
                     label: 'Share Location',
                     subtitle: 'Allow mechanics to see your location',
-                    value: _shareLocation,
-                    onChanged: (v) => setState(() => _shareLocation = v),
+                    value: settings.shareLocation,
+                    onChanged: (v) => ref.read(settingsProvider.notifier).setShareLocation(v),
                   ),
                   _ToggleItem(
                     label: 'Share Analytics',
                     subtitle: 'Help improve StanDiag Auto',
-                    value: _shareAnalytics,
-                    onChanged: (v) => setState(() => _shareAnalytics = v),
+                    value: settings.shareAnalytics,
+                    onChanged: (v) => ref.read(settingsProvider.notifier).setShareAnalytics(v),
                   ),
                 ],
               ),

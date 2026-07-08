@@ -1,55 +1,98 @@
-// User Scan screen — OBD diagnostic scan for car owners.
-// Nav bar active: Scan. Bell icon top right.
-// Shows scan prompt and connects to OBD adapter via Bluetooth.
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
-import '../../../shared/widget/app_button.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class UserScanScreen extends StatefulWidget {
+class UserScanScreen extends ConsumerStatefulWidget {
   const UserScanScreen({super.key});
 
   @override
-  State<UserScanScreen> createState() => _UserScanScreenState();
+  ConsumerState<UserScanScreen> createState() => _UserScanScreenState();
 }
 
-class _UserScanScreenState extends State<UserScanScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
-
+class _UserScanScreenState extends ConsumerState<UserScanScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+  }
+
+  Widget _buildUserDrawer() {
+    final userAsync = ref.watch(userProfileProvider);
+    return Drawer(
+      backgroundColor: const Color(0xFF111111),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              userAsync.when(
+                data: (user) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '@${user?.username ?? ''}',
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 20,
+                          fontWeight: FontWeight.w800, color: Colors.white,
+                          letterSpacing: -0.5),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(user?.email ?? '',
+                        style: const TextStyle(fontFamily: 'Inter', fontSize: 13,
+                            color: Color(0x59FFFFFF))),
+                  ],
+                ),
+                loading: () => Container(width: 160, height: 40,
+                    decoration: const BoxDecoration(color: Color(0x14FFFFFF))),
+                error: (_, __) => const SizedBox(height: 40),
+              ),
+              const SizedBox(height: 8),
+              const Divider(color: Color(0x14FFFFFF), height: 32),
+              _DrawerItem(icon: Icons.person_outline_rounded, label: 'My Profile',
+                  onTap: () => context.push(RouteNames.userProfile)),
+              _DrawerItem(icon: Icons.directions_car_outlined, label: 'My Vehicles',
+                  onTap: () => context.go(RouteNames.myVehicles)),
+              _DrawerItem(icon: Icons.work_outline_rounded, label: 'My Jobs',
+                  onTap: () => context.go(RouteNames.myJobs)),
+              _DrawerItem(icon: Icons.toll_rounded, label: 'Credits',
+                  onTap: () => context.go(RouteNames.userCredits)),
+              _DrawerItem(icon: Icons.settings_outlined, label: 'Settings',
+                  onTap: () => context.go(RouteNames.userSettings)),
+              const Spacer(),
+              const Divider(color: Color(0x14FFFFFF), height: 32),
+              _DrawerItem(icon: Icons.logout_rounded, label: 'Sign Out',
+                  color: AppColors.primary, onTap: _signOut),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
+    context.go(RouteNames.login);
   }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.background,
+      drawer: _buildUserDrawer(),
       body: Stack(
         children: [
           SafeArea(
@@ -59,110 +102,136 @@ class _UserScanScreenState extends State<UserScanScreen>
                 // ─── Header ─────────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.md,
-                    AppSpacing.pageHorizontal,
-                    0,
-                  ),
+                      AppSpacing.pageHorizontal, AppSpacing.md,
+                      AppSpacing.pageHorizontal, 0),
                   child: Row(
                     children: [
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppStrings.homeScanTitle,
-                              style: AppTypography.heading2,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                            Text(
-                              AppStrings.homeScanSubtitle,
-                              style: AppTypography.body,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: AppSpacing.iconButtonSize,
-                        height: AppSpacing.iconButtonSize,
-                        decoration: BoxDecoration(
-                          color: const Color(0x08FFFFFF),
-                          borderRadius: BorderRadius.circular(AppRadius.full),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: const Icon(Icons.notifications_outlined,
-                            size: 16, color: AppColors.textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // ─── Scan area ───────────────────────────────────────────
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Pulsing scan circle
-                      ScaleTransition(
-                        scale: _pulseAnimation,
+                      // Avatar — opens drawer
+                      Builder(builder: (ctx) {
+                        final userAsync = ref.watch(userProfileProvider);
+                        return GestureDetector(
+                          onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                          child: userAsync.when(
+                            data: (user) => _Avatar(name: user?.firstName ?? '?'),
+                            loading: () => const _AvatarSkeleton(),
+                            error: (_, __) => const _AvatarSkeleton(),
+                          ),
+                        );
+                      }),
+                      const SizedBox(width: 12),
+                      const Text('Scan Vehicle', style: AppTypography.heading3),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () => context.go(RouteNames.userScanHistory),
                         child: Container(
-                          width: 180,
-                          height: 180,
+                          width: 32, height: 32,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primarySubtle,
-                            border: Border.all(
-                                color: AppColors.primaryBorder, width: 2),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x33E8281E),
-                                blurRadius: 40,
-                                spreadRadius: 10,
-                              ),
-                            ],
+                            color: const Color(0x08FFFFFF),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.full),
+                            border: Border.all(color: AppColors.border),
                           ),
-                          child: const Icon(
-                            Icons.qr_code_scanner_rounded,
-                            color: AppColors.primary,
-                            size: 64,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      const Text(
-                        AppStrings.homeTapToScan,
-                        style: AppTypography.heading3,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                      const SizedBox(height: 8),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xxl),
-                        child: Text(
-                          'Connect your OBD adapter to your car\'s OBD-II port first.',
-                          style: AppTypography.body,
-                          textAlign: TextAlign.center,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.pageHorizontal),
-                        child: AppButton(
-                          label: AppStrings.homeTapToScan,
-                          onTap: () {},
+                          child: const Icon(Icons.history_rounded,
+                              size: 16, color: AppColors.textMuted),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.navBarClearance),
+                const SizedBox(height: 32),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.pageHorizontal, 0,
+                        AppSpacing.pageHorizontal,
+                        AppSpacing.navBarClearance),
+                    child: Column(
+                      children: [
+                        // OBD scan icon
+                        Container(
+                          width: 120, height: 120,
+                          decoration: BoxDecoration(
+                            color: const Color(0x0AE8281E),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: const Color(0x1AE8281E), width: 1.5),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.qr_code_scanner_rounded,
+                                color: AppColors.primary, size: 52),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        const Text('OBD Diagnostic Scan',
+                            style: AppTypography.heading2,
+                            textAlign: TextAlign.center),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Connect your OBD-II adapter to your vehicle\'s\ndiagnostic port and tap scan to begin.',
+                          style: AppTypography.body
+                              .copyWith(color: const Color(0x59FFFFFF)),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 40),
+
+                        // Scan button
+                        GestureDetector(
+                          onTap: () {},
+                          child: Container(
+                            width: double.infinity,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryButtonGradient,
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.full),
+                              boxShadow: const [
+                                BoxShadow(color: Color(0x40E8281E),
+                                    blurRadius: 20, offset: Offset(0, 8)),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Text('Start Scan',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter', fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  )),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // View history
+                        GestureDetector(
+                          onTap: () =>
+                              context.go(RouteNames.userScanHistory),
+                          child: Container(
+                            width: double.infinity,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0x08FFFFFF),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.full),
+                              border:
+                                  Border.all(color: const Color(0x14FFFFFF)),
+                            ),
+                            child: const Center(
+                              child: Text('View Scan History',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter', fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  )),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -174,6 +243,62 @@ class _UserScanScreenState extends State<UserScanScreen>
             onThirdTap: () => context.go(RouteNames.userMechanics),
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+
+class _Avatar extends StatelessWidget {
+  final String name;
+
+  const _Avatar({required this.name});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36, height: 36,
+      decoration: const BoxDecoration(
+          gradient: AppColors.primaryButtonGradient, shape: BoxShape.circle),
+      child: Center(child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
+            fontWeight: FontWeight.w800, color: Colors.white),
+      )),
+    );
+  }
+}
+
+class _AvatarSkeleton extends StatelessWidget {
+  const _AvatarSkeleton();
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 36, height: 36,
+    decoration: const BoxDecoration(
+        color: Color(0x14FFFFFF), shape: BoxShape.circle),
+  );
+}
+
+class _DrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? color;
+  const _DrawerItem({required this.icon, required this.label,
+      required this.onTap, this.color});
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? Colors.white;
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(children: [
+          Icon(icon, color: c, size: 20),
+          const SizedBox(width: 14),
+          Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 15,
+              fontWeight: FontWeight.w600, color: c)),
+        ]),
       ),
     );
   }

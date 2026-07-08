@@ -10,7 +10,9 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/app_button.dart';
+import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SearchingScreen extends StatefulWidget {
   const SearchingScreen({super.key});
@@ -54,12 +56,15 @@ class _SearchingScreenState extends State<SearchingScreen>
       backgroundColor: AppColors.mapBackground,
       body: Stack(
         children: [
-          Container(
-            color: AppColors.mapBackground,
-            child: const Center(
-              child: Icon(Icons.map_outlined,
-                  size: 80, color: AppColors.borderSubtle),
+          const LiveMapCanvas(
+            initialCameraPosition: CameraPosition(
+              target: LatLng(6.5244, 3.3792),
+              zoom: 13.5,
             ),
+            enableCurrentLocation: true,
+            showCurrentLocationButton: false,
+            showZoomControls: false,
+            showCompass: false,
           ),
 
           // Top gradient

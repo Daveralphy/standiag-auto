@@ -65,6 +65,9 @@ class CacheKeys {
   /// App text size preference (1–5 scale).
   static const String textSize = 'text_size';
 
+  /// Whether the user has already completed or skipped onboarding.
+  static const String onboardingSeen = 'onboarding_seen';
+
   /// Notification preferences map.
   static const String notificationPreferences = 'notification_preferences';
 

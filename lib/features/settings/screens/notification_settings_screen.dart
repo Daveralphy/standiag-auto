@@ -1,31 +1,28 @@
 // Notification Settings screen — toggle notification preferences.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../core/navigation/route_names.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/navigation/route_names.dart';
+import '../../settings/providers/settings_provider.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class NotificationSettingsScreen extends StatefulWidget {
+class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() =>
+  ConsumerState<NotificationSettingsScreen> createState() =>
       _NotificationSettingsScreenState();
 }
 
 class _NotificationSettingsScreenState
-    extends State<NotificationSettingsScreen> {
-  bool _jobUpdates = true;
-  bool _promotions = false;
-  bool _newMechanics = true;
-
+    extends ConsumerState<NotificationSettingsScreen> {
   @override
   void initState() {
     super.initState();
@@ -34,6 +31,8 @@ class _NotificationSettingsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -69,20 +68,26 @@ class _NotificationSettingsScreenState
                   _ToggleItem(
                     label: 'Job Updates',
                     subtitle: 'Get notified about your job status',
-                    value: _jobUpdates,
-                    onChanged: (v) => setState(() => _jobUpdates = v),
+                    value: settings.notifyJobUpdates,
+                    onChanged: (v) => ref
+                        .read(settingsProvider.notifier)
+                        .setNotifyJobUpdates(v),
                   ),
                   _ToggleItem(
                     label: 'Promotions',
                     subtitle: 'Offers and credit bonuses',
-                    value: _promotions,
-                    onChanged: (v) => setState(() => _promotions = v),
+                    value: settings.notifyPromotions,
+                    onChanged: (v) => ref
+                        .read(settingsProvider.notifier)
+                        .setNotifyPromotions(v),
                   ),
                   _ToggleItem(
                     label: 'New Mechanics',
                     subtitle: 'When new mechanics join your area',
-                    value: _newMechanics,
-                    onChanged: (v) => setState(() => _newMechanics = v),
+                    value: settings.notifyNewMechanics,
+                    onChanged: (v) => ref
+                        .read(settingsProvider.notifier)
+                        .setNotifyNewMechanics(v),
                   ),
                 ],
               ),

@@ -1,6 +1,7 @@
 // User model — represents both CarOwner and Mechanic base data from Firestore.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 enum UserType { carOwner, mechanic }
 
@@ -50,6 +51,33 @@ class UserModel {
       credits: data['credits'] ?? 0,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isFirstTime: data['isFirstTime'] ?? true,
+    );
+  }
+
+  factory UserModel.fromFirebaseUser(User user) {
+    final email = user.email ?? '';
+    final displayName = user.displayName?.trim() ?? '';
+    final username = email.contains('@') ? email.split('@').first : '';
+    final firstName = displayName.isNotEmpty
+        ? displayName.split(' ').first
+        : username;
+    final lastName = displayName.isNotEmpty && displayName.split(' ').length > 1
+        ? displayName.split(' ').sublist(1).join(' ')
+        : '';
+
+    return UserModel(
+      uid: user.uid,
+      type: UserType.carOwner,
+      firstName: firstName,
+      lastName: lastName,
+      username: username,
+      email: email,
+      phone: user.phoneNumber ?? '',
+      address: '',
+      profilePhoto: user.photoURL,
+      credits: 0,
+      createdAt: DateTime.now(),
+      isFirstTime: true,
     );
   }
 

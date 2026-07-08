@@ -1,7 +1,9 @@
 // Credits Overview screen — shows balance, how credits work, and recent activity.
 // History icon top right navigates to credits history.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -10,25 +12,43 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/credits/providers/credits_provider.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_button.dart';
+import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class CreditsOverviewScreen extends StatefulWidget {
+class CreditsOverviewScreen extends ConsumerStatefulWidget {
   const CreditsOverviewScreen({super.key});
 
   @override
-  State<CreditsOverviewScreen> createState() => _CreditsOverviewScreenState();
+  ConsumerState<CreditsOverviewScreen> createState() =>
+      _CreditsOverviewScreenState();
 }
 
-class _CreditsOverviewScreenState extends State<CreditsOverviewScreen> {
+class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) return;
+      ref.read(creditsProvider.notifier).fetchBalance(userId);
+      ref.read(creditsProvider.notifier).fetchHistory(userId);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<CreditsState>(creditsProvider, (_, next) {
+      if (next.error != null) {
+        AppErrorToast.showMessage(context, next.error!);
+      }
+    });
+
+    final state = ref.watch(creditsProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -75,45 +95,49 @@ class _CreditsOverviewScreenState extends State<CreditsOverviewScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Balance card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.creditsCardGradient,
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.creditsCard),
-                        border: Border.all(
-                            color: AppColors.primaryBorder)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(AppStrings.creditsBalance,
-                              style: AppTypography.micro.copyWith(
-                                  color: AppColors.textMuted,
-                                  letterSpacing: 0.5),
-                              overflow: TextOverflow.ellipsis, maxLines: 1),
-                          const SizedBox(height: 8),
-                          Row(children: [
-                            const Text('48',
-                                style: AppTypography.balanceDisplay,
+                    if (state.isLoading)
+                      const CreditsBalanceSkeleton()
+                    else
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          gradient: AppColors.creditsCardGradient,
+                          borderRadius:
+                              BorderRadius.circular(AppRadius.creditsCard),
+                          border: Border.all(color: AppColors.primaryBorder),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(AppStrings.creditsBalance,
+                                style: AppTypography.micro.copyWith(
+                                    color: AppColors.textMuted,
+                                    letterSpacing: 0.5),
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
-                            const SizedBox(width: 6),
-                            Text('credits',
-                                style: AppTypography.body.copyWith(
-                                    color: AppColors.textMuted),
-                                overflow: TextOverflow.ellipsis, maxLines: 1),
-                          ]),
-                          const SizedBox(height: 16),
-                          AppButton(
-                            label: AppStrings.creditsBuy,
-                            onTap: () => context.go(RouteNames.userBuyCredits),
-                            width: 140,
-                            paddingV: 11,
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            Row(children: [
+                              Text('${state.balance}',
+                                  style: AppTypography.balanceDisplay,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1),
+                              const SizedBox(width: 6),
+                              Text('credits',
+                                  style: AppTypography.body.copyWith(
+                                      color: AppColors.textMuted),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1),
+                            ]),
+                            const SizedBox(height: 16),
+                            AppButton(
+                              label: AppStrings.creditsBuy,
+                              onTap: () => context.go(RouteNames.userBuyCredits),
+                              width: 140,
+                              paddingV: 11,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 20),
 
                     // How credits work
@@ -139,14 +163,26 @@ class _CreditsOverviewScreenState extends State<CreditsOverviewScreen> {
                             letterSpacing: 0.8),
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 10),
-                    ...[
-                      ('OBD Scan', 'Today · 10:24 AM', false, 10),
-                      ('Contacted Kwame Asante', 'Today · 9:58 AM', false, 5),
-                      ('Bought 100 credits', 'Yesterday · 3:12 PM', true, 100),
-                      ('OBD Scan', '27 May · 2:05 PM', false, 10),
-                    ].map((t) => _TransactionRow(
-                      label: t.$1, date: t.$2,
-                      isCredit: t.$3, amount: t.$4)),
+                    if (state.isLoading && state.history.isEmpty)
+                      ...List.generate(
+                        4,
+                        (_) => const TransactionRowSkeleton(),
+                      )
+                    else if (state.history.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Text('No credit activity yet.',
+                            style: AppTypography.body),
+                      )
+                    else
+                      ...state.history.take(4).map(
+                            (transaction) => _TransactionRow(
+                              label: transaction.reason,
+                              date: transaction.createdAt.toIso8601String(),
+                              isCredit: transaction.isCredit,
+                              amount: transaction.amount,
+                            ),
+                          ),
                     const SizedBox(height: 24),
                   ],
                 ),

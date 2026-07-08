@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
@@ -11,6 +12,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/app_button.dart';
+import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
 class RadiusSelectorScreen extends StatefulWidget {
@@ -22,6 +24,7 @@ class RadiusSelectorScreen extends StatefulWidget {
 
 class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
   double _radius = 1.0;
+  final LatLng _center = const LatLng(6.5244, 3.3792);
 
   @override
   void initState() {
@@ -35,12 +38,27 @@ class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
       backgroundColor: AppColors.mapBackground,
       body: Stack(
         children: [
-          // Map background placeholder
-          Container(
-            color: AppColors.mapBackground,
-            child: const Center(
-              child: Icon(Icons.map_outlined, size: 80, color: AppColors.borderSubtle),
-            ),
+          LiveMapCanvas(
+            initialCameraPosition: CameraPosition(target: _center, zoom: 13.5),
+            markers: {
+              buildMapMarker(
+                markerId: 'search-center',
+                position: _center,
+                icon: buildDestinationMarkerIcon(),
+                infoWindowTitle: 'Search area',
+              ),
+            },
+            circles: {
+              buildRadiusCircle(
+                circleId: 'search-radius',
+                center: _center,
+                radiusMeters: _radius * 1000,
+              ),
+            },
+            enableCurrentLocation: true,
+            showCurrentLocationButton: false,
+            showZoomControls: false,
+            showCompass: false,
           ),
 
           // Top gradient

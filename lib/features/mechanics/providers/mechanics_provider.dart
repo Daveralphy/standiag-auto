@@ -1,83 +1,53 @@
-// Mechanics provider — owns the mechanic search results.
-// Results are cached in Riverpod memory for the session duration.
-// Only re-fetches on explicit refresh or session start.
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/mechanic_search_model.dart';
+import '../../../features/auth/models/mechanic_model.dart';
 
-class MechanicsState {
-  final List<MechanicSearchModel> mechanics;
-  final bool isLoading;
-  final bool isSearching;
-  final double radiusKm;
-  final String? error;
+// Fetch all visible mechanics once from Firestore mechanics/ collection.
+final mechanicsProvider = FutureProvider<List<MechanicModel>>((ref) async {
+  final snap = await FirebaseFirestore.instance
+      .collection('mechanics')
+      .where('isVisible', isEqualTo: true)
+      .get();
+  return snap.docs.map((doc) => MechanicModel.fromFirestore(doc)).toList();
+});
 
-  const MechanicsState({
-    this.mechanics = const [],
-    this.isLoading = false,
-    this.isSearching = false,
-    this.radiusKm = 1.0,
-    this.error,
-  });
+// Stream a single mechanic by UID from mechanics/ collection.
+final mechanicByIdProvider =
+    StreamProvider.family<MechanicModel?, String>((ref, uid) {
+  return FirebaseFirestore.instance
+      .collection('mechanics')
+      .doc(uid)
+      .snapshots()
+      .map((doc) => doc.exists ? MechanicModel.fromFirestore(doc) : null);
+});
 
-  MechanicsState copyWith({
-    List<MechanicSearchModel>? mechanics,
-    bool? isLoading,
-    bool? isSearching,
-    double? radiusKm,
-    String? error,
-  }) {
-    return MechanicsState(
-      mechanics: mechanics ?? this.mechanics,
-      isLoading: isLoading ?? this.isLoading,
-      isSearching: isSearching ?? this.isSearching,
-      radiusKm: radiusKm ?? this.radiusKm,
-      error: error,
+// Stream a mechanic's name and photo from the users/ collection.
+final mechanicUserProvider =
+    StreamProvider.family<MechanicUser?, String>((ref, uid) {
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
+      .snapshots()
+      .map((doc) {
+    if (!doc.exists) return null;
+    final data = doc.data()!;
+    return MechanicUser(
+      firstName: data['firstName'] as String? ?? '',
+      lastName: data['lastName'] as String? ?? '',
+      profilePhoto: data['profilePhoto'] as String?,
     );
-  }
+  });
+});
+
+class MechanicUser {
+  final String firstName;
+  final String lastName;
+  final String? profilePhoto;
+
+  const MechanicUser({
+    required this.firstName,
+    required this.lastName,
+    this.profilePhoto,
+  });
 }
-
-class MechanicsNotifier extends StateNotifier<MechanicsState> {
-  MechanicsNotifier() : super(const MechanicsState());
-
-  void setRadius(double km) {
-    state = state.copyWith(radiusKm: km);
-  }
-
-  Future<void> search() async {
-    state = state.copyWith(isSearching: true, error: null);
-    try {
-      // TODO: query Firestore mechanics collection filtered by isVisible + distance
-      await Future.delayed(const Duration(seconds: 3));
-      // Stub result for UI development
-      state = state.copyWith(
-        isSearching: false,
-        mechanics: [
-          const MechanicSearchModel(
-            uid: 'stub-1',
-            firstName: 'Kwame',
-            lastName: 'Asante',
-            workshopAddress: '14 Park Avenue, Lekki',
-            expertise: ['Engine Repair', 'Transmission', 'Electrical'],
-            rating: 4.9,
-            totalJobs: 312,
-            yearsOfExperience: 8,
-            isVisible: true,
-            distanceKm: 1.2,
-          ),
-        ],
-      );
-    } catch (e) {
-      state = state.copyWith(isSearching: false, error: e.toString());
-    }
-  }
-
-  void clear() {
-    state = const MechanicsState();
-  }
-}
-
-final mechanicsProvider =
-    StateNotifierProvider<MechanicsNotifier, MechanicsState>(
-        (ref) => MechanicsNotifier());

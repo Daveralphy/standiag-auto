@@ -1,5 +1,7 @@
 // Mechanic Profile Edit screen — mechanic edits their profile details.
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,8 +12,10 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_text_field.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
 class MechanicProfileEditScreen extends StatefulWidget {
@@ -102,13 +106,24 @@ class _MechanicProfileEditScreenState
                     AppButton(
                       label: AppStrings.profileSave,
                       onTap: () {
+                        final userId = FirebaseAuth.instance.currentUser?.uid;
+                        if (userId == null) return;
                         setState(() => _isLoading = true);
-                        Future.delayed(const Duration(seconds: 1), () {
+                        FirebaseFirestore.instance.collection('users').doc(userId).update({
+                          'firstName': _firstNameController.text.trim(),
+                          'lastName': _lastNameController.text.trim(),
+                          'address': _workshopController.text.trim(),
+                        }).then((_) {
                           if (!context.mounted) return;
-                          if (mounted) {
-                            setState(() => _isLoading = false);
-                            context.go(RouteNames.mechanicProfileView);
-                          }
+                          setState(() => _isLoading = false);
+                          context.go(RouteNames.mechanicProfileView);
+                        }).catchError((error, stackTrace) {
+                          if (!context.mounted) return;
+                          setState(() => _isLoading = false);
+                          AppErrorToast.showMessage(
+                            context,
+                            ErrorHandler.handle(error, stackTrace).message,
+                          );
                         });
                       },
                       isLoading: _isLoading,
