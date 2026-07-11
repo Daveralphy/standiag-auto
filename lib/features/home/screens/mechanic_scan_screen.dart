@@ -1,163 +1,122 @@
-// Mechanic Scan screen — OBD diagnostic scan for mechanics.
-// Nav bar active: Scan. Bell icon top right.
+// Mechanic Scan screen — OBD diagnostic scan for a customer's vehicle
+// during an active job. Nav bar active: Scan. Bell icon top right.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/app_screen_header.dart';
+import '../../../shared/widget/health_gauge.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../../jobs/providers/job_provider.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../../profile/screens/mechanic_drawer_screen.dart';
+import '../../scan/providers/scan_provider.dart';
 
-class MechanicScanScreen extends StatefulWidget {
+class MechanicScanScreen extends ConsumerStatefulWidget {
   const MechanicScanScreen({super.key});
 
   @override
-  State<MechanicScanScreen> createState() => _MechanicScanScreenState();
+  ConsumerState<MechanicScanScreen> createState() =>
+      _MechanicScanScreenState();
 }
 
-class _MechanicScanScreenState extends State<MechanicScanScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
+class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
   }
 
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
+  Future<void> _startScan(String vehicleId, String ownerId) async {
+    await ref.read(scanProvider.notifier).startScan(vehicleId, ownerId);
   }
 
   @override
   Widget build(BuildContext context) {
+    final mechanicId = ref.watch(currentUserIdProvider);
+    final activeJobAsync = mechanicId == null
+        ? null
+        : ref.watch(activeJobForMechanicProvider(mechanicId));
+    final job = activeJobAsync?.valueOrNull;
+    final vehicleAsync =
+        job == null ? null : ref.watch(vehicleByIdProvider(job.vehicleId));
+    final vehicle = vehicleAsync?.valueOrNull;
+    final scanState = ref.watch(scanProvider);
+
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.background,
+      drawer: const MechanicDrawerScreen(),
       body: Stack(
         children: [
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.md,
-                    AppSpacing.pageHorizontal,
-                    0,
-                  ),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppStrings.homeMechanicScanTitle,
-                              style: AppTypography.heading2,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                            Text(
-                              AppStrings.homeMechanicScanSubtitle,
-                              style: AppTypography.body,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: AppSpacing.iconButtonSize,
-                        height: AppSpacing.iconButtonSize,
-                        decoration: BoxDecoration(
-                          color: const Color(0x08FFFFFF),
-                          borderRadius: BorderRadius.circular(AppRadius.full),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: const Icon(Icons.notifications_outlined,
-                            size: 16, color: AppColors.textMuted),
-                      ),
-                    ],
-                  ),
+                AppScreenHeader(
+                  scaffoldKey: _scaffoldKey,
+                  title: AppStrings.homeMechanicScanTitle,
+                  subtitle: AppStrings.homeMechanicScanSubtitle,
+                  trailingIcon: Icons.notifications_outlined,
+                  onTrailingTap: () {},
                 ),
+                const SizedBox(height: 20),
                 Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ScaleTransition(
-                        scale: _pulseAnimation,
-                        child: Container(
-                          width: 180,
-                          height: 180,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primarySubtle,
-                            border: Border.all(
-                                color: AppColors.primaryBorder, width: 2),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x33E8281E),
-                                blurRadius: 40,
-                                spreadRadius: 10,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.qr_code_scanner_rounded,
-                            color: AppColors.primary,
-                            size: 64,
-                          ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.pageHorizontal),
+                    child: Column(
+                      children: [
+                        ObdStatusPill(connected: scanState.isConnected),
+                        const SizedBox(height: 20),
+                        HealthGauge(score: scanState.latestScan?.healthScore),
+                        const SizedBox(height: 20),
+                        const Text(
+                          AppStrings.homeDiagnoseCar,
+                          style: AppTypography.heading2,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      const Text(
-                        AppStrings.homeDiagnoseCar,
-                        style: AppTypography.heading3,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                      const SizedBox(height: 8),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xxl),
-                        child: Text(
-                          AppStrings.homeOBDHint,
+                        const SizedBox(height: 8),
+                        Text(
+                          vehicle == null
+                              ? 'You have no active job to diagnose right now.'
+                              : AppStrings.homeOBDHint,
                           style: AppTypography.body,
                           textAlign: TextAlign.center,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 40),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.pageHorizontal),
-                        child: AppButton(
-                          label: AppStrings.homeDiagnoseCar,
-                          onTap: () {},
-                        ),
-                      ),
-                    ],
+                        const SizedBox(height: 32),
+                        if (vehicle != null && job != null)
+                          AppButton(
+                            label: 'Tap to Scan',
+                            isLoading: scanState.isScanning,
+                            onTap: () =>
+                                _startScan(vehicle.id, job.carOwnerId),
+                          ),
+                        if (scanState.error != null) ...[
+                          const SizedBox(height: 12),
+                          Text(scanState.error!,
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: AppColors.primary),
+                              textAlign: TextAlign.center),
+                        ],
+                        const SizedBox(height: AppSpacing.navBarClearance),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.navBarClearance),
               ],
             ),
           ),

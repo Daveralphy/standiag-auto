@@ -1,0 +1,179 @@
+// Shared OBD diagnostic widgets — the health-score gauge and the adapter
+// connection pill used on both the CarOwner and Mechanic scan screens.
+
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
+
+/// Circular dial matching the design's OBD health-score gauge.
+/// [score] is on a 0-10 scale (see ScanModel.healthScore); null means no
+/// scan has run yet, which renders the needle at rest with a "—" readout —
+/// this is the design's own idle state, not a fabricated placeholder.
+class HealthGauge extends StatelessWidget {
+  final int? score;
+  final String? label;
+  final double size;
+
+  const HealthGauge({super.key, this.score, this.label, this.size = 220});
+
+  @override
+  Widget build(BuildContext context) {
+    final fraction = score == null ? 0.0 : (score!.clamp(0, 10)) / 10;
+    return SizedBox(
+      width: size,
+      height: size * 0.66,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          CustomPaint(
+            size: Size(size, size * 0.66),
+            painter: _HealthGaugePainter(fraction: fraction),
+          ),
+          Padding(
+            padding: EdgeInsets.only(bottom: size * 0.1),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  score == null ? '—' : '$score',
+                  style: AppTypography.healthScore,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label ?? (score == null ? 'No scan yet' : 'HEALTH SCORE'),
+                  style: AppTypography.captionSmall.copyWith(
+                    letterSpacing: 1,
+                    color: AppColors.textMuted,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HealthGaugePainter extends CustomPainter {
+  final double fraction;
+  const _HealthGaugePainter({required this.fraction});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height);
+    final radius = size.width / 2 - 14;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    const startAngle = math.pi;
+    const totalSweep = math.pi;
+
+    final trackFaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 16
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0x0DE8281E);
+    canvas.drawArc(rect, startAngle, totalSweep, false, trackFaint);
+
+    final track = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFF1A1A1A);
+    canvas.drawArc(rect, startAngle, totalSweep, false, track);
+
+    if (fraction > 0) {
+      final progress = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 10
+        ..strokeCap = StrokeCap.round
+        ..shader = const LinearGradient(
+          colors: [AppColors.success, AppColors.warning, AppColors.primary],
+        ).createShader(rect);
+      canvas.drawArc(rect, startAngle, totalSweep * fraction, false, progress);
+    }
+
+    final needleAngle = startAngle + totalSweep * fraction;
+    final needleEnd = Offset(
+      center.dx + (radius - 18) * math.cos(needleAngle),
+      center.dy + (radius - 18) * math.sin(needleAngle),
+    );
+    final needlePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..color = AppColors.primary;
+    canvas.drawLine(center, needleEnd, needlePaint);
+
+    canvas.drawCircle(
+        center, 8, Paint()..color = const Color(0xFF141414));
+    canvas.drawCircle(
+        center,
+        8,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = AppColors.primary);
+    canvas.drawCircle(center, 3.5, Paint()..color = AppColors.primary);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HealthGaugePainter oldDelegate) =>
+      oldDelegate.fraction != fraction;
+}
+
+/// Status pill showing whether an OBD-II Bluetooth adapter is connected.
+/// Both the dot color and the label reflect real connection state — there
+/// is no fabricated "connected" default.
+class ObdStatusPill extends StatelessWidget {
+  final bool connected;
+  const ObdStatusPill({super.key, required this.connected});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = connected ? AppColors.success : AppColors.textMuted;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0x0AFFFFFF),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: const Color(0x14FFFFFF)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color,
+              boxShadow: connected
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.8),
+                        blurRadius: 8,
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            connected ? 'OBD Adapter Connected' : 'OBD Adapter Not Connected',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ],
+      ),
+    );
+  }
+}

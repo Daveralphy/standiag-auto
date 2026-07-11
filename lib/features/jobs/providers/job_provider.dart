@@ -198,6 +198,26 @@ final pendingJobsForMechanicProvider =
   return snap.docs.map(JobModel.fromFirestore).toList();
 });
 
+/// One-time fetch of this mechanic's current in-progress job (any status
+/// after acceptance and before completion) — used by mechanic_home_screen's
+/// "Active" section and by mechanic_scan_screen to know which customer
+/// vehicle is being diagnosed. Not real-time, same reasoning as above.
+final activeJobForMechanicProvider =
+    FutureProvider.family<JobModel?, String>((ref, mechanicId) async {
+  final snap = await FirebaseFirestore.instance
+      .collection('jobs')
+      .where('mechanicId', isEqualTo: mechanicId)
+      .where('status', whereIn: [
+        JobStatus.accepted.value,
+        JobStatus.enRoute.value,
+        JobStatus.arrived.value,
+        JobStatus.inProgress.value,
+      ])
+      .limit(1)
+      .get();
+  return snap.docs.isEmpty ? null : JobModel.fromFirestore(snap.docs.first);
+});
+
 /// Real-time listener for an incoming job request addressed to this
 /// mechanic — the one Rule-13-sanctioned case for this query. Foreground
 /// only: it's watched from mechanic_home_screen while the app is open.

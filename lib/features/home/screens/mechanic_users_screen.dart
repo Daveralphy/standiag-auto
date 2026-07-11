@@ -4,19 +4,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_radius.dart';
-import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../features/jobs/models/job_model.dart';
 import '../../../features/jobs/providers/job_provider.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/widget/app_dark_map.dart';
 import '../../../shared/widget/app_nav_bar.dart';
-import '../../../shared/widget/live_map_canvas.dart';
+import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../../profile/screens/mechanic_drawer_screen.dart';
 
 class MechanicUsersScreen extends ConsumerStatefulWidget {
   const MechanicUsersScreen({super.key});
@@ -26,6 +25,8 @@ class MechanicUsersScreen extends ConsumerStatefulWidget {
 }
 
 class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -34,44 +35,32 @@ class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const LatLng mechanicUserCenter = LatLng(6.5244, 3.3792);
     final mechanicId = ref.watch(currentUserIdProvider);
     final requests = mechanicId == null
         ? const <JobModel>[]
         : ref.watch(pendingJobsForMechanicProvider(mechanicId)).valueOrNull ??
             const <JobModel>[];
-    final markers = {
+    final markers = [
       for (final job in requests)
         if (job.carOwnerLocation != null)
-          buildMapMarker(
-            markerId: job.id,
+          AppDarkMapMarker(
+            id: job.id,
             position: LatLng(
                 job.carOwnerLocation!.latitude, job.carOwnerLocation!.longitude),
-            icon: buildUserMarkerIcon(),
-            infoWindowTitle: job.issue,
+            child: const AppDarkMapPin(icon: Icons.person_outline_rounded),
           ),
-    };
+    ];
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.mapBackground,
+      drawer: const MechanicDrawerScreen(),
       body: Stack(
         children: [
-          LiveMapCanvas(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(6.5244, 3.3792),
-              zoom: 13.2,
-            ),
+          AppDarkMap(
+            initialCenter: const LatLng(6.5244, 3.3792),
+            initialZoom: 13.2,
             markers: markers,
-            circles: {
-              buildRadiusCircle(
-                circleId: 'mechanic-radius',
-                center: mechanicUserCenter,
-                radiusMeters: 2000,
-              ),
-            },
-            enableCurrentLocation: true,
-            showCurrentLocationButton: false,
-            showZoomControls: false,
-            showCompass: false,
+            radiusMeters: 2000,
           ),
 
           // ─── Top gradient ─────────────────────────────────────────────
@@ -93,49 +82,12 @@ class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
 
           // ─── Header ──────────────────────────────────────────────────
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageHorizontal,
-                AppSpacing.md,
-                AppSpacing.pageHorizontal,
-                0,
-              ),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Nearby Users',
-                          style: AppTypography.heading2,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                        Text(
-                          'Car owners near you',
-                          style: AppTypography.body,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Search icon
-                  Container(
-                    width: AppSpacing.iconButtonSize,
-                    height: AppSpacing.iconButtonSize,
-                    decoration: BoxDecoration(
-                      color: const Color(0xB3080808),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                      border:
-                          Border.all(color: const Color(0x1FFFFFFF)),
-                    ),
-                    child: const Icon(Icons.search_rounded,
-                        size: 16, color: Colors.white),
-                  ),
-                ],
-              ),
+            child: AppScreenHeader(
+              scaffoldKey: _scaffoldKey,
+              title: 'Nearby Users',
+              subtitle: 'Car owners near you',
+              trailingIcon: Icons.search_rounded,
+              onTrailingTap: () {},
             ),
           ),
 

@@ -1,15 +1,20 @@
+// User Mechanics tab — full-screen map of nearby mechanics, matching the
+// "Great Mechanics / Standby Nearby" design. Tapping "Find Nearby Mechanics"
+// starts the radius-selector → searching → mechanic-card flow.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
-import '../../../features/auth/models/mechanic_model.dart';
-import '../../../shared/providers/user_provider.dart';
+import '../../../shared/widget/app_dark_map.dart';
 import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../mechanics/providers/mechanics_provider.dart';
 import '../../profile/screens/user_drawer_screen.dart';
@@ -33,119 +38,86 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final mechanicsAsync = ref.watch(mechanicsProvider);
+    final mechanicsAsync = ref.watch(nearbyMechanicsProvider);
+    final mechanics = mechanicsAsync.valueOrNull ?? const [];
+    final markers = [
+      for (final entry in mechanics)
+        if (entry.mechanic.location != null)
+          AppDarkMapMarker(
+            id: entry.mechanic.uid,
+            position: LatLng(entry.mechanic.location!.latitude,
+                entry.mechanic.location!.longitude),
+            child: const AppDarkMapPin(icon: Icons.build_rounded),
+            onTap: () => context.go(RouteNames.mechanicProfile,
+                extra: entry.mechanic.uid),
+          ),
+    ];
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.mapBackground,
       drawer: const UserDrawerScreen(),
       body: Stack(
         children: [
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ─── Header ─────────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.pageHorizontal, AppSpacing.md,
-                      AppSpacing.pageHorizontal, 0),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                        child: Builder(builder: (ctx) {
-                          final userAsync = ref.watch(userProfileProvider);
-                          return userAsync.when(
-                            data: (user) => _Avatar(name: user?.firstName ?? '?'),
-                            loading: () => const _AvatarSkeleton(),
-                            error: (_, __) => const _AvatarSkeleton(),
-                          );
-                        }),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Mechanics', style: AppTypography.heading2),
-                            Text('Available nearby',
-                                style: AppTypography.body),
-                          ],
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => context.go(RouteNames.radiusSelector),
-                        child: Container(
-                          width: 32, height: 32,
-                          decoration: BoxDecoration(
-                            color: const Color(0x08FFFFFF),
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.full),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: const Icon(Icons.tune_rounded,
-                              size: 16, color: AppColors.textMuted),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
+          AppDarkMap(
+            initialCenter: const LatLng(6.5244, 3.3792),
+            initialZoom: 13.2,
+            markers: markers,
+          ),
 
-                Expanded(
-                  child: mechanicsAsync.when(
-                    data: (mechanics) {
-                      if (mechanics.isEmpty) {
-                        return const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.location_off_outlined,
-                                  color: Color(0x33FFFFFF), size: 48),
-                              SizedBox(height: 16),
-                              Text('No mechanics found nearby',
-                                  style: AppTypography.heading3),
-                              SizedBox(height: 8),
-                              Text('Try expanding your search radius',
-                                  style: AppTypography.body),
-                            ],
-                          ),
-                        );
-                      }
-                      return ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.pageHorizontal, 0,
-                            AppSpacing.pageHorizontal,
-                            AppSpacing.navBarClearance),
-                        itemCount: mechanics.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (_, i) =>
-                            _MechanicListCard(mechanic: mechanics[i]),
-                      );
-                    },
-                    loading: () => ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.pageHorizontal, 0,
-                          AppSpacing.pageHorizontal,
-                          AppSpacing.navBarClearance),
-                      itemCount: 5,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 10),
-                      itemBuilder: (_, __) => const _MechanicCardSkeleton(),
-                    ),
-                    error: (_, __) => const Center(
-                      child: Text('Failed to load mechanics',
-                          style: AppTypography.body),
-                    ),
-                  ),
+          // ─── Top gradient ─────────────────────────────────────────────
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 140,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xF0060606), Colors.transparent],
                 ),
-              ],
+              ),
             ),
           ),
 
-          // Find mechanic button
+          // ─── Header ──────────────────────────────────────────────────
+          SafeArea(
+            child: AppScreenHeader(
+              scaffoldKey: _scaffoldKey,
+              title: 'Great Mechanics',
+              subtitle: 'Standby Nearby',
+              trailingIcon: Icons.search_rounded,
+              onTrailingTap: () => context.go(RouteNames.radiusSelector),
+            ),
+          ),
+
+          if (mechanicsAsync.isLoading)
+            const Positioned(
+              top: 90,
+              left: 0,
+              right: 0,
+              child: Center(child: _StatusPill(text: 'Finding mechanics nearby…')),
+            )
+          else if (mechanicsAsync.hasError)
+            const Positioned(
+              top: 90,
+              left: 0,
+              right: 0,
+              child: Center(
+                  child: _StatusPill(text: 'Unable to load mechanics')),
+            )
+          else if (mechanics.isEmpty)
+            const Positioned(
+              top: 90,
+              left: 0,
+              right: 0,
+              child: Center(
+                  child: _StatusPill(text: 'No mechanics available nearby')),
+            ),
+
+          // ─── Find button — sits above the floating nav ─────────────────
           Positioned(
             bottom: AppSpacing.navBarHeight +
                 AppSpacing.navBarBottomOffset +
@@ -165,7 +137,7 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
                   ],
                 ),
                 child: const Center(
-                  child: Text('Find Mechanic Near Me',
+                  child: Text('Find Nearby Mechanics',
                       style: TextStyle(
                         fontFamily: 'Inter', fontSize: 15,
                         fontWeight: FontWeight.w700, color: Colors.white,
@@ -174,6 +146,7 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
               ),
             ),
           ),
+
           AppNavBar(
             activeItem: NavBarItem.third,
             userType: NavBarUserType.carOwner,
@@ -187,191 +160,23 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
   }
 }
 
-class _MechanicListCard extends ConsumerWidget {
-  final MechanicModel mechanic;
-  const _MechanicListCard({required this.mechanic});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(mechanicUserProvider(mechanic.uid));
-
-    return GestureDetector(
-      onTap: () =>
-          context.go(RouteNames.mechanicProfile, extra: mechanic.uid),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF111111),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0x12FFFFFF)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 52, height: 52,
-              decoration: BoxDecoration(
-                color: const Color(0x14E8281E),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0x1AE8281E)),
-              ),
-              child: const Center(
-                child: Icon(Icons.person_outline_rounded,
-                    color: AppColors.primary, size: 26),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  userAsync.when(
-                    data: (user) => Text(
-                      user != null
-                          ? '${user.firstName} ${user.lastName}'
-                          : 'Mechanic',
-                      style: const TextStyle(
-                        fontFamily: 'Inter', fontSize: 15,
-                        fontWeight: FontWeight.w700, color: Colors.white,
-                        letterSpacing: -0.3,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    loading: () => Container(
-                        width: 120, height: 14,
-                        decoration: BoxDecoration(
-                            color: const Color(0x14FFFFFF),
-                            borderRadius: BorderRadius.circular(4))),
-                    error: (_, __) => const Text('Mechanic',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    mechanic.expertise.take(2).join(' · '),
-                    style: const TextStyle(
-                        fontFamily: 'Inter', fontSize: 12,
-                        color: Color(0x66FFFFFF)),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.star_rounded,
-                          color: AppColors.primary, size: 13),
-                      const SizedBox(width: 3),
-                      Text(mechanic.rating.toStringAsFixed(1),
-                          style: const TextStyle(
-                              fontFamily: 'Inter', fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white)),
-                      const SizedBox(width: 10),
-                      const Icon(Icons.work_outline_rounded,
-                          size: 12, color: Color(0x59FFFFFF)),
-                      const SizedBox(width: 3),
-                      Text('${mechanic.totalJobs} jobs',
-                          style: const TextStyle(
-                              fontFamily: 'Inter', fontSize: 12,
-                              color: Color(0x59FFFFFF))),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0x14E8281E),
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(color: const Color(0x1AE8281E)),
-                  ),
-                  child: const Text('Available',
-                      style: TextStyle(
-                        fontFamily: 'Inter', fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      )),
-                ),
-                const SizedBox(height: 8),
-                const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 13, color: Color(0x33FFFFFF)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MechanicCardSkeleton extends StatelessWidget {
-  const _MechanicCardSkeleton();
+class _StatusPill extends StatelessWidget {
+  final String text;
+  const _StatusPill({required this.text});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x12FFFFFF)),
+        color: const Color(0xE10E0E0E),
+        borderRadius: BorderRadius.circular(AppRadius.full),
+        border: Border.all(color: const Color(0x14FFFFFF)),
       ),
-      child: Row(
-        children: [
-          Container(width: 52, height: 52,
-              decoration: BoxDecoration(
-                  color: const Color(0x14FFFFFF),
-                  borderRadius: BorderRadius.circular(14))),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(width: 130, height: 14,
-                    decoration: BoxDecoration(color: const Color(0x14FFFFFF),
-                        borderRadius: BorderRadius.circular(4))),
-                const SizedBox(height: 6),
-                Container(width: 90, height: 11,
-                    decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
-                        borderRadius: BorderRadius.circular(4))),
-              ],
-            ),
-          ),
-        ],
-      ),
+      child: Text(text,
+          style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1),
     );
   }
 }
-
-
-
-class _Avatar extends StatelessWidget {
-  final String name;
-
-  const _Avatar({required this.name});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 36, height: 36,
-      decoration: const BoxDecoration(
-          gradient: AppColors.primaryButtonGradient, shape: BoxShape.circle),
-      child: Center(child: Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
-        style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
-            fontWeight: FontWeight.w800, color: Colors.white),
-      )),
-    );
-  }
-}
-
-class _AvatarSkeleton extends StatelessWidget {
-  const _AvatarSkeleton();
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 36, height: 36,
-    decoration: const BoxDecoration(
-        color: Color(0x14FFFFFF), shape: BoxShape.circle),
-  );
-}
-

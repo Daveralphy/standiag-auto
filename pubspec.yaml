@@ -34,7 +34,9 @@ dependencies:
   hive_flutter: ^1.1.0            # Persistent local cache
 
   # ─── Maps ──────────────────────────────────────────────────────────────────
-  google_maps_flutter: ^2.10.0    # Map screens
+  google_maps_flutter: ^2.10.0    # Job-flow map screens (in-app call/tracking)
+  flutter_map: ^7.0.2             # Free, no-API-key map for the two nav tabs
+  latlong2: ^0.9.1                # LatLng type used by flutter_map
 
   # ─── Calls ─────────────────────────────────────────────────────────────────
   agora_rtc_engine: ^6.5.2        # In-app voice calls over data

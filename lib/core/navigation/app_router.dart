@@ -74,32 +74,6 @@ class _RouterRefreshNotifier extends ChangeNotifier {
   void notify() => notifyListeners();
 }
 
-// A quick fade + gentle upward drift, used for the home-tab destinations
-// (Home/Scan/Mechanics or Users on each side) so both arriving fresh from
-// login and switching between tabs feel like one smooth motion instead of
-// an abrupt jump cut, without being slow enough to feel laggy.
-CustomTransitionPage _fadePage(Widget child, GoRouterState state) {
-  return CustomTransitionPage(
-    key: state.pageKey,
-    child: child,
-    transitionDuration: const Duration(milliseconds: 220),
-    reverseTransitionDuration: const Duration(milliseconds: 180),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.02),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
-  );
-}
-
 final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = _RouterRefreshNotifier();
   ref.listen(authStateProvider, (_, __) => refreshNotifier.notify());
@@ -220,18 +194,28 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (_, __) =>
             const NoTransitionPage(child: MechanicSignupStepThreeScreen()),
       ),
+      // No-transition pages: these six are the bottom-nav tabs for each
+      // profile type. The header and nav bar sit in the exact same place on
+      // all three, so switching tabs should read as content swapping in
+      // place, not as a new page sliding/fading in.
       GoRoute(path: RouteNames.userHome,
-          pageBuilder: (_, state) => _fadePage(const UserHomeScreen(), state)),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: UserHomeScreen())),
       GoRoute(path: RouteNames.userScan,
-          pageBuilder: (_, state) => _fadePage(const UserScanScreen(), state)),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: UserScanScreen())),
       GoRoute(path: RouteNames.userMechanics,
-          pageBuilder: (_, state) => _fadePage(const UserMechanicsScreen(), state)),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: UserMechanicsScreen())),
       GoRoute(path: RouteNames.mechanicHome,
-          pageBuilder: (_, state) => _fadePage(const MechanicHomeScreen(), state)),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: MechanicHomeScreen())),
       GoRoute(path: RouteNames.mechanicScan,
-          pageBuilder: (_, state) => _fadePage(const MechanicScanScreen(), state)),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: MechanicScanScreen())),
       GoRoute(path: RouteNames.mechanicUsers,
-          pageBuilder: (_, state) => _fadePage(const MechanicUsersScreen(), state)),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: MechanicUsersScreen())),
 
       GoRoute(path: RouteNames.radiusSelector,
           builder: (_, __) => const RadiusSelectorScreen()),

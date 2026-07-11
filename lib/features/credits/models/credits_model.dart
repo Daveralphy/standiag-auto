@@ -36,7 +36,9 @@ class CreditsModel {
       amount: data['amount'] ?? 0,
       reason: data['reason'] ?? '',
       relatedJobId: data['relatedJobId'],
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: data['createdAt'] is Timestamp
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
     );
   }
 

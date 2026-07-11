@@ -49,7 +49,9 @@ class UserModel {
       address: data['address'] ?? '',
       profilePhoto: data['profilePhoto'],
       credits: data['credits'] ?? 0,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: data['createdAt'] is Timestamp
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
       isFirstTime: data['isFirstTime'] ?? true,
     );
   }

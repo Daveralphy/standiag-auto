@@ -78,11 +78,19 @@ class JobModel {
       vehicleId: data['vehicleId'] ?? '',
       issue: data['issue'] ?? '',
       status: JobStatusExtension.fromString(data['status'] ?? 'pending'),
-      carOwnerLocation: data['carOwnerLocation'] as GeoPoint?,
-      mechanicLocation: data['mechanicLocation'] as GeoPoint?,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      acceptedAt: (data['acceptedAt'] as Timestamp?)?.toDate(),
-      completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
+      carOwnerLocation:
+          data['carOwnerLocation'] is GeoPoint ? data['carOwnerLocation'] : null,
+      mechanicLocation:
+          data['mechanicLocation'] is GeoPoint ? data['mechanicLocation'] : null,
+      createdAt: data['createdAt'] is Timestamp
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      acceptedAt: data['acceptedAt'] is Timestamp
+          ? (data['acceptedAt'] as Timestamp).toDate()
+          : null,
+      completedAt: data['completedAt'] is Timestamp
+          ? (data['completedAt'] as Timestamp).toDate()
+          : null,
       rating: (data['rating'] as num?)?.toDouble(),
       ratingComment: data['ratingComment'],
     );

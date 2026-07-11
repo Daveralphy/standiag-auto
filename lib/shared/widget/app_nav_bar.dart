@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -38,17 +40,28 @@ class AppNavBar extends StatelessWidget {
           // ─── Bar background ───────────────────────────────────────────
           Positioned.fill(
             child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.navBarBackground,
-                borderRadius: BorderRadius.circular(AppRadius.floatingNav),
-                border: Border.all(color: AppColors.navBarBorder),
-                boxShadow: const [
+              decoration: const BoxDecoration(
+                boxShadow: [
                   BoxShadow(
                     color: Color(0x99000000),
                     offset: Offset(0, 8),
                     blurRadius: 32,
                   ),
                 ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.floatingNav),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.navBarBackground,
+                      borderRadius:
+                          BorderRadius.circular(AppRadius.floatingNav),
+                      border: Border.all(color: AppColors.navBarBorder),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

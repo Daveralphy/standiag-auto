@@ -52,12 +52,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       body: SafeArea(
         child: userAsync.when(
           loading: () => const _ProfileSkeletonView(),
-          error: (_, __) => _ProfileErrorView(
+          error: (error, stackTrace) => _ProfileErrorView(
+            message: ErrorHandler.handle(error, stackTrace).message,
             onRetry: () => ref.invalidate(userProfileProvider),
           ),
           data: (user) {
             if (user == null) {
               return _ProfileErrorView(
+                message: 'You need to be signed in to view this.',
                 onRetry: () => ref.invalidate(userProfileProvider),
               );
             }
@@ -242,9 +244,10 @@ class _ProfileSkeletonView extends StatelessWidget {
 }
 
 class _ProfileErrorView extends StatelessWidget {
+  final String message;
   final VoidCallback onRetry;
 
-  const _ProfileErrorView({required this.onRetry});
+  const _ProfileErrorView({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -257,10 +260,11 @@ class _ProfileErrorView extends StatelessWidget {
             const Icon(Icons.error_outline_rounded,
                 color: AppColors.textMuted, size: 32),
             const SizedBox(height: 12),
-            const Text(AppStrings.errorLoadData,
+            Text(message,
                 style: AppTypography.bodyLarge,
+                textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-                maxLines: 1),
+                maxLines: 2),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: onRetry,

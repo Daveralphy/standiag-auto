@@ -139,3 +139,17 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 final profileProvider =
     StateNotifierProvider<ProfileNotifier, ProfileState>(
         (ref) => ProfileNotifier());
+
+/// One-time fetch of a single vehicle by id — used wherever a job only
+/// carries a vehicleId and the vehicle's make/model needs to be shown
+/// (e.g. a mechanic's pending/active job tiles). Not real-time (Rule 13):
+/// a vehicle's details rarely change mid-job.
+final vehicleByIdProvider =
+    FutureProvider.family<VehicleModel?, String>((ref, vehicleId) async {
+  if (vehicleId.isEmpty) return null;
+  final doc = await FirebaseFirestore.instance
+      .collection('vehicles')
+      .doc(vehicleId)
+      .get();
+  return doc.exists ? VehicleModel.fromFirestore(doc) : null;
+});

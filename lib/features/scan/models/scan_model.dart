@@ -33,7 +33,9 @@ class ScanModel {
       vehicleId: data['vehicleId'] ?? '',
       healthScore: data['healthScore'] ?? 0,
       rawData: Map<String, dynamic>.from(data['rawData'] ?? {}),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: data['createdAt'] is Timestamp
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
     );
   }
 

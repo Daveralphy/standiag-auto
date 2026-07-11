@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/constants/app_typography.dart';
 import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
@@ -61,17 +60,29 @@ class _MechanicDrawerScreenState extends ConsumerState<MechanicDrawerScreen> {
                   AppSpacing.pageHorizontal, AppSpacing.xl),
               child: Row(
                 children: [
-                  AppAvatar(name: displayName, size: 52),
-                  const SizedBox(width: 14),
+                  AppAvatar(name: displayName, size: 60),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(displayName,
-                            style: AppTypography.heading3,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.4,
+                            ),
                             overflow: TextOverflow.ellipsis, maxLines: 1),
+                        const SizedBox(height: 3),
                         Text(email.isNotEmpty ? email : '@mechanic',
-                            style: AppTypography.caption,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textMuted,
+                            ),
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],
                     ),
@@ -79,7 +90,7 @@ class _MechanicDrawerScreenState extends ConsumerState<MechanicDrawerScreen> {
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     child: const Icon(Icons.close_rounded,
-                        color: AppColors.textMuted, size: 20),
+                        color: AppColors.textMuted, size: 24),
                   ),
                 ],
               ),
@@ -159,22 +170,26 @@ class _DrawerItem extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.pageHorizontal, vertical: 14),
+            horizontal: AppSpacing.pageHorizontal, vertical: 16),
         child: Row(
           children: [
             Icon(icon,
-                size: 18,
+                size: 22,
                 color: isDestructive
                     ? AppColors.primary
                     : AppColors.textMuted),
-            const SizedBox(width: 14),
+            const SizedBox(width: 16),
             Expanded(
               child: Text(
                 label,
-                style: AppTypography.body.copyWith(
-                    color: isDestructive
-                        ? AppColors.primary
-                        : AppColors.textSecondary),
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDestructive
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
+                ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),

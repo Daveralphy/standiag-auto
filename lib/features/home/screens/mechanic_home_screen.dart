@@ -1,8 +1,11 @@
 // Mechanic Home screen — dashboard for mechanics.
-// Shows greeting, diagnose car button, and incoming job requests.
+// Shows greeting, own profile summary, and Pending/Active job sections.
 // Nav bar: Scan (left) | Home (center, active) | Users (right).
 // Bell icon top right.
 
+import 'dart:math' as math;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,14 +16,16 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/user_provider.dart';
+import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
-import '../../../shared/widget/app_skeleton.dart';
+import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../jobs/models/job_model.dart';
 import '../../jobs/providers/job_provider.dart';
 import '../../mechanics/providers/mechanics_provider.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../../profile/screens/mechanic_drawer_screen.dart';
-import '../../../shared/providers/user_provider.dart';
 
 class MechanicHomeScreen extends ConsumerStatefulWidget {
   const MechanicHomeScreen({super.key});
@@ -40,7 +45,6 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userAsync = ref.watch(userProfileProvider);
     final mechanicId = ref.watch(currentUserIdProvider);
     if (mechanicId != null) {
       // Foreground-only real-time listener for an incoming job request —
@@ -62,195 +66,97 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ─── Header ─────────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.md,
-                    AppSpacing.pageHorizontal,
-                    0,
-                  ),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () =>
-                            _scaffoldKey.currentState?.openDrawer(),
-                        child: Container(
-                          width: AppSpacing.iconButtonSize,
-                          height: AppSpacing.iconButtonSize,
-                          decoration: BoxDecoration(
-                            color: const Color(0x08FFFFFF),
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.full),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: const Icon(Icons.menu_rounded,
-                              size: 16, color: AppColors.textMuted),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: userAsync.when(
-                          data: (user) => Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Hi, ${user?.firstName.isNotEmpty == true ? user!.firstName : 'there'} 👋',
-                                style: AppTypography.heading2,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                              const Text(
-                                'Your Dashboard',
-                                style: AppTypography.body,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ],
-                          ),
-                          loading: () => const _GreetingSkeleton(),
-                          error: (_, __) => const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Hi, there 👋',
-                                style: AppTypography.heading2,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                              Text(
-                                'Your Dashboard',
-                                style: AppTypography.body,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Container(
-                        width: AppSpacing.iconButtonSize,
-                        height: AppSpacing.iconButtonSize,
-                        decoration: BoxDecoration(
-                          color: const Color(0x08FFFFFF),
-                          borderRadius: BorderRadius.circular(AppRadius.full),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: const Icon(Icons.notifications_outlined,
-                            size: 16, color: AppColors.textMuted),
-                      ),
-                    ],
-                  ),
+                AppScreenHeader(
+                  scaffoldKey: _scaffoldKey,
+                  showGreeting: true,
+                  subtitle: 'Your Dashboard',
+                  trailingIcon: Icons.notifications_outlined,
+                  onTrailingTap: () {},
                 ),
                 const SizedBox(height: 20),
 
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.pageHorizontal).copyWith(
                         bottom: AppSpacing.navBarClearance),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ─── Diagnose Car card ───────────────────────────
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal),
-                          child: GestureDetector(
-                            onTap: () => context.go(RouteNames.mechanicScan),
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: AppColors.primaryButtonGradient,
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.card),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x33E8281E),
-                                    blurRadius: 20,
-                                    offset: Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(Icons.qr_code_scanner_rounded,
-                                      color: Colors.white, size: 28),
-                                  const SizedBox(height: 12),
-                                  const Text(
-                                    'Scan Customer',
-                                    style: AppTypography.heading2,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                  const Text(
-                                    'Vehicle',
-                                    style: AppTypography.heading2,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Tap to diagnose a customer\'s car with OBD',
-                                    style: AppTypography.bodySmall.copyWith(
-                                        color: Colors.white70),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        // ─── Own profile summary card ────────────────────
+                        if (mechanicId == null)
+                          const _ProfileCardSkeleton()
+                        else
+                          _MechanicProfileCard(mechanicId: mechanicId),
                         const SizedBox(height: 24),
 
-                        // ─── Job Requests section ────────────────────────
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal),
-                          child: Text(
-                            'Job Requests',
-                            style: AppTypography.heading3,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
+                        // ─── Pending section ──────────────────────────────
+                        const Text(
+                          'PENDING',
+                          style: AppTypography.captionLarge,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                        const SizedBox(height: 14),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal),
-                          child: Builder(builder: (context) {
-                            if (mechanicId == null) {
-                              return const MechanicCardSkeleton();
-                            }
+                        const SizedBox(height: 10),
+                        if (mechanicId == null)
+                          const _JobTileSkeleton()
+                        else
+                          Consumer(builder: (context, ref, _) {
                             final requestsAsync = ref.watch(
                                 pendingJobsForMechanicProvider(mechanicId));
                             return requestsAsync.when(
                               data: (jobs) => jobs.isEmpty
-                                  ? const Text('No job requests right now.',
+                                  ? const Text('No pending requests right now.',
                                       style: AppTypography.body)
                                   : Column(
                                       children: [
                                         for (final job in jobs) ...[
-                                          _JobRequestTile(job: job),
+                                          _PendingJobTile(
+                                              job: job, mechanicId: mechanicId),
                                           const SizedBox(height: 10),
                                         ],
                                       ],
                                     ),
                               loading: () => const Column(
                                 children: [
-                                  MechanicCardSkeleton(),
+                                  _JobTileSkeleton(),
                                   SizedBox(height: 10),
-                                  MechanicCardSkeleton(),
+                                  _JobTileSkeleton(),
                                 ],
                               ),
                               error: (_, __) => const Text(
-                                  'Unable to load job requests.',
+                                  'Unable to load pending requests.',
                                   style: AppTypography.body),
                             );
                           }),
-                        ),
+                        const SizedBox(height: 24),
+
+                        // ─── Active section ───────────────────────────────
+                        if (mechanicId != null)
+                          Consumer(builder: (context, ref, _) {
+                            final activeAsync = ref.watch(
+                                activeJobForMechanicProvider(mechanicId));
+                            return activeAsync.when(
+                              data: (job) => job == null
+                                  ? const SizedBox.shrink()
+                                  : Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'ACTIVE',
+                                          style: AppTypography.captionLarge,
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                        const SizedBox(height: 10),
+                                        _ActiveJobTile(job: job),
+                                      ],
+                                    ),
+                              loading: () => const _JobTileSkeleton(),
+                              error: (_, __) => const SizedBox.shrink(),
+                            );
+                          }),
                       ],
                     ),
                   ),
@@ -272,45 +178,155 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
   }
 }
 
-class _GreetingSkeleton extends StatelessWidget {
-  const _GreetingSkeleton();
+/// Haversine distance in kilometers between two Firestore GeoPoints.
+double _distanceKm(GeoPoint a, GeoPoint b) {
+  const earthRadiusKm = 6371.0;
+  final dLat = _deg2rad(b.latitude - a.latitude);
+  final dLon = _deg2rad(b.longitude - a.longitude);
+  final lat1 = _deg2rad(a.latitude);
+  final lat2 = _deg2rad(b.latitude);
+  final h = math.pow(math.sin(dLat / 2), 2) +
+      math.cos(lat1) * math.cos(lat2) * math.pow(math.sin(dLon / 2), 2);
+  return earthRadiusKm * 2 * math.atan2(math.sqrt(h), math.sqrt(1 - h));
+}
+
+double _deg2rad(double deg) => deg * (math.pi / 180);
+
+String _statusLabel(JobStatus status) {
+  switch (status) {
+    case JobStatus.accepted:
+      return 'Accepted';
+    case JobStatus.enRoute:
+      return 'On The Way';
+    case JobStatus.arrived:
+      return 'Arrived';
+    case JobStatus.inProgress:
+      return 'In Progress';
+    default:
+      return 'Active';
+  }
+}
+
+// ─── Widgets ───────────────────────────────────────────────────────────────
+
+class _MechanicProfileCard extends ConsumerWidget {
+  final String mechanicId;
+  const _MechanicProfileCard({required this.mechanicId});
+
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(width: 140, height: 20,
-            decoration: BoxDecoration(color: const Color(0x14FFFFFF),
-                borderRadius: BorderRadius.circular(6))),
-        const SizedBox(height: 6),
-        Container(width: 100, height: 14,
-            decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
-                borderRadius: BorderRadius.circular(6))),
-      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mechanicAsync = ref.watch(mechanicByIdProvider(mechanicId));
+    final userAsync = ref.watch(userProfileProvider);
+
+    return mechanicAsync.when(
+      data: (mechanic) {
+        final name = userAsync.valueOrNull?.firstName.isNotEmpty == true
+            ? '${userAsync.valueOrNull!.firstName} ${userAsync.valueOrNull!.lastName}'
+                .trim()
+            : 'Your Profile';
+        final expertise = mechanic?.expertise ?? const <String>[];
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.xl4),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name,
+                  style: AppTypography.heading4,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1),
+              const SizedBox(height: 4),
+              if (mechanic != null)
+                Row(
+                  children: [
+                    const Icon(Icons.star_rounded,
+                        color: AppColors.primary, size: 14),
+                    const SizedBox(width: 3),
+                    Text(mechanic.rating.toStringAsFixed(1),
+                        style: AppTypography.bodySmall
+                            .copyWith(color: AppColors.textPrimary)),
+                    const SizedBox(width: 8),
+                    Text('${mechanic.totalJobs} jobs',
+                        style: AppTypography.bodySmall),
+                  ],
+                ),
+              const SizedBox(height: 10),
+              if (expertise.isEmpty)
+                const Text('No expertise added yet',
+                    style: AppTypography.bodySmall)
+              else
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final tag in expertise)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0x0DFFFFFF),
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Text(tag, style: AppTypography.captionLarge),
+                      ),
+                  ],
+                ),
+              const SizedBox(height: 16),
+              AppButton(
+                label: 'Diagnose a Car',
+                onTap: () => context.go(RouteNames.mechanicScan),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const _ProfileCardSkeleton(),
+      error: (_, __) => const _ProfileCardSkeleton(),
     );
   }
 }
 
-class _JobRequestTile extends ConsumerWidget {
+class _PendingJobTile extends ConsumerWidget {
   final JobModel job;
-  const _JobRequestTile({required this.job});
+  final String mechanicId;
+  const _PendingJobTile({required this.job, required this.mechanicId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ownerAsync = ref.watch(mechanicUserProvider(job.carOwnerId));
+    final vehicleAsync = ref.watch(vehicleByIdProvider(job.vehicleId));
+    final mechanicAsync = ref.watch(mechanicByIdProvider(mechanicId));
+
     final ownerName = ownerAsync.valueOrNull != null
         ? '${ownerAsync.valueOrNull!.firstName} ${ownerAsync.valueOrNull!.lastName}'
             .trim()
         : 'Car Owner';
+    final vehicleName = vehicleAsync.valueOrNull?.displayName;
+    final subtitle =
+        vehicleName != null ? '${job.issue} · $vehicleName' : job.issue;
+
+    String? distanceLabel;
+    final mechanicLocation = mechanicAsync.valueOrNull?.location;
+    if (mechanicLocation != null && job.carOwnerLocation != null) {
+      final km = _distanceKm(mechanicLocation, job.carOwnerLocation!);
+      distanceLabel = '${km.toStringAsFixed(1)} km away';
+    }
+
     return GestureDetector(
       onTap: () =>
           context.push(RouteNames.mechanicIncomingCall, extra: job.id),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.xl2),
         decoration: BoxDecoration(
-          color: const Color(0xFF111111),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0x12FFFFFF)),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -319,18 +335,197 @@ class _JobRequestTile extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(ownerName,
-                      style: AppTypography.bodyLarge,
-                      overflow: TextOverflow.ellipsis, maxLines: 1),
-                  Text(job.issue,
-                      style: AppTypography.caption,
-                      overflow: TextOverflow.ellipsis, maxLines: 1),
+                      style: AppTypography.heading4,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: AppTypography.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1),
+                  if (distanceLabel != null) ...[
+                    const SizedBox(height: 2),
+                    Text(distanceLabel,
+                        style: AppTypography.caption,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1),
+                  ],
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: Color(0x33FFFFFF)),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () => context.push(RouteNames.mechanicActiveCall,
+                  extra: job.id),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  gradient: AppColors.primaryButtonGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.call_rounded,
+                    color: Colors.white, size: 18),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ActiveJobTile extends ConsumerWidget {
+  final JobModel job;
+  const _ActiveJobTile({required this.job});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownerAsync = ref.watch(mechanicUserProvider(job.carOwnerId));
+    final vehicleAsync = ref.watch(vehicleByIdProvider(job.vehicleId));
+
+    final ownerName = ownerAsync.valueOrNull != null
+        ? '${ownerAsync.valueOrNull!.firstName} ${ownerAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Car Owner';
+    final vehicleName = vehicleAsync.valueOrNull?.displayName;
+    final subtitle =
+        vehicleName != null ? '${job.issue} · $vehicleName' : job.issue;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl2),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(ownerName,
+              style: AppTypography.heading4,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1),
+          const SizedBox(height: 2),
+          Text(subtitle,
+              style: AppTypography.bodySmall,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.success,
+                      boxShadow: [
+                        BoxShadow(color: Color(0xCC4CAF50), blurRadius: 6),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(_statusLabel(job.status),
+                      style: AppTypography.bodySmall
+                          .copyWith(color: AppColors.success)),
+                ],
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  ref
+                      .read(jobProvider.notifier)
+                      .updateStatus(job.id, JobStatus.completed);
+                  context.go(RouteNames.mechanicJobCompleted, extra: job.id);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: const Color(0x14E8281E),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(color: const Color(0x33E8281E)),
+                  ),
+                  child: const Text('Close Job',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      )),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileCardSkeleton extends StatelessWidget {
+  const _ProfileCardSkeleton();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(width: 140, height: 16,
+              decoration: BoxDecoration(color: const Color(0x14FFFFFF),
+                  borderRadius: BorderRadius.circular(4))),
+          const SizedBox(height: 10),
+          Container(width: 90, height: 12,
+              decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
+                  borderRadius: BorderRadius.circular(4))),
+          const SizedBox(height: 16),
+          Container(width: double.infinity, height: 44,
+              decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
+                  borderRadius: BorderRadius.circular(AppRadius.full))),
+        ],
+      ),
+    );
+  }
+}
+
+class _JobTileSkeleton extends StatelessWidget {
+  const _JobTileSkeleton();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl2),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(width: 120, height: 14,
+                    decoration: BoxDecoration(color: const Color(0x14FFFFFF),
+                        borderRadius: BorderRadius.circular(4))),
+                const SizedBox(height: 6),
+                Container(width: 80, height: 11,
+                    decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
+                        borderRadius: BorderRadius.circular(4))),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
