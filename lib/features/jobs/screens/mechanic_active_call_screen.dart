@@ -1,24 +1,29 @@
 // Mechanic Active Call screen — mechanic is on call with user.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/job_provider.dart';
 
-class MechanicActiveCallScreen extends StatefulWidget {
-  const MechanicActiveCallScreen({super.key});
+class MechanicActiveCallScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const MechanicActiveCallScreen({super.key, required this.jobId});
 
   @override
-  State<MechanicActiveCallScreen> createState() =>
+  ConsumerState<MechanicActiveCallScreen> createState() =>
       _MechanicActiveCallScreenState();
 }
 
-class _MechanicActiveCallScreenState extends State<MechanicActiveCallScreen> {
+class _MechanicActiveCallScreenState
+    extends ConsumerState<MechanicActiveCallScreen> {
   bool _isMuted = false;
   bool _isSpeaker = false;
   int _seconds = 0;
@@ -27,6 +32,7 @@ class _MechanicActiveCallScreenState extends State<MechanicActiveCallScreen> {
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return false;
@@ -43,6 +49,14 @@ class _MechanicActiveCallScreenState extends State<MechanicActiveCallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final callerAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.carOwnerId));
+    final callerName = callerAsync?.valueOrNull != null
+        ? '${callerAsync!.valueOrNull!.firstName} ${callerAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Car Owner';
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -60,9 +74,9 @@ class _MechanicActiveCallScreenState extends State<MechanicActiveCallScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const AppAvatar(name: 'John Doe', size: 100),
+                  AppAvatar(name: callerName, size: 100),
                   const SizedBox(height: 20),
-                  const Text('John Doe',
+                  Text(callerName,
                       style: AppTypography.heading1,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
@@ -87,7 +101,8 @@ class _MechanicActiveCallScreenState extends State<MechanicActiveCallScreen> {
                     isActive: _isMuted,
                   ),
                   GestureDetector(
-                    onTap: () => context.go(RouteNames.mechanicPostCall),
+                    onTap: () => context.go(RouteNames.mechanicPostCall,
+                        extra: widget.jobId),
                     child: Container(
                       width: 64, height: 64,
                       decoration: const BoxDecoration(

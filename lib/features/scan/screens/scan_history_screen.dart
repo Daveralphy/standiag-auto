@@ -11,6 +11,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../core/utils/formatters.dart';
 import '../providers/scan_provider.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_skeleton.dart';
@@ -108,7 +109,7 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
                       itemBuilder: (_, i) => _ScanCard(
                         vehicle: state.history[i].vehicleId,
                         score: state.history[i].healthScore,
-                        date: state.history[i].createdAt.toIso8601String(),
+                        date: Formatters.relativeDate(state.history[i].createdAt),
                       ),
                     ),
             ),

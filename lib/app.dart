@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/navigation/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'shared/widget/offline_banner.dart';
 
 class StanDiagApp extends ConsumerWidget {
   const StanDiagApp({super.key});
@@ -25,6 +26,14 @@ class StanDiagApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       locale: const Locale('en'),
       supportedLocales: const [Locale('en')],
+      // Mounted once here so every routed screen gets the offline banner
+      // automatically, instead of each screen wiring its own connectivity check.
+      builder: (context, child) => Stack(
+        children: [
+          if (child != null) child,
+          const OfflineBanner(),
+        ],
+      ),
     );
   }
 }

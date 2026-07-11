@@ -2,6 +2,8 @@
 // Never use hardcoded route strings anywhere in the app — always use this class.
 // GoRouter uses these names for navigation and deep linking.
 
+import '../../features/auth/models/user_model.dart';
+
 class RouteNames {
   // Private constructor — this class is never instantiated.
   RouteNames._();
@@ -16,6 +18,7 @@ class RouteNames {
   // ─── Authentication ────────────────────────────────────────────────────────
 
   static const String login = '/login';
+  static const String forgotPassword = '/forgot-password';
   static const String otpPhone = '/otp-phone';
   static const String otpEmail = '/otp-email';
 
@@ -115,4 +118,42 @@ class RouteNames {
   static const String mechanicDeleteAccount =
       '/mechanic/settings/delete-account';
   static const String mechanicHelpSupport = '/mechanic/settings/help';
+
+  // ─── Type-aware helpers ────────────────────────────────────────────────────
+  // Several screens (settings, its children, drawers) are shared between
+  // both `/user/...` and `/mechanic/...` route trees. These helpers pick the
+  // right variant for the signed-in user's profile type so a mechanic never
+  // gets routed into a CarOwner-only screen, and vice versa.
+
+  static String homeFor(UserType type) =>
+      type == UserType.mechanic ? mechanicHome : userHome;
+
+  static String settingsFor(UserType type) =>
+      type == UserType.mechanic ? mechanicSettings : userSettings;
+
+  static String notificationSettingsFor(UserType type) => type == UserType.mechanic
+      ? mechanicNotificationSettings
+      : userNotificationSettings;
+
+  static String languageFor(UserType type) =>
+      type == UserType.mechanic ? mechanicLanguage : userLanguage;
+
+  static String appearanceFor(UserType type) =>
+      type == UserType.mechanic ? mechanicAppearance : userAppearance;
+
+  static String privacyFor(UserType type) =>
+      type == UserType.mechanic ? mechanicPrivacy : userPrivacy;
+
+  static String changePasswordFor(UserType type) =>
+      type == UserType.mechanic ? mechanicChangePassword : userChangePassword;
+
+  static String verifyPasswordChangeFor(UserType type) => type == UserType.mechanic
+      ? mechanicVerifyPasswordChange
+      : userVerifyPasswordChange;
+
+  static String deleteAccountFor(UserType type) =>
+      type == UserType.mechanic ? mechanicDeleteAccount : userDeleteAccount;
+
+  static String helpSupportFor(UserType type) =>
+      type == UserType.mechanic ? mechanicHelpSupport : userHelpSupport;
 }

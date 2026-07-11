@@ -2,6 +2,7 @@
 // Map background, mechanic info card at bottom, Subscribe/Call buttons.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -9,29 +10,59 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_badge.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../providers/mechanics_provider.dart';
+import '../../jobs/providers/job_provider.dart';
 
-class MechanicCardScreen extends StatefulWidget {
-  const MechanicCardScreen({super.key});
+class MechanicCardScreen extends ConsumerStatefulWidget {
+  final String mechanicId;
+  const MechanicCardScreen({super.key, required this.mechanicId});
 
   @override
-  State<MechanicCardScreen> createState() => _MechanicCardScreenState();
+  ConsumerState<MechanicCardScreen> createState() => _MechanicCardScreenState();
 }
 
-class _MechanicCardScreenState extends State<MechanicCardScreen> {
+class _MechanicCardScreenState extends ConsumerState<MechanicCardScreen> {
+  bool _isCalling = false;
+
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
   }
 
+  Future<void> _callMechanic() async {
+    setState(() => _isCalling = true);
+    final carOwnerId = ref.read(currentUserIdProvider);
+    if (carOwnerId == null) return;
+    final jobId = await ref.read(jobProvider.notifier).createJob(
+          carOwnerId: carOwnerId,
+          mechanicId: widget.mechanicId,
+          vehicleId: '',
+          issue: 'General car issue',
+        );
+    if (!mounted) return;
+    context.go(RouteNames.inAppCall, extra: {
+      'jobId': jobId,
+      'mechanicId': widget.mechanicId,
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final mechanicAsync = ref.watch(mechanicByIdProvider(widget.mechanicId));
+    final mechanicUserAsync = ref.watch(mechanicUserProvider(widget.mechanicId));
+    final mechanic = mechanicAsync.valueOrNull;
+    final mechanicUser = mechanicUserAsync.valueOrNull;
+    final mechanicName = mechanicUser != null
+        ? '${mechanicUser.firstName} ${mechanicUser.lastName}'.trim()
+        : 'Mechanic';
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
       body: Stack(
@@ -93,7 +124,7 @@ class _MechanicCardScreenState extends State<MechanicCardScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.go(RouteNames.searching),
+                    onTap: () => context.go(RouteNames.userMechanics),
                     child: Container(
                       width: 32, height: 32,
                       decoration: BoxDecoration(
@@ -144,50 +175,45 @@ class _MechanicCardScreenState extends State<MechanicCardScreen> {
                 children: [
                   Row(
                     children: [
-                      const AppAvatar(name: 'Kwame Asante', size: 46),
+                      AppAvatar(name: mechanicName, size: 46),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Kwame Asante',
+                            Text(mechanicName,
                                 style: AppTypography.heading4,
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
-                            SizedBox(height: 3),
+                            const SizedBox(height: 3),
                             Row(
                               children: [
-                                RatingStars(rating: 4.9, starSize: 12),
-                                SizedBox(width: 4),
+                                RatingStars(
+                                    rating: mechanic?.rating ?? 0, starSize: 12),
+                                const SizedBox(width: 4),
                                 Flexible(
-                                  child: Text('4.9 · 312 jobs',
+                                  child: Text(
+                                      '${(mechanic?.rating ?? 0).toStringAsFixed(1)} · ${mechanic?.totalJobs ?? 0} jobs',
                                       style: AppTypography.caption,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Flexible(child: ExpertiseTag(label: 'Engine')),
-                                SizedBox(width: 4),
-                                Flexible(child: ExpertiseTag(label: 'Transmission')),
-                                SizedBox(width: 4),
-                                Flexible(child: ExpertiseTag(label: 'Electrical')),
-                              ],
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 4, runSpacing: 4,
+                              children: (mechanic?.expertise ?? const [])
+                                  .take(3)
+                                  .map((e) => ExpertiseTag(label: e))
+                                  .toList(),
                             ),
                           ],
                         ),
                       ),
-                      Column(
+                      const Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('1.2 km',
-                              style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.primary),
-                              overflow: TextOverflow.ellipsis, maxLines: 1),
-                          const SizedBox(height: 2),
-                          const StatusDot(isOnline: true, size: 8),
+                          StatusDot(isOnline: true, size: 8),
                         ],
                       ),
                     ],
@@ -198,15 +224,17 @@ class _MechanicCardScreenState extends State<MechanicCardScreen> {
                       Expanded(
                         child: AppButton(
                           label: 'View Profile',
-                          onTap: () => context.go(RouteNames.mechanicProfile),
+                          onTap: () => context.go(RouteNames.mechanicProfile,
+                              extra: widget.mechanicId),
                           variant: AppButtonVariant.ghost,
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: AppButton(
+                          isLoading: _isCalling,
                           label: 'Call Mechanic',
-                          onTap: () => context.go(RouteNames.inAppCall),
+                          onTap: _callMechanic,
                         ),
                       ),
                     ],

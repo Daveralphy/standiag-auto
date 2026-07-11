@@ -1,6 +1,7 @@
 // Settings screen — list of settings options with navigation.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -9,16 +10,17 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void initState() {
     super.initState();
@@ -27,6 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final type = ref.watch(currentUserTypeProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -37,7 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userHome),
+                  onTap: () => context.go(RouteNames.homeFor(type)),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -62,27 +65,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsItem(
                     icon: Icons.notifications_outlined,
                     label: AppStrings.settingsNotifications,
-                    onTap: () => context.go(RouteNames.userNotificationSettings),
+                    onTap: () =>
+                        context.go(RouteNames.notificationSettingsFor(type)),
                   ),
                   _SettingsItem(
                     icon: Icons.language_outlined,
                     label: AppStrings.settingsLanguage,
-                    onTap: () => context.go(RouteNames.userLanguage),
+                    onTap: () => context.go(RouteNames.languageFor(type)),
                   ),
                   _SettingsItem(
                     icon: Icons.dark_mode_outlined,
                     label: AppStrings.settingsAppearance,
-                    onTap: () => context.go(RouteNames.userAppearance),
+                    onTap: () => context.go(RouteNames.appearanceFor(type)),
                   ),
                   _SettingsItem(
                     icon: Icons.lock_outline_rounded,
                     label: AppStrings.settingsPrivacy,
-                    onTap: () => context.go(RouteNames.userPrivacy),
+                    onTap: () => context.go(RouteNames.privacyFor(type)),
                   ),
                   _SettingsItem(
                     icon: Icons.key_outlined,
                     label: AppStrings.settingsChangePassword,
-                    onTap: () => context.go(RouteNames.userChangePassword),
+                    onTap: () =>
+                        context.go(RouteNames.changePasswordFor(type)),
                   ),
                   const SizedBox(height: 8),
                   const Divider(color: AppColors.borderSubtle),
@@ -90,7 +95,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsItem(
                     icon: Icons.delete_outline_rounded,
                     label: AppStrings.settingsDeleteAccount,
-                    onTap: () => context.go(RouteNames.userDeleteAccount),
+                    onTap: () =>
+                        context.go(RouteNames.deleteAccountFor(type)),
                     isDestructive: true,
                   ),
                 ],

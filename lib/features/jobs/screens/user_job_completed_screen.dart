@@ -2,6 +2,7 @@
 // Map background, user nav Mechanics active, search icon top right.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_badge.dart';
 import '../../../shared/widget/app_button.dart';
@@ -16,24 +18,41 @@ import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../providers/job_provider.dart';
 
-class UserJobCompletedScreen extends StatefulWidget {
-  const UserJobCompletedScreen({super.key});
+class UserJobCompletedScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const UserJobCompletedScreen({super.key, required this.jobId});
 
   @override
-  State<UserJobCompletedScreen> createState() =>
+  ConsumerState<UserJobCompletedScreen> createState() =>
       _UserJobCompletedScreenState();
 }
 
-class _UserJobCompletedScreenState extends State<UserJobCompletedScreen> {
+class _UserJobCompletedScreenState
+    extends ConsumerState<UserJobCompletedScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final mechanicAsync = job == null
+        ? null
+        : ref.watch(mechanicByIdProvider(job.mechanicId));
+    final mechanicUserAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.mechanicId));
+    final mechanicName = mechanicUserAsync?.valueOrNull != null
+        ? '${mechanicUserAsync!.valueOrNull!.firstName} ${mechanicUserAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Mechanic';
+    final mechanicRating = mechanicAsync?.valueOrNull?.rating ?? 0.0;
+    final mechanicJobs = mechanicAsync?.valueOrNull?.totalJobs ?? 0;
     const LatLng userLocation = LatLng(6.5244, 3.3792);
     const LatLng mechanicLocation = LatLng(6.5246, 3.37935);
 
@@ -112,17 +131,17 @@ class _UserJobCompletedScreenState extends State<UserJobCompletedScreen> {
                   color: const Color(0x144CAF50),
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: const Color(0x334CAF50))),
-                child: const Row(children: [
-                  Icon(Icons.check_circle_outline_rounded,
+                child: Row(children: [
+                  const Icon(Icons.check_circle_outline_rounded,
                       color: AppColors.success, size: 18),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Job marked as done!',
+                      const Text('Job marked as done!',
                           style: AppTypography.bodyLarge,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
-                      Text('Engine Problem · Toyota Corolla',
+                      Text(job?.issue ?? '',
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
                     ],
@@ -136,18 +155,19 @@ class _UserJobCompletedScreenState extends State<UserJobCompletedScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   border: Border.all(color: AppColors.border)),
                 child: Column(children: [
-                  const Row(children: [
-                    AppAvatar(name: 'Kwame Asante', size: 42),
-                    SizedBox(width: 10),
+                  Row(children: [
+                    AppAvatar(name: mechanicName, size: 42),
+                    const SizedBox(width: 10),
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Kwame Asante', style: AppTypography.heading4,
+                        Text(mechanicName, style: AppTypography.heading4,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                         Row(children: [
-                          RatingStars(rating: 4.9, starSize: 11),
-                          SizedBox(width: 4),
-                          Flexible(child: Text('4.9 · 312 jobs',
+                          RatingStars(rating: mechanicRating, starSize: 11),
+                          const SizedBox(width: 4),
+                          Flexible(child: Text(
+                              '${mechanicRating.toStringAsFixed(1)} · $mechanicJobs jobs',
                               style: AppTypography.caption,
                               overflow: TextOverflow.ellipsis, maxLines: 1)),
                         ]),
@@ -155,7 +175,7 @@ class _UserJobCompletedScreenState extends State<UserJobCompletedScreen> {
                     )),
                   ]),
                   const SizedBox(height: 12),
-                  const Text('Help Kwame grow by leaving a rating.',
+                  Text('Help $mechanicName grow by leaving a rating.',
                       style: AppTypography.bodySmall,
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis, maxLines: 2),
@@ -169,7 +189,8 @@ class _UserJobCompletedScreenState extends State<UserJobCompletedScreen> {
                     const SizedBox(width: 10),
                     Expanded(child: AppButton(
                       label: 'Rate Mechanic',
-                      onTap: () => context.go(RouteNames.userRateMechanic),
+                      onTap: () => context.go(RouteNames.userRateMechanic,
+                          extra: widget.jobId),
                     )),
                   ]),
                 ]),

@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/route_names.dart';
@@ -11,20 +12,30 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/app_button.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class VerifyPasswordChangeScreen extends StatefulWidget {
-  const VerifyPasswordChangeScreen({super.key});
+class VerifyPasswordChangeScreen extends ConsumerStatefulWidget {
+  final String currentPassword;
+  final String newPassword;
+  const VerifyPasswordChangeScreen({
+    super.key,
+    required this.currentPassword,
+    required this.newPassword,
+  });
 
   @override
-  State<VerifyPasswordChangeScreen> createState() =>
+  ConsumerState<VerifyPasswordChangeScreen> createState() =>
       _VerifyPasswordChangeScreenState();
 }
 
 class _VerifyPasswordChangeScreenState
-    extends State<VerifyPasswordChangeScreen> {
+    extends ConsumerState<VerifyPasswordChangeScreen> {
   final List<TextEditingController> _controllers =
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
@@ -59,6 +70,7 @@ class _VerifyPasswordChangeScreenState
 
   @override
   Widget build(BuildContext context) {
+    final type = ref.watch(currentUserTypeProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -69,7 +81,7 @@ class _VerifyPasswordChangeScreenState
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userSettings),
+                  onTap: () => context.go(RouteNames.settingsFor(type)),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -145,15 +157,22 @@ class _VerifyPasswordChangeScreenState
                   const SizedBox(height: 32),
                   AppButton(
                     label: AppStrings.verifyChangeVerify,
-                    onTap: () {
+                    onTap: () async {
                       setState(() => _isLoading = true);
-                      Future.delayed(const Duration(seconds: 1), () {
+                      try {
+                        await ref.read(authControllerProvider).changePassword(
+                              currentPassword: widget.currentPassword,
+                              newPassword: widget.newPassword,
+                            );
                         if (!mounted) return;
-                        setState(() => _isLoading = false);
-                        if (!context.mounted) return;
-                        context.go(RouteNames.userSettings);
-                        context.go(RouteNames.userSettings);
-                      });
+                        context.go(RouteNames.settingsFor(type));
+                      } catch (error, stackTrace) {
+                        if (!mounted) return;
+                        AppErrorToast.showMessage(context,
+                            ErrorHandler.handle(error, stackTrace).message);
+                      } finally {
+                        if (mounted) setState(() => _isLoading = false);
+                      }
                     },
                     isLoading: _isLoading,
                   ),

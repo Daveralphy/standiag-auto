@@ -2,28 +2,35 @@
 // Map background, user nav Mechanics active, search icon top right.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_text_field.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/job_provider.dart';
 
-class UserRateMechanicScreen extends StatefulWidget {
-  const UserRateMechanicScreen({super.key});
+class UserRateMechanicScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const UserRateMechanicScreen({super.key, required this.jobId});
 
   @override
-  State<UserRateMechanicScreen> createState() =>
+  ConsumerState<UserRateMechanicScreen> createState() =>
       _UserRateMechanicScreenState();
 }
 
-class _UserRateMechanicScreenState extends State<UserRateMechanicScreen> {
+class _UserRateMechanicScreenState
+    extends ConsumerState<UserRateMechanicScreen> {
   int _rating = 0;
   final _commentController = TextEditingController();
   bool _isLoading = false;
@@ -32,6 +39,7 @@ class _UserRateMechanicScreenState extends State<UserRateMechanicScreen> {
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
   @override
@@ -40,8 +48,41 @@ class _UserRateMechanicScreenState extends State<UserRateMechanicScreen> {
     super.dispose();
   }
 
+  Future<void> _submit() async {
+    if (_rating == 0) {
+      AppErrorToast.showMessage(context, 'Tap a star to rate the mechanic.');
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(jobProvider.notifier).submitRating(
+            widget.jobId,
+            _rating.toDouble(),
+            _commentController.text.trim().isEmpty
+                ? null
+                : _commentController.text.trim(),
+          );
+      if (!mounted) return;
+      context.go(RouteNames.userHome);
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      AppErrorToast.showMessage(
+          context, ErrorHandler.handle(error, stackTrace).message);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final mechanicAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.mechanicId));
+    final mechanicName = mechanicAsync?.valueOrNull != null
+        ? '${mechanicAsync!.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Mechanic';
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
       body: Stack(
@@ -92,15 +133,15 @@ class _UserRateMechanicScreenState extends State<UserRateMechanicScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.card),
                 border: Border.all(color: AppColors.border)),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Row(children: [
-                  AppAvatar(name: 'Kwame Asante', size: 46),
-                  SizedBox(width: 10),
+                Row(children: [
+                  AppAvatar(name: mechanicName, size: 46),
+                  const SizedBox(width: 10),
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Kwame Asante', style: AppTypography.heading4,
+                      Text(mechanicName, style: AppTypography.heading4,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
-                      Text('Engine Problem · Toyota Corolla 2019',
+                      Text(job?.issue ?? '',
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
                     ],
@@ -148,13 +189,7 @@ class _UserRateMechanicScreenState extends State<UserRateMechanicScreen> {
                   const SizedBox(width: 10),
                   Expanded(child: AppButton(
                     label: 'Submit',
-                    onTap: () {
-                      setState(() => _isLoading = true);
-                      Future.delayed(const Duration(seconds: 1), () {
-                        if (!context.mounted) return;
-                        if (mounted) context.go(RouteNames.userHome);
-                      });
-                    },
+                    onTap: _submit,
                     isLoading: _isLoading,
                   )),
                 ]),

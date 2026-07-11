@@ -1,6 +1,7 @@
 // Displays the live tracking map while the mechanic is en route.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -9,29 +10,43 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/job_provider.dart';
 
-class UserTrackingScreen extends StatefulWidget {
-  const UserTrackingScreen({super.key});
+class UserTrackingScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const UserTrackingScreen({super.key, required this.jobId});
 
   @override
-  State<UserTrackingScreen> createState() => _UserTrackingScreenState();
+  ConsumerState<UserTrackingScreen> createState() => _UserTrackingScreenState();
 }
 
-class _UserTrackingScreenState extends State<UserTrackingScreen> {
+class _UserTrackingScreenState extends ConsumerState<UserTrackingScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final mechanicAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.mechanicId));
+    final mechanicName = mechanicAsync?.valueOrNull != null
+        ? '${mechanicAsync!.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Mechanic';
     const LatLng userLocation = LatLng(6.5244, 3.3792);
-    const LatLng mechanicLocation = LatLng(6.5290, 3.3830);
+    final mechanicLocation = job?.mechanicLocation != null
+        ? LatLng(job!.mechanicLocation!.latitude, job.mechanicLocation!.longitude)
+        : const LatLng(6.5290, 3.3830);
 
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
@@ -127,22 +142,22 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.card),
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  AppAvatar(name: 'Kwame Asante', size: 42),
-                  SizedBox(width: 10),
+                  AppAvatar(name: mechanicName, size: 42),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Kwame Asante',
+                          mechanicName,
                           style: AppTypography.heading4,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
                         Text(
-                          '7 min away · 1.2 km',
+                          job?.issue ?? '',
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,

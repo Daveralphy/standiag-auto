@@ -23,7 +23,7 @@ class RadiusSelectorScreen extends StatefulWidget {
 }
 
 class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
-  double _radius = 1.0;
+  double _radius = 5.0;
   final LatLng _center = const LatLng(6.5244, 3.3792);
 
   @override
@@ -157,8 +157,8 @@ class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
                     ),
                     child: Slider(
                       value: _radius,
-                      min: 0.5,
-                      max: 10.0,
+                      min: 1.0,
+                      max: 20.0,
                       divisions: 19,
                       onChanged: (v) => setState(() => _radius = v),
                     ),
@@ -167,16 +167,17 @@ class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('0.5 km', style: AppTypography.caption,
+                      Text('1 km', style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
-                      Text('10 km', style: AppTypography.caption,
+                      Text('20 km', style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
                     ],
                   ),
                   const SizedBox(height: 24),
                   AppButton(
                     label: 'Find Nearby Mechanics',
-                    onTap: () => context.go(RouteNames.searching),
+                    onTap: () =>
+                        context.go(RouteNames.searching, extra: _radius),
                   ),
                 ],
               ),

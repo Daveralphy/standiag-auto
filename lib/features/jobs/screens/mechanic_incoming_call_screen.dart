@@ -2,25 +2,30 @@
 // Accept and Decline buttons.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../models/job_model.dart';
+import '../providers/job_provider.dart';
 
-class MechanicIncomingCallScreen extends StatefulWidget {
-  const MechanicIncomingCallScreen({super.key});
+class MechanicIncomingCallScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const MechanicIncomingCallScreen({super.key, required this.jobId});
 
   @override
-  State<MechanicIncomingCallScreen> createState() =>
+  ConsumerState<MechanicIncomingCallScreen> createState() =>
       _MechanicIncomingCallScreenState();
 }
 
 class _MechanicIncomingCallScreenState
-    extends State<MechanicIncomingCallScreen>
+    extends ConsumerState<MechanicIncomingCallScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ringController;
   late final Animation<double> _ringAnimation;
@@ -29,6 +34,7 @@ class _MechanicIncomingCallScreenState
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
     _ringController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
@@ -44,8 +50,25 @@ class _MechanicIncomingCallScreenState
     super.dispose();
   }
 
+  void _decline() {
+    ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.rejected);
+    context.go(RouteNames.mechanicHome);
+  }
+
+  void _accept() {
+    context.go(RouteNames.mechanicActiveCall, extra: widget.jobId);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final callerAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.carOwnerId));
+    final callerName = callerAsync?.valueOrNull != null
+        ? '${callerAsync!.valueOrNull!.firstName} ${callerAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Car Owner';
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -74,13 +97,13 @@ class _MechanicIncomingCallScreenState
                         border: Border.all(
                             color: AppColors.primaryBorder, width: 2),
                       ),
-                      child: const Center(
-                        child: AppAvatar(name: 'John Doe', size: 96),
+                      child: Center(
+                        child: AppAvatar(name: callerName, size: 96),
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text('John Doe',
+                  Text(callerName,
                       style: AppTypography.heading1,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
@@ -100,7 +123,7 @@ class _MechanicIncomingCallScreenState
                 children: [
                   // Decline
                   GestureDetector(
-                    onTap: () => context.go(RouteNames.mechanicHome),
+                    onTap: _decline,
                     child: Column(
                       children: [
                         Container(
@@ -122,7 +145,7 @@ class _MechanicIncomingCallScreenState
                   ),
                   // Accept
                   GestureDetector(
-                    onTap: () => context.go(RouteNames.mechanicActiveCall),
+                    onTap: _accept,
                     child: Column(
                       children: [
                         Container(

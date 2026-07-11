@@ -2,23 +2,28 @@
 // Same structure as user step 3 but routes to mechanic home after creation.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/signup_draft_provider.dart';
 
-class MechanicSignupStepThreeScreen extends StatefulWidget {
+class MechanicSignupStepThreeScreen extends ConsumerStatefulWidget {
   const MechanicSignupStepThreeScreen({super.key});
 
   @override
-  State<MechanicSignupStepThreeScreen> createState() =>
+  ConsumerState<MechanicSignupStepThreeScreen> createState() =>
       _MechanicSignupStepThreeScreenState();
 }
 
 class _MechanicSignupStepThreeScreenState
-    extends State<MechanicSignupStepThreeScreen> {
+    extends ConsumerState<MechanicSignupStepThreeScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
@@ -38,6 +43,39 @@ class _MechanicSignupStepThreeScreenState
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
+  }
+
+  Future<void> _createAccount() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+    if (username.isEmpty || password.length < 6) {
+      AppErrorToast.showMessage(
+          context, 'Choose a username and a password of at least 6 characters.');
+      return;
+    }
+    if (password != _confirmController.text) {
+      AppErrorToast.showMessage(context, 'Passwords do not match.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    ref
+        .read(signupDraftProvider.notifier)
+        .updateCredentials(username: username, password: password);
+
+    try {
+      await ref.read(authControllerProvider).signUp(ref.read(signupDraftProvider));
+      if (!mounted) return;
+      context.go(RouteNames.otpEmail);
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      AppErrorToast.showMessage(
+        context,
+        ErrorHandler.handle(error, stackTrace).message,
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -198,15 +236,7 @@ class _MechanicSignupStepThreeScreenState
                       _PrimaryButton(
                         label: 'Create Account',
                         isLoading: _isLoading,
-                        onTap: () {
-                          setState(() => _isLoading = true);
-                          Future.delayed(const Duration(seconds: 2), () {
-                            if (!mounted) return;
-                            setState(() => _isLoading = false);
-                            if (!context.mounted) return;
-                            context.go(RouteNames.otpEmail);
-                          });
-                        },
+                        onTap: _createAccount,
                       ),
                       ],
                     ),

@@ -3,6 +3,7 @@
 // profile in mechanics/screens/mechanic_profile_screen.dart.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -10,19 +11,23 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
+import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_badge.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class MechanicProfileOwnScreen extends StatefulWidget {
+class MechanicProfileOwnScreen extends ConsumerStatefulWidget {
   const MechanicProfileOwnScreen({super.key});
 
   @override
-  State<MechanicProfileOwnScreen> createState() =>
+  ConsumerState<MechanicProfileOwnScreen> createState() =>
       _MechanicProfileOwnScreenState();
 }
 
-class _MechanicProfileOwnScreenState extends State<MechanicProfileOwnScreen> {
+class _MechanicProfileOwnScreenState
+    extends ConsumerState<MechanicProfileOwnScreen> {
   @override
   void initState() {
     super.initState();
@@ -31,6 +36,13 @@ class _MechanicProfileOwnScreenState extends State<MechanicProfileOwnScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final uid = ref.watch(currentUserIdProvider);
+    final userAsync = ref.watch(userProfileProvider);
+    final mechanicAsync =
+        uid == null ? null : ref.watch(mechanicByIdProvider(uid));
+    final user = userAsync.valueOrNull;
+    final mechanic = mechanicAsync?.valueOrNull;
+    final name = user != null ? '${user.firstName} ${user.lastName}'.trim() : '';
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -64,36 +76,37 @@ class _MechanicProfileOwnScreenState extends State<MechanicProfileOwnScreen> {
               ]),
             ),
             const SizedBox(height: 24),
-            const Expanded(
+            Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.pageHorizontal),
                 child: Column(children: [
-                  AppAvatar(name: 'Kwame Asante', size: 80),
-                  SizedBox(height: 12),
-                  Text('Kwame Asante', style: AppTypography.heading2,
+                  AppAvatar(name: name, size: 80),
+                  const SizedBox(height: 12),
+                  Text(name, style: AppTypography.heading2,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Row(mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      RatingStars(rating: 4.9),
-                      SizedBox(width: 6),
-                      Flexible(child: Text('4.9 · 312 jobs',
+                      RatingStars(rating: mechanic?.rating ?? 0),
+                      const SizedBox(width: 6),
+                      Flexible(child: Text(
+                          '${(mechanic?.rating ?? 0).toStringAsFixed(1)} · ${mechanic?.totalJobs ?? 0} jobs',
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1)),
                     ]),
-                  SizedBox(height: 12),
-                  Wrap(spacing: 6, runSpacing: 6, children: [
-                    ExpertiseTag(label: 'Engine Repair'),
-                    ExpertiseTag(label: 'Transmission'),
-                    ExpertiseTag(label: 'Electrical'),
-                    ExpertiseTag(label: 'Brakes'),
-                  ]),
-                  SizedBox(height: 24),
-                  _InfoRow(label: 'Workshop', value: '14 Park Avenue, Lekki'),
-                  _InfoRow(label: 'Experience', value: '8 years'),
-                  _InfoRow(label: 'Phone', value: '+234 800 000 0000'),
-                  _InfoRow(label: 'Email', value: 'kwame@email.com'),
+                  const SizedBox(height: 12),
+                  Wrap(spacing: 6, runSpacing: 6,
+                    children: (mechanic?.expertise ?? const [])
+                        .map((e) => ExpertiseTag(label: e))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  _InfoRow(label: 'Workshop', value: mechanic?.workshopAddress ?? ''),
+                  _InfoRow(label: 'Experience',
+                      value: '${mechanic?.yearsOfExperience ?? 0} years'),
+                  _InfoRow(label: 'Phone', value: user?.phone ?? ''),
+                  _InfoRow(label: 'Email', value: user?.email ?? ''),
                 ]),
               ),
             ),

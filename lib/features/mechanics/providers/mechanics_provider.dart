@@ -12,32 +12,28 @@ final mechanicsProvider = FutureProvider<List<MechanicModel>>((ref) async {
   return snap.docs.map((doc) => MechanicModel.fromFirestore(doc)).toList();
 });
 
-// Stream a single mechanic by UID from mechanics/ collection.
+// One-time fetch of a single mechanic by UID from mechanics/ collection.
+// Not real-time (Rule 13): a profile lookup while browsing isn't one of the
+// allowed live-query cases.
 final mechanicByIdProvider =
-    StreamProvider.family<MechanicModel?, String>((ref, uid) {
-  return FirebaseFirestore.instance
-      .collection('mechanics')
-      .doc(uid)
-      .snapshots()
-      .map((doc) => doc.exists ? MechanicModel.fromFirestore(doc) : null);
+    FutureProvider.family<MechanicModel?, String>((ref, uid) async {
+  final doc =
+      await FirebaseFirestore.instance.collection('mechanics').doc(uid).get();
+  return doc.exists ? MechanicModel.fromFirestore(doc) : null;
 });
 
-// Stream a mechanic's name and photo from the users/ collection.
+// One-time fetch of a mechanic's (or car owner's) name and photo from the
+// users/ collection. Not real-time — see mechanicByIdProvider above.
 final mechanicUserProvider =
-    StreamProvider.family<MechanicUser?, String>((ref, uid) {
-  return FirebaseFirestore.instance
-      .collection('users')
-      .doc(uid)
-      .snapshots()
-      .map((doc) {
-    if (!doc.exists) return null;
-    final data = doc.data()!;
-    return MechanicUser(
-      firstName: data['firstName'] as String? ?? '',
-      lastName: data['lastName'] as String? ?? '',
-      profilePhoto: data['profilePhoto'] as String?,
-    );
-  });
+    FutureProvider.family<MechanicUser?, String>((ref, uid) async {
+  final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+  if (!doc.exists) return null;
+  final data = doc.data()!;
+  return MechanicUser(
+    firstName: data['firstName'] as String? ?? '',
+    lastName: data['lastName'] as String? ?? '',
+    profilePhoto: data['profilePhoto'] as String?,
+  );
 });
 
 class MechanicUser {

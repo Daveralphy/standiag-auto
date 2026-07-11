@@ -12,7 +12,10 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/utils/formatters.dart';
+import '../../../features/auth/models/user_model.dart';
 import '../../../features/credits/providers/credits_provider.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/system_ui_style.dart';
@@ -47,6 +50,8 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
     });
 
     final state = ref.watch(creditsProvider);
+    final type = ref.watch(currentUserTypeProvider);
+    final isMechanic = type == UserType.mechanic;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -59,7 +64,9 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
                   AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userCredits),
+                  onTap: () => context.go(isMechanic
+                      ? RouteNames.mechanicCredits
+                      : RouteNames.userCredits),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -128,7 +135,7 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
                                     style: AppTypography.body,
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1),
-                                Text(transaction.createdAt.toIso8601String(),
+                                Text(Formatters.relativeDate(transaction.createdAt),
                                     style: AppTypography.caption,
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1),

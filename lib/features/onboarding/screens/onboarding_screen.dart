@@ -104,19 +104,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           SafeArea(
             child: Column(
               children: [
-                // Top nav — dots + skip
+                // Top nav — dots truly centered, Skip absolutely positioned
+                // on top so its width can never throw off the dots' centering.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(26, 14, 26, 0),
-                  child: Row(
-                    children: [
-                      // Left placeholder to balance skip button
-                      if (!isLast)
-                        const SizedBox(width: 48)
-                      else
-                        const SizedBox(width: 48),
-                      // Dots centered
-                      Expanded(
-                        child: Row(
+                  child: SizedBox(
+                    height: 24,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(_pages.length, (i) {
                             final bool active = i == _currentPage;
@@ -149,27 +146,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             );
                           }),
                         ),
-                      ),
-                      // Skip — right side
-                      SizedBox(
-                        width: 48,
-                        child: !isLast
-                            ? GestureDetector(
-                                onTap: () =>
-                                            _completeOnboarding(RouteNames.login),
+                        if (!isLast)
+                          Positioned(
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _completeOnboarding(RouteNames.login),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 60),
                                 child: Text(
                                   'Skip',
                                   textAlign: TextAlign.right,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                   style: AppTypography.bodySmall.copyWith(
-                                    color: const Color(0x80FFFFFF),
+                                    color: const Color(0x99FFFFFF),
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 15,
+                                    fontSize: 16,
                                   ),
                                 ),
-                              )
-                            : const SizedBox(),
-                      ),
-                    ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -178,7 +178,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                 // Bottom — headline, subline, button, sign in
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(26, 0, 26, 32),
+                  padding: const EdgeInsets.fromLTRB(26, 0, 26, 76),
                   child: Column(
                     children: [
                       // Headline
@@ -187,11 +187,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         text: TextSpan(
                           style: const TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 30,
+                            fontSize: 33,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
-                            height: 1.1,
-                            letterSpacing: -1.5,
+                            height: 1.15,
+                            letterSpacing: -1.4,
                           ),
                           children: [
                             TextSpan(text: '${data.headline}\n'),
@@ -203,7 +203,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
 
                       // Subline
                       Text(
@@ -211,16 +211,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontFamily: 'Inter',
-                          fontSize: 15,
+                          fontSize: 16,
                           fontWeight: FontWeight.w400,
-                          color: Color(0x52FFFFFF),
-                          height: 1.65,
+                          color: Color(0x99FFFFFF),
+                          height: 1.55,
                           letterSpacing: -0.1,
                         ),
                         maxLines: 4,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 24),
 
                       // Primary button
                       GestureDetector(
@@ -259,7 +259,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 15,
+                              fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                               letterSpacing: -0.3,
@@ -279,9 +279,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               text: const TextSpan(
                                 style: TextStyle(
                                   fontFamily: 'Inter',
-                                  fontSize: 13,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w400,
-                                  color: Color(0x38FFFFFF),
+                                  color: Color(0x59FFFFFF),
                                   letterSpacing: -0.1,
                                 ),
                                 children: [
@@ -332,6 +332,7 @@ class _PhotoLayer extends StatelessWidget {
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
               ),
+              // Bottom fade — blends the photo into the dark background.
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -339,10 +340,25 @@ class _PhotoLayer extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Color(0xB3000000),
+                      Color(0x73000000),
+                      Color(0xE0000000),
                       AppColors.background,
                     ],
-                    stops: [0.35, 0.65, 1.0],
+                    stops: [0.0, 0.35, 0.65, 1.0],
+                  ),
+                ),
+              ),
+              // Top scrim — keeps the status bar legible over bright photos.
+              Container(
+                height: MediaQuery.of(context).size.height * 0.65 * 0.4,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x73000000),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
               ),

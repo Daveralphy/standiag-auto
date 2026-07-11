@@ -54,4 +54,22 @@ class VehicleModel {
       'fuelType': fuelType,
     };
   }
+
+  /// Same as [toFirestore] but includes the doc id — needed to round-trip
+  /// through the local Hive cache, which has no notion of a document id.
+  Map<String, dynamic> toCache() => {'id': id, ...toFirestore()};
+
+  factory VehicleModel.fromCache(Map<String, dynamic> json) {
+    return VehicleModel(
+      id: json['id'] ?? '',
+      ownerId: json['ownerId'] ?? '',
+      make: json['make'] ?? '',
+      model: json['model'] ?? '',
+      year: json['year'] ?? '',
+      type: json['type'] ?? '',
+      colour: json['colour'] ?? '',
+      plateNumber: json['plateNumber'] ?? '',
+      fuelType: json['fuelType'] ?? '',
+    );
+  }
 }

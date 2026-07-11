@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -12,24 +13,38 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class DeleteAccountScreen extends StatefulWidget {
+class DeleteAccountScreen extends ConsumerStatefulWidget {
   const DeleteAccountScreen({super.key});
 
   @override
-  State<DeleteAccountScreen> createState() => _DeleteAccountScreenState();
+  ConsumerState<DeleteAccountScreen> createState() =>
+      _DeleteAccountScreenState();
 }
 
-class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
+class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+  }
+
+  Future<void> _deleteUserSubcollection(
+      String collection, String field, String uid) async {
+    final firestore = FirebaseFirestore.instance;
+    final docs = await firestore
+        .collection(collection)
+        .where(field, isEqualTo: uid)
+        .get();
+    for (final doc in docs.docs) {
+      await doc.reference.delete();
+    }
   }
 
   Future<void> _deleteAccount() async {
@@ -40,7 +55,12 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+      final uid = user.uid;
+      await _deleteUserSubcollection('vehicles', 'ownerId', uid);
+      await _deleteUserSubcollection('scans', 'ownerId', uid);
+      await _deleteUserSubcollection('credits_history', 'userId', uid);
+      await FirebaseFirestore.instance.collection('mechanics').doc(uid).delete();
+      await FirebaseFirestore.instance.collection('users').doc(uid).delete();
       await user.delete();
       if (!mounted) {
         return;
@@ -61,6 +81,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final type = ref.watch(currentUserTypeProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -132,7 +153,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                   Align(
                     alignment: Alignment.topRight,
                     child: GestureDetector(
-                      onTap: () => context.go(RouteNames.userSettings),
+                      onTap: () => context.go(RouteNames.settingsFor(type)),
                       child: Container(
                         width: 26,
                         height: 26,
@@ -185,7 +206,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     Expanded(
                       child: AppButton(
                         label: AppStrings.deleteAccountCancel,
-                        onTap: () => context.go(RouteNames.userSettings),
+                        onTap: () => context.go(RouteNames.settingsFor(type)),
                         variant: AppButtonVariant.ghost,
                       ),
                     ),

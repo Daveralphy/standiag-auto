@@ -1,7 +1,12 @@
 // Mechanic En Route screen — mechanic navigating to user location.
 // Mechanic nav bar, Users active, search icon top right.
 
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart' show GeoPoint;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -9,30 +14,81 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../models/job_model.dart';
+import '../providers/job_provider.dart';
 
-class MechanicEnRouteScreen extends StatefulWidget {
-  const MechanicEnRouteScreen({super.key});
+class MechanicEnRouteScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const MechanicEnRouteScreen({super.key, required this.jobId});
 
   @override
-  State<MechanicEnRouteScreen> createState() => _MechanicEnRouteScreenState();
+  ConsumerState<MechanicEnRouteScreen> createState() =>
+      _MechanicEnRouteScreenState();
 }
 
-class _MechanicEnRouteScreenState extends State<MechanicEnRouteScreen> {
+class _MechanicEnRouteScreenState extends ConsumerState<MechanicEnRouteScreen> {
+  StreamSubscription<Position>? _positionSubscription;
+
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
+    ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.enRoute);
+    _startSharingLocation();
+  }
+
+  Future<void> _startSharingLocation() async {
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return;
+    }
+    _positionSubscription = Geolocator.getPositionStream(
+      locationSettings:
+          const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 25),
+    ).listen((position) {
+      ref.read(jobProvider.notifier).updateMechanicLocation(
+            widget.jobId,
+            GeoPoint(position.latitude, position.longitude),
+          );
+    });
+  }
+
+  @override
+  void dispose() {
+    _positionSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _navigate() {
+    ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.arrived);
+    context.go(RouteNames.mechanicJobInProgress, extra: widget.jobId);
   }
 
   @override
   Widget build(BuildContext context) {
-    const LatLng mechanicLocation = LatLng(6.5290, 3.3830);
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final callerAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.carOwnerId));
+    final callerName = callerAsync?.valueOrNull != null
+        ? '${callerAsync!.valueOrNull!.firstName} ${callerAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Car Owner';
+    final mechanicLocation = job?.mechanicLocation != null
+        ? LatLng(job!.mechanicLocation!.latitude, job.mechanicLocation!.longitude)
+        : const LatLng(6.5290, 3.3830);
     const LatLng userLocation = LatLng(6.5244, 3.3792);
 
     return Scaffold(
@@ -114,32 +170,23 @@ class _MechanicEnRouteScreenState extends State<MechanicEnRouteScreen> {
                   border: Border.all(color: AppColors.border)),
                 child: Column(children: [
                   Row(children: [
-                    const AppAvatar(name: 'John Doe', size: 42),
+                    AppAvatar(name: callerName, size: 42),
                     const SizedBox(width: 10),
-                    const Expanded(child: Column(
+                    Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('John Doe', style: AppTypography.heading4,
+                        Text(callerName, style: AppTypography.heading4,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
-                        Text('14 Park Avenue, Lekki',
+                        Text(job?.issue ?? '',
                             style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],
                     )),
-                    Column(crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('7 min', style: AppTypography.bodyLarge.copyWith(
-                            color: AppColors.primary),
-                            overflow: TextOverflow.ellipsis, maxLines: 1),
-                        const Text('1.2 km', style: AppTypography.caption,
-                            overflow: TextOverflow.ellipsis, maxLines: 1),
-                      ],
-                    ),
                   ]),
                   const SizedBox(height: 14),
                   AppButton(
                     label: 'Navigate',
-                    onTap: () => context.go(RouteNames.mechanicJobInProgress),
+                    onTap: _navigate,
                   ),
                 ]),
               ),

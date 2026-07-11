@@ -2,6 +2,8 @@
 // Full screen map, pulsing animation, cancel button at bottom.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -13,18 +15,21 @@ import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../providers/mechanics_provider.dart';
 
-class SearchingScreen extends StatefulWidget {
-  const SearchingScreen({super.key});
+class SearchingScreen extends ConsumerStatefulWidget {
+  final double radiusKm;
+  const SearchingScreen({super.key, required this.radiusKm});
 
   @override
-  State<SearchingScreen> createState() => _SearchingScreenState();
+  ConsumerState<SearchingScreen> createState() => _SearchingScreenState();
 }
 
-class _SearchingScreenState extends State<SearchingScreen>
+class _SearchingScreenState extends ConsumerState<SearchingScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
+  bool _notFound = false;
 
   @override
   void initState() {
@@ -37,11 +42,49 @@ class _SearchingScreenState extends State<SearchingScreen>
     _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    _search();
+  }
 
-    // Auto navigate to mechanic card after simulated search
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) context.go(RouteNames.mechanicCard);
-    });
+  Future<void> _search() async {
+    setState(() => _notFound = false);
+    LatLng? origin;
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission != LocationPermission.denied &&
+          permission != LocationPermission.deniedForever) {
+        final position = await Geolocator.getCurrentPosition();
+        origin = LatLng(position.latitude, position.longitude);
+      }
+    } catch (_) {
+      // Fall back to unfiltered results below if location isn't available.
+    }
+
+    final mechanics = await ref.refresh(mechanicsProvider.future);
+    if (!mounted) return;
+
+    final withinRadius = origin == null
+        ? mechanics
+        : mechanics.where((m) {
+            if (m.location == null) return false;
+            final distanceMeters = Geolocator.distanceBetween(
+              origin!.latitude,
+              origin.longitude,
+              m.location!.latitude,
+              m.location!.longitude,
+            );
+            return distanceMeters / 1000 <= widget.radiusKm;
+          }).toList();
+
+    final match = withinRadius.isNotEmpty ? withinRadius.first : null;
+    if (!mounted) return;
+    if (match == null) {
+      setState(() => _notFound = true);
+      return;
+    }
+    context.go(RouteNames.mechanicCard, extra: match.uid);
   }
 
   @override
@@ -153,16 +196,23 @@ class _SearchingScreenState extends State<SearchingScreen>
             right: AppSpacing.pageHorizontal,
             child: Column(
               children: [
-                const Text('Searching for mechanics nearby...',
-                    style: AppTypography.body,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis, maxLines: 2),
-                const SizedBox(height: 20),
-                AppButton(
-                  label: 'Cancel Search',
-                  onTap: () => context.go(RouteNames.userMechanics),
-                  variant: AppButtonVariant.ghost,
+                Text(
+                  _notFound
+                      ? 'No mechanics found within ${widget.radiusKm.toStringAsFixed(0)} km.'
+                      : 'Searching within ${widget.radiusKm.toStringAsFixed(0)} km...',
+                  style: AppTypography.body,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis, maxLines: 2,
                 ),
+                const SizedBox(height: 20),
+                if (_notFound)
+                  AppButton(label: 'Try Again', onTap: _search)
+                else
+                  AppButton(
+                    label: 'Cancel Search',
+                    onTap: () => context.go(RouteNames.userMechanics),
+                    variant: AppButtonVariant.ghost,
+                  ),
               ],
             ),
           ),

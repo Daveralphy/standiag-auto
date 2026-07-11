@@ -99,6 +99,45 @@ class JobNotifier extends StateNotifier<JobState> {
     });
   }
 
+  /// Creates the `jobs/{id}` document a CarOwner's call initiates, and
+  /// starts watching it immediately so the caller lands on a screen that
+  /// already has real data. Returns the new job's id.
+  Future<String> createJob({
+    required String carOwnerId,
+    required String mechanicId,
+    required String vehicleId,
+    required String issue,
+  }) async {
+    final doc = await FirebaseFirestore.instance.collection('jobs').add(
+      JobModel(
+        id: '',
+        carOwnerId: carOwnerId,
+        mechanicId: mechanicId,
+        vehicleId: vehicleId,
+        issue: issue,
+        status: JobStatus.pending,
+        createdAt: DateTime.now(),
+      ).toFirestore(),
+    );
+    watchActiveJob(doc.id);
+    return doc.id;
+  }
+
+  /// Writes the mechanic's current position onto the job doc — the one
+  /// Rule-13-sanctioned write side of an otherwise real-time-only field.
+  Future<void> updateMechanicLocation(String jobId, GeoPoint location) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('jobs')
+          .doc(jobId)
+          .update({'mechanicLocation': location});
+    } catch (e) {
+      state = state.copyWith(
+        error: ErrorHandler.handle(e, StackTrace.current).message,
+      );
+    }
+  }
+
   Future<void> updateStatus(String jobId, JobStatus status) async {
     try {
       await FirebaseFirestore.instance.collection('jobs').doc(jobId).update({
@@ -145,3 +184,30 @@ class JobNotifier extends StateNotifier<JobState> {
 
 final jobProvider =
     StateNotifierProvider<JobNotifier, JobState>((ref) => JobNotifier());
+
+/// One-time fetch of every pending job request addressed to this mechanic —
+/// used by mechanic_users_screen's request list. Not real-time (Rule 13):
+/// browsing a list isn't one of the allowed live-query cases.
+final pendingJobsForMechanicProvider =
+    FutureProvider.family<List<JobModel>, String>((ref, mechanicId) async {
+  final snap = await FirebaseFirestore.instance
+      .collection('jobs')
+      .where('mechanicId', isEqualTo: mechanicId)
+      .where('status', isEqualTo: JobStatus.pending.value)
+      .get();
+  return snap.docs.map(JobModel.fromFirestore).toList();
+});
+
+/// Real-time listener for an incoming job request addressed to this
+/// mechanic — the one Rule-13-sanctioned case for this query. Foreground
+/// only: it's watched from mechanic_home_screen while the app is open.
+final pendingJobForMechanicProvider =
+    StreamProvider.family<JobModel?, String>((ref, mechanicId) {
+  return FirebaseFirestore.instance
+      .collection('jobs')
+      .where('mechanicId', isEqualTo: mechanicId)
+      .where('status', isEqualTo: JobStatus.pending.value)
+      .limit(1)
+      .snapshots()
+      .map((snap) => snap.docs.isEmpty ? null : JobModel.fromFirestore(snap.docs.first));
+});

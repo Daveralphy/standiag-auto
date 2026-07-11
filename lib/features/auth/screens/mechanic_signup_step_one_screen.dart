@@ -2,23 +2,26 @@
 // Photo bleed 46%, back + step dots + "1 of 3" top nav.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/signup_draft_provider.dart';
 
-class MechanicSignupStepOneScreen extends StatefulWidget {
+class MechanicSignupStepOneScreen extends ConsumerStatefulWidget {
   const MechanicSignupStepOneScreen({super.key});
 
   @override
-  State<MechanicSignupStepOneScreen> createState() =>
+  ConsumerState<MechanicSignupStepOneScreen> createState() =>
       _MechanicSignupStepOneScreenState();
 }
 
 class _MechanicSignupStepOneScreenState
-    extends State<MechanicSignupStepOneScreen> {
+    extends ConsumerState<MechanicSignupStepOneScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -37,6 +40,25 @@ class _MechanicSignupStepOneScreenState
     _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  void _continue() {
+    final email = _emailController.text.trim();
+    if (_firstNameController.text.trim().isEmpty ||
+        _lastNameController.text.trim().isEmpty ||
+        !email.contains('@') ||
+        _phoneController.text.trim().isEmpty) {
+      AppErrorToast.showMessage(
+          context, 'Please fill in every field with a valid email to continue.');
+      return;
+    }
+    ref.read(signupDraftProvider.notifier).updateMechanicStepOne(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          email: email,
+          phone: _phoneController.text.trim(),
+        );
+    context.go(RouteNames.mechanicSignupStepTwo);
   }
 
   @override
@@ -164,7 +186,7 @@ class _MechanicSignupStepOneScreenState
                       const SizedBox(height: 28),
                       _PrimaryButton(
                         label: 'Continue',
-                        onTap: () => context.go(RouteNames.mechanicSignupStepTwo),
+                        onTap: _continue,
                       ),
                     ],
                   ),

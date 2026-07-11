@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/route_names.dart';
@@ -13,32 +14,44 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/errors/error_handler.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
+import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_text_field.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class MechanicProfileEditScreen extends StatefulWidget {
+class MechanicProfileEditScreen extends ConsumerStatefulWidget {
   const MechanicProfileEditScreen({super.key});
 
   @override
-  State<MechanicProfileEditScreen> createState() =>
+  ConsumerState<MechanicProfileEditScreen> createState() =>
       _MechanicProfileEditScreenState();
 }
 
 class _MechanicProfileEditScreenState
-    extends State<MechanicProfileEditScreen> {
-  final _firstNameController = TextEditingController(text: 'Kwame');
-  final _lastNameController = TextEditingController(text: 'Asante');
-  final _workshopController =
-      TextEditingController(text: '14 Park Avenue, Lekki');
-  final _experienceController = TextEditingController(text: '8');
+    extends ConsumerState<MechanicProfileEditScreen> {
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _workshopController = TextEditingController();
+  final _experienceController = TextEditingController();
   bool _isLoading = false;
+  bool _prefilled = false;
 
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+  }
+
+  void _prefillOnce(String firstName, String lastName, String workshop, int years) {
+    if (_prefilled) return;
+    _prefilled = true;
+    _firstNameController.text = firstName;
+    _lastNameController.text = lastName;
+    _workshopController.text = workshop;
+    _experienceController.text = years.toString();
   }
 
   @override
@@ -52,6 +65,16 @@ class _MechanicProfileEditScreenState
 
   @override
   Widget build(BuildContext context) {
+    final uid = ref.watch(currentUserIdProvider);
+    final userAsync = ref.watch(userProfileProvider);
+    final mechanicAsync =
+        uid == null ? null : ref.watch(mechanicByIdProvider(uid));
+    final user = userAsync.valueOrNull;
+    final mechanic = mechanicAsync?.valueOrNull;
+    if (user != null && mechanic != null) {
+      _prefillOnce(user.firstName, user.lastName, mechanic.workshopAddress,
+          mechanic.yearsOfExperience);
+    }
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -105,26 +128,32 @@ class _MechanicProfileEditScreenState
                     const SizedBox(height: 32),
                     AppButton(
                       label: AppStrings.profileSave,
-                      onTap: () {
+                      onTap: () async {
                         final userId = FirebaseAuth.instance.currentUser?.uid;
                         if (userId == null) return;
                         setState(() => _isLoading = true);
-                        FirebaseFirestore.instance.collection('users').doc(userId).update({
-                          'firstName': _firstNameController.text.trim(),
-                          'lastName': _lastNameController.text.trim(),
-                          'address': _workshopController.text.trim(),
-                        }).then((_) {
-                          if (!context.mounted) return;
+                        try {
+                          final firestore = FirebaseFirestore.instance;
+                          await firestore.collection('users').doc(userId).update({
+                            'firstName': _firstNameController.text.trim(),
+                            'lastName': _lastNameController.text.trim(),
+                          });
+                          await firestore.collection('mechanics').doc(userId).update({
+                            'workshopAddress': _workshopController.text.trim(),
+                            'yearsOfExperience':
+                                int.tryParse(_experienceController.text.trim()) ?? 0,
+                          });
+                          if (!mounted) return;
                           setState(() => _isLoading = false);
                           context.go(RouteNames.mechanicProfileView);
-                        }).catchError((error, stackTrace) {
-                          if (!context.mounted) return;
+                        } catch (error, stackTrace) {
+                          if (!mounted) return;
                           setState(() => _isLoading = false);
                           AppErrorToast.showMessage(
                             context,
                             ErrorHandler.handle(error, stackTrace).message,
                           );
-                        });
+                        }
                       },
                       isLoading: _isLoading,
                     ),

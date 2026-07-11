@@ -11,6 +11,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../features/jobs/models/job_model.dart';
 import '../../../features/jobs/providers/job_provider.dart';
 import '../../../shared/widget/app_error_toast.dart';
@@ -100,7 +101,8 @@ class _JobHistoryScreenState extends ConsumerState<JobHistoryScreen> {
                         return _JobHistoryCard(
                           title: job.issue,
                           subtitle: job.vehicleId,
-                          date: job.completedAt?.toIso8601String() ?? job.createdAt.toIso8601String(),
+                          date: Formatters.relativeDate(
+                              job.completedAt ?? job.createdAt),
                           rating: job.rating?.round() ?? 0,
                         );
                       },

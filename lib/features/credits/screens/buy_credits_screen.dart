@@ -2,6 +2,7 @@
 // Bundle options: 10 free (first time), 100cr, 250cr, 500cr (best value), 1000cr.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/route_names.dart';
@@ -11,19 +12,21 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_button.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/credits_provider.dart';
 
-class BuyCreditsScreen extends StatefulWidget {
+class BuyCreditsScreen extends ConsumerStatefulWidget {
   const BuyCreditsScreen({super.key});
 
   @override
-  State<BuyCreditsScreen> createState() => _BuyCreditsScreenState();
+  ConsumerState<BuyCreditsScreen> createState() => _BuyCreditsScreenState();
 }
 
-class _BuyCreditsScreenState extends State<BuyCreditsScreen> {
+class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
   int? _selectedBundle;
-  bool _isLoading = false;
 
   static const List<_Bundle> _bundles = [
     _Bundle(credits: 100, priceNaira: 2000, label: null),
@@ -36,10 +39,31 @@ class _BuyCreditsScreenState extends State<BuyCreditsScreen> {
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    final userId = ref.read(currentUserIdProvider);
+    if (userId != null) {
+      ref.read(creditsProvider.notifier).fetchBalance(userId);
+    }
+  }
+
+  Future<void> _purchase() async {
+    final bundleIndex = _selectedBundle;
+    final userId = ref.read(currentUserIdProvider);
+    if (bundleIndex == null || userId == null) return;
+    await ref
+        .read(creditsProvider.notifier)
+        .purchase(userId, _bundles[bundleIndex].credits);
+    if (!mounted) return;
+    final error = ref.read(creditsProvider).error;
+    if (error != null) {
+      AppErrorToast.showMessage(context, error);
+      return;
+    }
+    context.go(RouteNames.userCredits);
   }
 
   @override
   Widget build(BuildContext context) {
+    final creditsState = ref.watch(creditsProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -85,14 +109,14 @@ class _BuyCreditsScreenState extends State<BuyCreditsScreen> {
                         borderRadius: BorderRadius.circular(AppRadius.card),
                         border: Border.all(color: AppColors.border)),
                       child: Row(children: [
-                        const Expanded(child: Column(
+                        Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(AppStrings.creditsBalance,
+                            const Text(AppStrings.creditsBalance,
                                 style: AppTypography.caption,
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
-                            SizedBox(height: 4),
-                            Text('48 credits',
+                            const SizedBox(height: 4),
+                            Text('${creditsState.balance} credits',
                                 style: AppTypography.heading3,
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
                           ],
@@ -198,19 +222,8 @@ class _BuyCreditsScreenState extends State<BuyCreditsScreen> {
                     const SizedBox(height: 24),
                     AppButton(
                       label: AppStrings.buyCreditsConfirm,
-                      onTap: _selectedBundle != null
-                          ? () {
-                              setState(() => _isLoading = true);
-                              Future.delayed(const Duration(seconds: 2), () {
-                        if (!context.mounted) return;
-                                if (mounted) {
-                                  setState(() => _isLoading = false);
-                                  context.go(RouteNames.userCredits);
-                                }
-                              });
-                            }
-                          : null,
-                      isLoading: _isLoading,
+                      onTap: _selectedBundle != null ? _purchase : null,
+                      isLoading: creditsState.isPurchasing,
                     ),
                     const SizedBox(height: 24),
                   ],

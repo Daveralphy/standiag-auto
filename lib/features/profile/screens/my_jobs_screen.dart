@@ -1,6 +1,8 @@
 // My Jobs screen — mechanic's list of active and completed jobs.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/route_names.dart';
@@ -10,24 +12,49 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/jobs/models/job_model.dart';
+import '../../../features/jobs/providers/job_provider.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
+import '../../../shared/widget/app_error_toast.dart';
+import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class MyJobsScreen extends StatefulWidget {
+class MyJobsScreen extends ConsumerStatefulWidget {
   const MyJobsScreen({super.key});
 
   @override
-  State<MyJobsScreen> createState() => _MyJobsScreenState();
+  ConsumerState<MyJobsScreen> createState() => _MyJobsScreenState();
 }
 
-class _MyJobsScreenState extends State<MyJobsScreen> {
+class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) return;
+      ref.read(jobProvider.notifier).fetchHistory(userId);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<JobState>(jobProvider, (_, next) {
+      if (next.error != null) {
+        AppErrorToast.showMessage(context, next.error!);
+      }
+    });
+
+    final state = ref.watch(jobProvider);
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final jobs = state.jobHistory
+        .where((job) =>
+            job.mechanicId == userId &&
+            job.status != JobStatus.completed &&
+            job.status != JobStatus.rejected)
+        .toList();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -56,18 +83,26 @@ class _MyJobsScreenState extends State<MyJobsScreen> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.pageHorizontal),
-                itemCount: 3,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, i) => _JobCard(
-                  customerName: ['John Doe', 'Mary Johnson', 'Peter Smith'][i],
-                  issue: ['Engine Problem', 'Brake Repair', 'AC Not Working'][i],
-                  status: i == 0 ? 'In Progress' : 'Completed',
-                  isActive: i == 0,
-                ),
-              ),
+              child: state.isLoading && jobs.isEmpty
+                  ? ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal),
+                      itemCount: 3,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (_, __) => const _JobCardSkeleton(),
+                    )
+                  : jobs.isEmpty
+                      ? const Center(
+                          child: Text('No active jobs right now.',
+                              style: AppTypography.body))
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.pageHorizontal),
+                          itemCount: jobs.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (_, i) => _JobCard(job: jobs[i]),
+                        ),
             ),
           ],
         ),
@@ -76,19 +111,27 @@ class _MyJobsScreenState extends State<MyJobsScreen> {
   }
 }
 
-class _JobCard extends StatelessWidget {
-  final String customerName;
-  final String issue;
-  final String status;
-  final bool isActive;
-
-  const _JobCard({
-    required this.customerName, required this.issue,
-    required this.status, required this.isActive,
-  });
+class _JobCard extends ConsumerWidget {
+  final JobModel job;
+  const _JobCard({required this.job});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownerAsync = ref.watch(mechanicUserProvider(job.carOwnerId));
+    final ownerName = ownerAsync.valueOrNull != null
+        ? '${ownerAsync.valueOrNull!.firstName} ${ownerAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Car Owner';
+    final isActive = job.status != JobStatus.completed;
+    final statusLabel = switch (job.status) {
+      JobStatus.pending => 'Pending',
+      JobStatus.accepted => 'Accepted',
+      JobStatus.enRoute => 'En Route',
+      JobStatus.arrived => 'Arrived',
+      JobStatus.inProgress => 'In Progress',
+      JobStatus.completed => 'Completed',
+      JobStatus.rejected => 'Rejected',
+    };
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl2),
       decoration: BoxDecoration(
@@ -99,10 +142,10 @@ class _JobCard extends StatelessWidget {
         Expanded(child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(customerName, style: AppTypography.bodyLarge,
+            Text(ownerName, style: AppTypography.bodyLarge,
                 overflow: TextOverflow.ellipsis, maxLines: 1),
             const SizedBox(height: 3),
-            Text(issue, style: AppTypography.caption,
+            Text(job.issue, style: AppTypography.caption,
                 overflow: TextOverflow.ellipsis, maxLines: 1),
           ],
         )),
@@ -113,11 +156,34 @@ class _JobCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.full),
             border: Border.all(
               color: isActive ? AppColors.primaryBorder : const Color(0x334CAF50))),
-          child: Text(status,
+          child: Text(statusLabel,
               style: AppTypography.micro.copyWith(
                   color: isActive ? AppColors.primary : AppColors.success),
               overflow: TextOverflow.ellipsis, maxLines: 1)),
       ]),
+    );
+  }
+}
+
+class _JobCardSkeleton extends StatelessWidget {
+  const _JobCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl2),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Row(
+        children: [
+          Expanded(child: AppSkeleton.wide(height: 14)),
+          SizedBox(width: 12),
+          AppSkeleton(width: 70, height: 20),
+        ],
+      ),
     );
   }
 }

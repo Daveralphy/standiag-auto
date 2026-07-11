@@ -1,6 +1,7 @@
 // Mechanic Post Call screen — after call ends, mechanic decides to accept or reject job.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -8,30 +9,54 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../models/job_model.dart';
+import '../providers/job_provider.dart';
 
-class MechanicPostCallScreen extends StatefulWidget {
-  const MechanicPostCallScreen({super.key});
+class MechanicPostCallScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const MechanicPostCallScreen({super.key, required this.jobId});
 
   @override
-  State<MechanicPostCallScreen> createState() =>
+  ConsumerState<MechanicPostCallScreen> createState() =>
       _MechanicPostCallScreenState();
 }
 
-class _MechanicPostCallScreenState extends State<MechanicPostCallScreen> {
+class _MechanicPostCallScreenState
+    extends ConsumerState<MechanicPostCallScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
+  }
+
+  void _reject() {
+    ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.rejected);
+    context.go(RouteNames.mechanicHome);
+  }
+
+  void _accept() {
+    ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.accepted);
+    context.go(RouteNames.mechanicEnRoute, extra: widget.jobId);
   }
 
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final callerAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.carOwnerId));
+    final callerName = callerAsync?.valueOrNull != null
+        ? '${callerAsync!.valueOrNull!.firstName} ${callerAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Car Owner';
     const LatLng mechanicLocation = LatLng(6.5282, 3.3822);
     const LatLng userLocation = LatLng(6.5244, 3.3792);
 
@@ -106,15 +131,15 @@ class _MechanicPostCallScreenState extends State<MechanicPostCallScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   border: Border.all(color: AppColors.border)),
                 child: Column(children: [
-                  const Row(children: [
-                    AppAvatar(name: 'John Doe', size: 42),
-                    SizedBox(width: 10),
+                  Row(children: [
+                    AppAvatar(name: callerName, size: 42),
+                    const SizedBox(width: 10),
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('John Doe', style: AppTypography.heading4,
+                        Text(callerName, style: AppTypography.heading4,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
-                        Text('Engine Problem · Toyota Corolla',
+                        Text(job?.issue ?? '',
                             style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],
@@ -124,13 +149,13 @@ class _MechanicPostCallScreenState extends State<MechanicPostCallScreen> {
                   Row(children: [
                     Expanded(child: AppButton(
                       label: 'Reject Job',
-                      onTap: () => context.go(RouteNames.mechanicHome),
+                      onTap: _reject,
                       variant: AppButtonVariant.ghost,
                     )),
                     const SizedBox(width: 10),
                     Expanded(child: AppButton(
                       label: 'Accept Job',
-                      onTap: () => context.go(RouteNames.mechanicEnRoute),
+                      onTap: _accept,
                     )),
                   ]),
                 ]),

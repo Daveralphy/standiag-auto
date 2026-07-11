@@ -2,23 +2,26 @@
 // Photo bleed 46%, step 2 of 3 dots.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/signup_draft_provider.dart';
 
-class MechanicSignupStepTwoScreen extends StatefulWidget {
+class MechanicSignupStepTwoScreen extends ConsumerStatefulWidget {
   const MechanicSignupStepTwoScreen({super.key});
 
   @override
-  State<MechanicSignupStepTwoScreen> createState() =>
+  ConsumerState<MechanicSignupStepTwoScreen> createState() =>
       _MechanicSignupStepTwoScreenState();
 }
 
 class _MechanicSignupStepTwoScreenState
-    extends State<MechanicSignupStepTwoScreen> {
+    extends ConsumerState<MechanicSignupStepTwoScreen> {
   final _workshopController = TextEditingController();
   final _experienceController = TextEditingController();
   final List<String> _selectedExpertise = [];
@@ -42,6 +45,23 @@ class _MechanicSignupStepTwoScreenState
     _workshopController.dispose();
     _experienceController.dispose();
     super.dispose();
+  }
+
+  void _continue() {
+    final years = int.tryParse(_experienceController.text.trim());
+    if (_workshopController.text.trim().isEmpty ||
+        _selectedExpertise.length < 3 ||
+        years == null) {
+      AppErrorToast.showMessage(context,
+          'Add a workshop address, at least 3 areas of expertise, and your years of experience.');
+      return;
+    }
+    ref.read(signupDraftProvider.notifier).updateMechanicStepTwo(
+          workshopAddress: _workshopController.text.trim(),
+          expertise: _selectedExpertise,
+          yearsOfExperience: years,
+        );
+    context.go(RouteNames.mechanicSignupStepThree);
   }
 
   void _toggleExpertise(String item) {
@@ -256,8 +276,7 @@ class _MechanicSignupStepTwoScreenState
 
                         _PrimaryButton(
                           label: 'Continue',
-                          onTap: () => context.go(
-                              RouteNames.mechanicSignupStepThree),
+                          onTap: _continue,
                         ),
                       ],
                     ),

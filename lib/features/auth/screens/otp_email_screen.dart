@@ -1,20 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../models/user_model.dart';
+import '../providers/signup_draft_provider.dart';
 
-class OtpEmailScreen extends StatefulWidget {
+class OtpEmailScreen extends ConsumerStatefulWidget {
   const OtpEmailScreen({super.key});
 
   @override
-  State<OtpEmailScreen> createState() => _OtpEmailScreenState();
+  ConsumerState<OtpEmailScreen> createState() => _OtpEmailScreenState();
 }
 
-class _OtpEmailScreenState extends State<OtpEmailScreen> {
+class _OtpEmailScreenState extends ConsumerState<OtpEmailScreen> {
   final List<String> _digits = List.filled(6, '');
   int _countdown = 59;
   Timer? _timer;
@@ -25,6 +31,7 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
     super.initState();
     SystemUiStyle.applyDark();
     _startCountdown();
+    ref.read(authControllerProvider).sendEmailVerification();
   }
 
   void _startCountdown() {
@@ -71,8 +78,37 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
 
   bool get _isFull => _digits.every((d) => d.isNotEmpty);
 
+  Future<void> _resend() async {
+    if (_countdown != 0) return;
+    await ref.read(authControllerProvider).sendEmailVerification();
+    if (!mounted) return;
+    setState(() => _countdown = 59);
+    _startCountdown();
+  }
+
+  Future<void> _verify() async {
+    setState(() => _isLoading = true);
+    try {
+      final verified = await ref.read(authControllerProvider).checkEmailVerified();
+      if (!mounted) return;
+      if (!verified) {
+        AppErrorToast.showMessage(context,
+            'Not verified yet — open the link we emailed you, then try again.');
+        return;
+      }
+      context.go(RouteNames.otpPhone);
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      AppErrorToast.showMessage(
+          context, ErrorHandler.handle(error, stackTrace).message);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final draftType = ref.watch(signupDraftProvider).type;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -110,7 +146,9 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: () => context.go(RouteNames.userSignupStepThree),
+                        onTap: () => context.go(draftType == UserType.mechanic
+                            ? RouteNames.mechanicSignupStepThree
+                            : RouteNames.userSignupStepThree),
                         child: Container(
                           width: 36, height: 36,
                           decoration: BoxDecoration(
@@ -197,26 +235,29 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                       ),
                       const SizedBox(height: 16),
                       Center(
-                        child: RichText(
-                          text: TextSpan(
-                            style: const TextStyle(
-                              fontFamily: 'Inter', fontSize: 14,
-                              color: Color(0x4DFFFFFF),
-                            ),
-                            children: [
-                              const TextSpan(text: "Didn't receive a code? "),
-                              TextSpan(
-                                text: _countdown == 0
-                                    ? 'Resend'
-                                    : 'Resend in $_countdownLabel',
-                                style: TextStyle(
-                                  color: _countdown == 0
-                                      ? AppColors.primary
-                                      : const Color(0x33FFFFFF),
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        child: GestureDetector(
+                          onTap: _resend,
+                          child: RichText(
+                            text: TextSpan(
+                              style: const TextStyle(
+                                fontFamily: 'Inter', fontSize: 14,
+                                color: Color(0x4DFFFFFF),
                               ),
-                            ],
+                              children: [
+                                const TextSpan(text: "Didn't receive a code? "),
+                                TextSpan(
+                                  text: _countdown == 0
+                                      ? 'Resend'
+                                      : 'Resend in $_countdownLabel',
+                                  style: TextStyle(
+                                    color: _countdown == 0
+                                        ? AppColors.primary
+                                        : const Color(0x33FFFFFF),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -233,15 +274,7 @@ class _OtpEmailScreenState extends State<OtpEmailScreen> {
                     children: [
                       // Verify button
                       GestureDetector(
-                        onTap: (_isFull && !_isLoading) ? () {
-                          setState(() => _isLoading = true);
-                          Future.delayed(const Duration(seconds: 2), () {
-                            if (!mounted) return;
-                            setState(() => _isLoading = false);
-                            if (!context.mounted) return;
-                            context.go(RouteNames.otpPhone);
-                          });
-                        } : null,
+                        onTap: (_isFull && !_isLoading) ? _verify : null,
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           width: double.infinity,

@@ -1,22 +1,26 @@
-import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
+import '../../../core/errors/app_error.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
+import '../models/user_model.dart';
+import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/widget/auth_floating_field.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
+class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -124,20 +128,6 @@ class _LoginScreenState extends State<LoginScreen>
     });
   }
 
-  // ─── Resolve email ───────────────────────────────────────────────────
-  Future<String?> _resolveEmail(String input) async {
-    final trimmed = input.trim();
-    if (trimmed.contains('@')) return trimmed;
-    final snap = await FirebaseFirestore.instance
-        .collection('users')
-        .where('username', isEqualTo: trimmed)
-        .limit(1)
-        .get()
-        .timeout(const Duration(seconds: 5));
-    if (snap.docs.isEmpty) return null;
-    return snap.docs.first.data()['email'] as String?;
-  }
-
   // ─── Sign in ─────────────────────────────────────────────────────────
   Future<void> _signIn() async {
     // Clear field errors
@@ -164,74 +154,41 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() => _isLoading = true);
 
     try {
-      // Resolve to email
-      final email = await _resolveEmail(input);
-
-      if (email == null) {
-        if (mounted) {
-          setState(() => _emailError = 'No account found with that username');
-        }
-        return;
-      }
-
-      // Sign in
-      final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      ).timeout(const Duration(seconds: 15));
-
-      final uid = cred.user!.uid;
-
-      // Get user type with a timeout so it never hangs
-      String type = 'car_owner';
-      try {
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .get()
-            .timeout(const Duration(seconds: 5));
-        type = userDoc.data()?['type'] as String? ?? 'car_owner';
-      } catch (_) {
-        // If Firestore times out just default to car_owner
-        type = 'car_owner';
-      }
-
+      final auth = ref.read(authControllerProvider);
+      await auth.signInWithIdentifier(input, password);
+      if (!mounted) return;
+      final uid = ref.read(currentUserIdProvider);
+      // Resolve the real type with one direct fetch instead of reading the
+      // (possibly still-loading) currentUserTypeProvider — otherwise a
+      // mechanic can briefly land on the CarOwner home before the router's
+      // redirect corrects it, which reads as a visible flash of the wrong
+      // screen rather than a smooth arrival.
+      final type = uid == null
+          ? UserType.carOwner
+          : await auth.fetchUserType(uid);
+      if (!mounted) return;
+      context.go(RouteNames.homeFor(type));
+    } on StateError {
       if (mounted) {
-        if (type == 'mechanic') {
-          context.go(RouteNames.mechanicHome);
-        } else {
-          context.go(RouteNames.userHome);
-        }
+        setState(() => _emailError = 'No account found with that username');
       }
     } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        switch (e.code) {
-          case 'wrong-password':
-          case 'invalid-credential':
-            setState(() => _passwordError = 'Incorrect password');
-            break;
-          case 'user-not-found':
-            setState(() => _emailError = 'No account found with this email');
-            break;
-          case 'invalid-email':
-            setState(() => _emailError = 'Invalid email address');
-            break;
-          case 'user-disabled':
-            _showToast('This account has been disabled.');
-            break;
-          case 'too-many-requests':
-            _showToast('Too many attempts. Please try again later.');
-            break;
-          case 'network-request-failed':
-            _showToast('No internet connection.');
-            break;
-          default:
-            _showToast('Sign in failed. Please try again.');
-        }
+      if (!mounted) return;
+      final error = ErrorHandler.handle(e, StackTrace.current);
+      switch (error.type) {
+        case AppErrorType.wrongPassword:
+          setState(() => _passwordError = error.message);
+          break;
+        case AppErrorType.userNotFound:
+        case AppErrorType.invalidEmail:
+          setState(() => _emailError = error.message);
+          break;
+        default:
+          _showToast(error.message);
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
       if (mounted) {
-        _showToast('Something went wrong. Please try again.');
+        _showToast(ErrorHandler.handle(error, stackTrace).message);
       }
     } finally {
       if (mounted) {
@@ -278,12 +235,12 @@ class _LoginScreenState extends State<LoginScreen>
             child: SingleChildScrollView(
               keyboardDismissBehavior:
                   ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 56),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.22),
+                      height: MediaQuery.of(context).size.height * 0.15),
 
                   RichText(
                     text: const TextSpan(
@@ -304,13 +261,13 @@ class _LoginScreenState extends State<LoginScreen>
                     'Sign in to continue to StanDiag Auto.',
                     style: TextStyle(
                       fontFamily: 'Inter', fontSize: 15,
-                      color: Color(0x47FFFFFF), height: 1.5,
+                      color: Color(0x99FFFFFF), height: 1.5,
                     ),
                   ),
                   const SizedBox(height: 28),
 
                   // Email / Username
-                  _FloatingField(
+                  AuthFloatingField(
                     label: 'Username or Email',
                     hint: 'Enter your username or email',
                     controller: _emailController,
@@ -326,7 +283,7 @@ class _LoginScreenState extends State<LoginScreen>
                   const SizedBox(height: 22),
 
                   // Password
-                  _FloatingField(
+                  AuthFloatingField(
                     label: 'Password',
                     hint: 'Enter your password',
                     controller: _passwordController,
@@ -357,7 +314,7 @@ class _LoginScreenState extends State<LoginScreen>
                     child: Padding(
                       padding: const EdgeInsets.only(top: 8, bottom: 20),
                       child: GestureDetector(
-                        onTap: () {},
+                        onTap: () => context.push(RouteNames.forgotPassword),
                         child: const Text('Forgot password?',
                             style: TextStyle(
                               fontFamily: 'Inter', fontSize: 13,
@@ -386,8 +343,8 @@ class _LoginScreenState extends State<LoginScreen>
                           padding: EdgeInsets.symmetric(horizontal: 10),
                           child: Text('or continue with',
                               style: TextStyle(
-                                fontFamily: 'Inter', fontSize: 12,
-                                color: Color(0x33FFFFFF),
+                                fontFamily: 'Inter', fontSize: 13,
+                                color: Color(0x73FFFFFF),
                                 fontWeight: FontWeight.w500,
                               )),
                         ),
@@ -403,14 +360,16 @@ class _LoginScreenState extends State<LoginScreen>
                       Expanded(child: _SocialButton(
                         label: 'Google',
                         icon: const _GoogleIcon(),
-                        onTap: () {},
+                        onTap: () =>
+                            _showToast('Google sign-in is coming soon.'),
                       )),
                       const SizedBox(width: 10),
                       Expanded(child: _SocialButton(
                         label: 'Apple',
                         icon: const Icon(Icons.apple_rounded,
                             size: 18, color: Colors.white),
-                        onTap: () {},
+                        onTap: () =>
+                            _showToast('Apple sign-in is coming soon.'),
                       )),
                     ],
                   ),
@@ -424,7 +383,7 @@ class _LoginScreenState extends State<LoginScreen>
                         text: const TextSpan(
                           style: TextStyle(
                             fontFamily: 'Inter', fontSize: 15,
-                            color: Color(0x4DFFFFFF),
+                            color: Color(0x80FFFFFF),
                           ),
                           children: [
                             TextSpan(text: "Don't have an account? "),
@@ -443,117 +402,6 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ],
       ),
-    );
-  }
-}
-
-// ─── Floating field with inline error ─────────────────────────────────────
-
-class _FloatingField extends StatelessWidget {
-  final String label;
-  final String hint;
-  final TextEditingController controller;
-  final TextInputType keyboardType;
-  final bool obscureText;
-  final bool enabled;
-  final String? errorText;
-  final ValueChanged<String>? onChanged;
-  final Widget? suffix;
-
-  const _FloatingField({
-    required this.label,
-    required this.hint,
-    required this.controller,
-    this.keyboardType = TextInputType.text,
-    this.obscureText = false,
-    this.enabled = true,
-    this.errorText,
-    this.onChanged,
-    this.suffix,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final hasError = errorText != null;
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      enabled: enabled,
-      onChanged: onChanged,
-      style: const TextStyle(
-        fontFamily: 'Inter', fontSize: 16,
-        color: Colors.white, fontWeight: FontWeight.w400,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hasError ? errorText : hint,
-        labelStyle: TextStyle(
-          fontFamily: 'Inter', fontSize: 15,
-          color: hasError
-              ? AppColors.primary.withValues(alpha: 0.8)
-              : const Color(0x66FFFFFF),
-          fontWeight: FontWeight.w400,
-        ),
-        floatingLabelStyle: TextStyle(
-          fontFamily: 'Inter', fontSize: 13,
-          color: hasError ? AppColors.primary : AppColors.primary,
-          fontWeight: FontWeight.w600,
-        ),
-        hintStyle: TextStyle(
-          fontFamily: 'Inter', fontSize: 14,
-          color: hasError
-              ? AppColors.primary.withValues(alpha: 0.7)
-              : const Color(0x40FFFFFF),
-          fontWeight: hasError ? FontWeight.w500 : FontWeight.w400,
-        ),
-        filled: true,
-        fillColor: hasError
-            ? const Color(0x0DE8281E)
-            : const Color(0x0AFFFFFF),
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 18),
-        suffixIcon: suffix != null
-            ? Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: suffix)
-            : null,
-        suffixIconConstraints: const BoxConstraints(
-            minWidth: 40, minHeight: 48),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: hasError
-                ? AppColors.primary
-                : const Color(0x1AFFFFFF),
-            width: hasError ? 1.5 : 1,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: hasError
-                ? AppColors.primary
-                : const Color(0x1AFFFFFF),
-            width: hasError ? 1.5 : 1,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-              color: AppColors.primary, width: 1.5),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0x0AFFFFFF)),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-              color: AppColors.primary, width: 1.5),
-        ),
-      ),
-      cursorColor: AppColors.primary,
     );
   }
 }

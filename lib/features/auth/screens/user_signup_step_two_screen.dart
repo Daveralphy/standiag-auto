@@ -2,22 +2,26 @@
 // Photo bleed 46%, back + step 2 dots + "2 of 3" top nav.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/signup_draft_provider.dart';
 
-class UserSignupStepTwoScreen extends StatefulWidget {
+class UserSignupStepTwoScreen extends ConsumerStatefulWidget {
   const UserSignupStepTwoScreen({super.key});
 
   @override
-  State<UserSignupStepTwoScreen> createState() =>
+  ConsumerState<UserSignupStepTwoScreen> createState() =>
       _UserSignupStepTwoScreenState();
 }
 
-class _UserSignupStepTwoScreenState extends State<UserSignupStepTwoScreen> {
+class _UserSignupStepTwoScreenState
+    extends ConsumerState<UserSignupStepTwoScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
@@ -34,6 +38,23 @@ class _UserSignupStepTwoScreenState extends State<UserSignupStepTwoScreen> {
     _emailController.dispose();
     _addressController.dispose();
     super.dispose();
+  }
+
+  void _continue() {
+    final email = _emailController.text.trim();
+    if (_phoneController.text.trim().isEmpty ||
+        !email.contains('@') ||
+        _addressController.text.trim().isEmpty) {
+      AppErrorToast.showMessage(
+          context, 'Please fill in every field with a valid email to continue.');
+      return;
+    }
+    ref.read(signupDraftProvider.notifier).updateUserStepTwo(
+          phone: _phoneController.text.trim(),
+          email: email,
+          address: _addressController.text.trim(),
+        );
+    context.go(RouteNames.userSignupStepThree);
   }
 
   @override
@@ -168,7 +189,7 @@ class _UserSignupStepTwoScreenState extends State<UserSignupStepTwoScreen> {
                       const SizedBox(height: 28),
                       _PrimaryButton(
                         label: 'Continue',
-                        onTap: () => context.go(RouteNames.userSignupStepThree),
+                        onTap: _continue,
                       ),
                     ],
                   ),

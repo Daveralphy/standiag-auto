@@ -29,3 +29,11 @@ final userProfileProvider = StreamProvider<UserModel?>((ref) {
         return UserModel.fromFirebaseUser(authUser);
       });
 });
+
+// The current user's profile type (CarOwner or Mechanic), derived from
+// their Firestore document. Defaults to carOwner while the profile is
+// still loading, matching the fallback already used at login/splash.
+// The router and every type-aware screen (settings, credits) read this.
+final currentUserTypeProvider = Provider<UserType>((ref) {
+  return ref.watch(userProfileProvider).valueOrNull?.type ?? UserType.carOwner;
+});

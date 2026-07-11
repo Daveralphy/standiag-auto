@@ -1,8 +1,11 @@
 // Full navigation tree for StanDiag Auto using GoRouter.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/models/user_model.dart';
+import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/mechanic_signup_step_one_screen.dart';
 import '../../features/auth/screens/mechanic_signup_step_three_screen.dart';
@@ -35,10 +38,9 @@ import '../../features/jobs/screens/user_mechanic_arrived_screen.dart';
 import '../../features/jobs/screens/user_rate_mechanic_screen.dart';
 import '../../features/jobs/screens/user_tracking_screen.dart';
 import '../../features/mechanics/screens/in_app_call_screen.dart';
+import '../../features/mechanics/screens/mechanic_candidate_profile_screen.dart';
 import '../../features/mechanics/screens/mechanic_card_screen.dart';
-import '../../features/mechanics/screens/mechanic_profile_screen.dart';
-import '../../features/profile/screens/mechanic_profile_screen.dart'
-    show MechanicProfileOwnScreen;
+import '../../features/profile/screens/mechanic_profile_screen.dart';
 import '../../features/mechanics/screens/radius_selector_screen.dart';
 import '../../features/mechanics/screens/searching_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
@@ -62,11 +64,51 @@ import '../../features/settings/screens/privacy_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/settings/screens/verify_password_change_screen.dart';
 import '../../shared/providers/auth_provider.dart';
+import '../../shared/providers/user_provider.dart';
 import 'route_names.dart';
 
+// Bridges Riverpod's auth state to GoRouter's Listenable-based refresh hook,
+// so the router re-evaluates `redirect` the moment auth state changes (e.g.
+// on sign-out) instead of only on the next manual navigation.
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
+
+// A quick fade + gentle upward drift, used for the home-tab destinations
+// (Home/Scan/Mechanics or Users on each side) so both arriving fresh from
+// login and switching between tabs feel like one smooth motion instead of
+// an abrupt jump cut, without being slow enough to feel laggy.
+CustomTransitionPage _fadePage(Widget child, GoRouterState state) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 220),
+    reverseTransitionDuration: const Duration(milliseconds: 180),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.02),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
+  final refreshNotifier = _RouterRefreshNotifier();
+  ref.listen(authStateProvider, (_, __) => refreshNotifier.notify());
+  ref.listen(currentUserTypeProvider, (_, __) => refreshNotifier.notify());
+  ref.onDispose(refreshNotifier.dispose);
+
   return GoRouter(
     initialLocation: RouteNames.splashOne,
+    refreshListenable: refreshNotifier,
         redirect: (_, state) {
             final location = state.matchedLocation;
             const publicRoutes = {
@@ -75,6 +117,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 RouteNames.onboarding,
                 RouteNames.profileTypePicker,
                 RouteNames.login,
+                RouteNames.forgotPassword,
                 RouteNames.otpPhone,
                 RouteNames.otpEmail,
                 RouteNames.userSignupStepOne,
@@ -85,10 +128,28 @@ final routerProvider = Provider<GoRouter>((ref) {
                 RouteNames.mechanicSignupStepThree,
             };
 
-            final isAuthenticated = ref.watch(currentUserProvider) != null;
-            if (!isAuthenticated && !publicRoutes.contains(location)) {
-                return RouteNames.login;
+            // Use `read`, not `watch`: this callback re-runs on every
+            // navigation attempt and on the refreshListenable above, so
+            // watching here would rebuild this whole GoRouter (and reset
+            // navigation state) on every auth/profile change instead of
+            // just re-evaluating the redirect.
+            final isAuthenticated = ref.read(currentUserProvider) != null;
+            if (!isAuthenticated) {
+                return publicRoutes.contains(location) ? null : RouteNames.login;
             }
+
+            // Keep each profile type inside its own route tree — a Mechanic
+            // account has no business on `/user/...` routes and vice versa.
+            final type = ref.read(currentUserTypeProvider);
+            final onMechanicRoute = location.startsWith('/mechanic/');
+            final onUserRoute = location.startsWith('/user/');
+            if (type == UserType.mechanic && onUserRoute) {
+                return RouteNames.mechanicHome;
+            }
+            if (type == UserType.carOwner && onMechanicRoute) {
+                return RouteNames.userHome;
+            }
+
             return null;
         },
     routes: [
@@ -116,6 +177,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: RouteNames.login,
         pageBuilder: (_, __) =>
             const NoTransitionPage(child: LoginScreen()),
+      ),
+      GoRoute(
+        path: RouteNames.forgotPassword,
+        builder: (_, __) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: RouteNames.otpPhone,
@@ -156,52 +221,73 @@ final routerProvider = Provider<GoRouter>((ref) {
             const NoTransitionPage(child: MechanicSignupStepThreeScreen()),
       ),
       GoRoute(path: RouteNames.userHome,
-          pageBuilder: (_, __) => const NoTransitionPage(child: UserHomeScreen())),
+          pageBuilder: (_, state) => _fadePage(const UserHomeScreen(), state)),
       GoRoute(path: RouteNames.userScan,
-          pageBuilder: (_, __) => const NoTransitionPage(child: UserScanScreen())),
+          pageBuilder: (_, state) => _fadePage(const UserScanScreen(), state)),
       GoRoute(path: RouteNames.userMechanics,
-          pageBuilder: (_, __) => const NoTransitionPage(child: UserMechanicsScreen())),
+          pageBuilder: (_, state) => _fadePage(const UserMechanicsScreen(), state)),
       GoRoute(path: RouteNames.mechanicHome,
-          pageBuilder: (_, __) => const NoTransitionPage(child: MechanicHomeScreen())),
+          pageBuilder: (_, state) => _fadePage(const MechanicHomeScreen(), state)),
       GoRoute(path: RouteNames.mechanicScan,
-          pageBuilder: (_, __) => const NoTransitionPage(child: MechanicScanScreen())),
+          pageBuilder: (_, state) => _fadePage(const MechanicScanScreen(), state)),
       GoRoute(path: RouteNames.mechanicUsers,
-          pageBuilder: (_, __) => const NoTransitionPage(child: MechanicUsersScreen())),
+          pageBuilder: (_, state) => _fadePage(const MechanicUsersScreen(), state)),
 
       GoRoute(path: RouteNames.radiusSelector,
           builder: (_, __) => const RadiusSelectorScreen()),
       GoRoute(path: RouteNames.searching,
-          builder: (_, __) => const SearchingScreen()),
+          builder: (_, state) =>
+              SearchingScreen(radiusKm: state.extra as double? ?? 5.0)),
       GoRoute(path: RouteNames.mechanicCard,
-          builder: (_, __) => const MechanicCardScreen()),
+          builder: (_, state) =>
+              MechanicCardScreen(mechanicId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.mechanicProfile,
-          builder: (_, __) => const MechanicProfileScreen()),
+          builder: (_, state) => MechanicCandidateProfileScreen(
+              mechanicId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.inAppCall,
-          builder: (_, __) => const InAppCallScreen()),
+          builder: (_, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? const {};
+            return InAppCallScreen(
+              jobId: extra['jobId'] as String? ?? '',
+              mechanicId: extra['mechanicId'] as String? ?? '',
+            );
+          }),
       GoRoute(path: RouteNames.mechanicIncomingCall,
-          builder: (_, __) => const MechanicIncomingCallScreen()),
+          builder: (_, state) =>
+              MechanicIncomingCallScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.mechanicActiveCall,
-          builder: (_, __) => const MechanicActiveCallScreen()),
+          builder: (_, state) =>
+              MechanicActiveCallScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.mechanicPostCall,
-          builder: (_, __) => const MechanicPostCallScreen()),
+          builder: (_, state) =>
+              MechanicPostCallScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.userMechanicAccepted,
-          builder: (_, __) => const UserMechanicAcceptedScreen()),
+          builder: (_, state) =>
+              UserMechanicAcceptedScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.mechanicEnRoute,
-          builder: (_, __) => const MechanicEnRouteScreen()),
+          builder: (_, state) =>
+              MechanicEnRouteScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.userTracking,
-          builder: (_, __) => const UserTrackingScreen()),
+          builder: (_, state) =>
+              UserTrackingScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.userMechanicArrived,
-          builder: (_, __) => const UserMechanicArrivedScreen()),
+          builder: (_, state) =>
+              UserMechanicArrivedScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.userJobInProgress,
-          builder: (_, __) => const UserJobInProgressScreen()),
+          builder: (_, state) =>
+              UserJobInProgressScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.mechanicJobInProgress,
-          builder: (_, __) => const MechanicJobInProgressScreen()),
+          builder: (_, state) =>
+              MechanicJobInProgressScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.userJobCompleted,
-          builder: (_, __) => const UserJobCompletedScreen()),
+          builder: (_, state) =>
+              UserJobCompletedScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.userRateMechanic,
-          builder: (_, __) => const UserRateMechanicScreen()),
+          builder: (_, state) =>
+              UserRateMechanicScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.mechanicJobCompleted,
-          builder: (_, __) => const MechanicJobCompletedScreen()),
+          builder: (_, state) =>
+              MechanicJobCompletedScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.userProfile,
           builder: (_, __) => const UserProfileScreen()),
       GoRoute(path: RouteNames.mechanicProfileView,
@@ -245,7 +331,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: RouteNames.userChangePassword,
           builder: (_, __) => const ChangePasswordScreen()),
       GoRoute(path: RouteNames.userVerifyPasswordChange,
-          builder: (_, __) => const VerifyPasswordChangeScreen()),
+          builder: (_, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? const {};
+            return VerifyPasswordChangeScreen(
+              currentPassword: extra['current'] as String? ?? '',
+              newPassword: extra['new'] as String? ?? '',
+            );
+          }),
       GoRoute(path: RouteNames.userDeleteAccount,
           builder: (_, __) => const DeleteAccountScreen()),
       GoRoute(path: RouteNames.userHelpSupport,
@@ -263,7 +355,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: RouteNames.mechanicChangePassword,
           builder: (_, __) => const ChangePasswordScreen()),
       GoRoute(path: RouteNames.mechanicVerifyPasswordChange,
-          builder: (_, __) => const VerifyPasswordChangeScreen()),
+          builder: (_, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? const {};
+            return VerifyPasswordChangeScreen(
+              currentPassword: extra['current'] as String? ?? '',
+              newPassword: extra['new'] as String? ?? '',
+            );
+          }),
       GoRoute(path: RouteNames.mechanicDeleteAccount,
           builder: (_, __) => const DeleteAccountScreen()),
       GoRoute(path: RouteNames.mechanicHelpSupport,

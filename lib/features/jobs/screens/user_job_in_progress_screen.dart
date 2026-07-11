@@ -2,6 +2,7 @@
 // Map background, user nav bar Mechanics active, search icon top right.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -9,31 +10,46 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../providers/job_provider.dart';
 
-class UserJobInProgressScreen extends StatefulWidget {
-  const UserJobInProgressScreen({super.key});
+class UserJobInProgressScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const UserJobInProgressScreen({super.key, required this.jobId});
 
   @override
-  State<UserJobInProgressScreen> createState() =>
+  ConsumerState<UserJobInProgressScreen> createState() =>
       _UserJobInProgressScreenState();
 }
 
-class _UserJobInProgressScreenState extends State<UserJobInProgressScreen> {
+class _UserJobInProgressScreenState
+    extends ConsumerState<UserJobInProgressScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final mechanicAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.mechanicId));
+    final mechanicName = mechanicAsync?.valueOrNull != null
+        ? '${mechanicAsync!.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Mechanic';
     const LatLng userLocation = LatLng(6.5244, 3.3792);
-    const LatLng mechanicLocation = LatLng(6.5246, 3.37935);
+    final mechanicLocation = job?.mechanicLocation != null
+        ? LatLng(job!.mechanicLocation!.latitude, job.mechanicLocation!.longitude)
+        : const LatLng(6.5246, 3.37935);
 
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
@@ -106,14 +122,14 @@ class _UserJobInProgressScreenState extends State<UserJobInProgressScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.card),
                 border: Border.all(color: AppColors.border)),
               child: Row(children: [
-                const AppAvatar(name: 'Kwame Asante', size: 42),
+                AppAvatar(name: mechanicName, size: 42),
                 const SizedBox(width: 10),
-                const Expanded(child: Column(
+                Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Kwame Asante', style: AppTypography.heading4,
+                    Text(mechanicName, style: AppTypography.heading4,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
-                    Text('Working on Engine Problem',
+                    Text('Working on ${job?.issue ?? "your vehicle"}',
                         style: AppTypography.caption,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                   ],

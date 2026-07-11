@@ -1,6 +1,7 @@
 // Help & Support screen — FAQs and contact options.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -10,16 +11,36 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class HelpSupportScreen extends StatefulWidget {
+class HelpSupportScreen extends ConsumerStatefulWidget {
   const HelpSupportScreen({super.key});
 
   @override
-  State<HelpSupportScreen> createState() => _HelpSupportScreenState();
+  ConsumerState<HelpSupportScreen> createState() => _HelpSupportScreenState();
 }
 
-class _HelpSupportScreenState extends State<HelpSupportScreen> {
+class _Faq {
+  final String question;
+  final String answer;
+  const _Faq(this.question, this.answer);
+}
+
+const _faqs = [
+  _Faq('How do I find a mechanic?',
+      'Tap the Mechanics tab and set your search radius. Nearby mechanics will appear on the map.'),
+  _Faq('How does the credits system work?',
+      'Credits are spent to contact a mechanic or run an OBD scan. Buy more anytime from the Credits screen.'),
+  _Faq('What is the OBD scanner?',
+      "It's a Bluetooth adapter that plugs into your car's OBD-II port and lets the app read your vehicle's diagnostic data."),
+  _Faq('How do I add a vehicle?',
+      'Open My Vehicles from the drawer and tap "+ Add" to enter your vehicle\'s details.'),
+  _Faq('How do I rate a mechanic?',
+      "After a job is marked complete, you'll be prompted to rate the mechanic and leave an optional comment."),
+];
+
+class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   @override
   void initState() {
     super.initState();
@@ -36,6 +57,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final type = ref.watch(currentUserTypeProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -50,7 +72,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               ),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userSettings),
+                  onTap: () => context.go(RouteNames.settingsFor(type)),
                   child: Container(
                     width: 32,
                     height: 32,
@@ -78,13 +100,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                     const Text('FAQs', style: AppTypography.heading4,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 12),
-                    ...[
-                      'How do I find a mechanic?',
-                      'How does the credits system work?',
-                      'What is the OBD scanner?',
-                      'How do I add a vehicle?',
-                      'How do I rate a mechanic?',
-                    ].map((question) => _FaqItem(question: question)),
+                    ..._faqs.map((faq) =>
+                        _FaqItem(question: faq.question, answer: faq.answer)),
                     const SizedBox(height: 24),
                     const Text(AppStrings.helpStillNeed,
                         style: AppTypography.heading4,
@@ -116,7 +133,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
 class _FaqItem extends StatefulWidget {
   final String question;
-  const _FaqItem({required this.question});
+  final String answer;
+  const _FaqItem({required this.question, required this.answer});
 
   @override
   State<_FaqItem> createState() => _FaqItemState();
@@ -150,8 +168,7 @@ class _FaqItemState extends State<_FaqItem> {
             ]),
             if (_expanded) ...[
               const SizedBox(height: 8),
-              const Text('Tap the Mechanics tab and set your search radius. '
-                  'Nearby mechanics will appear on the map.',
+              Text(widget.answer,
                   style: AppTypography.bodySmall,
                   overflow: TextOverflow.ellipsis, maxLines: 5),
             ],

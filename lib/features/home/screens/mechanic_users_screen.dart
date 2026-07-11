@@ -2,6 +2,7 @@
 // Nav bar active: Users. Search icon top right.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -10,18 +11,21 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/jobs/models/job_model.dart';
+import '../../../features/jobs/providers/job_provider.dart';
+import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
-class MechanicUsersScreen extends StatefulWidget {
+class MechanicUsersScreen extends ConsumerStatefulWidget {
   const MechanicUsersScreen({super.key});
 
   @override
-  State<MechanicUsersScreen> createState() => _MechanicUsersScreenState();
+  ConsumerState<MechanicUsersScreen> createState() => _MechanicUsersScreenState();
 }
 
-class _MechanicUsersScreenState extends State<MechanicUsersScreen> {
+class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
   @override
   void initState() {
     super.initState();
@@ -31,6 +35,22 @@ class _MechanicUsersScreenState extends State<MechanicUsersScreen> {
   @override
   Widget build(BuildContext context) {
     const LatLng mechanicUserCenter = LatLng(6.5244, 3.3792);
+    final mechanicId = ref.watch(currentUserIdProvider);
+    final requests = mechanicId == null
+        ? const <JobModel>[]
+        : ref.watch(pendingJobsForMechanicProvider(mechanicId)).valueOrNull ??
+            const <JobModel>[];
+    final markers = {
+      for (final job in requests)
+        if (job.carOwnerLocation != null)
+          buildMapMarker(
+            markerId: job.id,
+            position: LatLng(
+                job.carOwnerLocation!.latitude, job.carOwnerLocation!.longitude),
+            icon: buildUserMarkerIcon(),
+            infoWindowTitle: job.issue,
+          ),
+    };
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
       body: Stack(
@@ -40,26 +60,7 @@ class _MechanicUsersScreenState extends State<MechanicUsersScreen> {
               target: LatLng(6.5244, 3.3792),
               zoom: 13.2,
             ),
-            markers: {
-              buildMapMarker(
-                markerId: 'user-1',
-                position: mechanicUserCenter,
-                icon: buildUserMarkerIcon(),
-                infoWindowTitle: 'User requesting help',
-              ),
-              buildMapMarker(
-                markerId: 'user-2',
-                position: const LatLng(6.5271, 3.3820),
-                icon: buildUserMarkerIcon(),
-                infoWindowTitle: 'Nearby user',
-              ),
-              buildMapMarker(
-                markerId: 'user-3',
-                position: const LatLng(6.5218, 3.3767),
-                icon: buildUserMarkerIcon(),
-                infoWindowTitle: 'Nearby user',
-              ),
-            },
+            markers: markers,
             circles: {
               buildRadiusCircle(
                 circleId: 'mechanic-radius',

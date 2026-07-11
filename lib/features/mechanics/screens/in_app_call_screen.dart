@@ -2,6 +2,7 @@
 // Full screen dark background, mechanic info, mute/speaker/end buttons.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -10,15 +11,20 @@ import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/mechanics_provider.dart';
+import '../../jobs/models/job_model.dart';
+import '../../jobs/providers/job_provider.dart';
 
-class InAppCallScreen extends StatefulWidget {
-  const InAppCallScreen({super.key});
+class InAppCallScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  final String mechanicId;
+  const InAppCallScreen({super.key, required this.jobId, required this.mechanicId});
 
   @override
-  State<InAppCallScreen> createState() => _InAppCallScreenState();
+  ConsumerState<InAppCallScreen> createState() => _InAppCallScreenState();
 }
 
-class _InAppCallScreenState extends State<InAppCallScreen> {
+class _InAppCallScreenState extends ConsumerState<InAppCallScreen> {
   bool _isMuted = false;
   bool _isSpeaker = false;
   int _seconds = 0;
@@ -28,6 +34,11 @@ class _InAppCallScreenState extends State<InAppCallScreen> {
     super.initState();
     SystemUiStyle.applyDark();
     _startTimer();
+  }
+
+  void _endCall() {
+    ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.completed);
+    context.go(RouteNames.userJobCompleted, extra: widget.jobId);
   }
 
   void _startTimer() {
@@ -47,6 +58,11 @@ class _InAppCallScreenState extends State<InAppCallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mechanicUserAsync = ref.watch(mechanicUserProvider(widget.mechanicId));
+    final mechanicName = mechanicUserAsync.valueOrNull != null
+        ? '${mechanicUserAsync.valueOrNull!.firstName} ${mechanicUserAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Mechanic';
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -73,9 +89,9 @@ class _InAppCallScreenState extends State<InAppCallScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const AppAvatar(name: 'Kwame Asante', size: 100),
+                  AppAvatar(name: mechanicName, size: 100),
                   const SizedBox(height: 20),
-                  const Text('Kwame Asante',
+                  Text(mechanicName,
                       style: AppTypography.heading1,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
@@ -106,7 +122,7 @@ class _InAppCallScreenState extends State<InAppCallScreen> {
                   ),
                   // End call
                   GestureDetector(
-                    onTap: () => context.go(RouteNames.userJobCompleted),
+                    onTap: _endCall,
                     child: Container(
                       width: 64, height: 64,
                       decoration: const BoxDecoration(

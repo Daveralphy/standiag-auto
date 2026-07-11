@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/signup_draft_provider.dart';
 
-class UserSignupStepOneScreen extends StatefulWidget {
+class UserSignupStepOneScreen extends ConsumerStatefulWidget {
   const UserSignupStepOneScreen({super.key});
 
   @override
-  State<UserSignupStepOneScreen> createState() =>
+  ConsumerState<UserSignupStepOneScreen> createState() =>
       _UserSignupStepOneScreenState();
 }
 
-class _UserSignupStepOneScreenState extends State<UserSignupStepOneScreen> {
+class _UserSignupStepOneScreenState
+    extends ConsumerState<UserSignupStepOneScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   String? _gender;
@@ -32,6 +36,23 @@ class _UserSignupStepOneScreenState extends State<UserSignupStepOneScreen> {
     _lastNameController.dispose();
     _dobController.dispose();
     super.dispose();
+  }
+
+  void _continue() {
+    if (_firstNameController.text.trim().isEmpty ||
+        _lastNameController.text.trim().isEmpty ||
+        _gender == null ||
+        _dobController.text.trim().isEmpty) {
+      AppErrorToast.showMessage(context, 'Please fill in every field to continue.');
+      return;
+    }
+    ref.read(signupDraftProvider.notifier).updateUserStepOne(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          gender: _gender!,
+          dob: _dobController.text.trim(),
+        );
+    context.go(RouteNames.userSignupStepTwo);
   }
 
   @override
@@ -205,7 +226,7 @@ class _UserSignupStepOneScreenState extends State<UserSignupStepOneScreen> {
                       const SizedBox(height: 28),
                       _PrimaryButton(
                         label: 'Continue',
-                        onTap: () => context.go(RouteNames.userSignupStepTwo),
+                        onTap: _continue,
                       ),
                     ],
                   ),

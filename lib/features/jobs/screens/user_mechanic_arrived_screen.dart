@@ -2,6 +2,7 @@
 // Map background, arrival confirmation, confirm job started button.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -9,33 +10,53 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../models/job_model.dart';
+import '../providers/job_provider.dart';
 
-class UserMechanicArrivedScreen extends StatefulWidget {
-  const UserMechanicArrivedScreen({super.key});
+class UserMechanicArrivedScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const UserMechanicArrivedScreen({super.key, required this.jobId});
 
   @override
-  State<UserMechanicArrivedScreen> createState() =>
+  ConsumerState<UserMechanicArrivedScreen> createState() =>
       _UserMechanicArrivedScreenState();
 }
 
 class _UserMechanicArrivedScreenState
-    extends State<UserMechanicArrivedScreen> {
+    extends ConsumerState<UserMechanicArrivedScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
+  }
+
+  void _confirmStarted() {
+    ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.inProgress);
+    context.go(RouteNames.userJobInProgress, extra: widget.jobId);
   }
 
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final mechanicAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.mechanicId));
+    final mechanicName = mechanicAsync?.valueOrNull != null
+        ? '${mechanicAsync!.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Mechanic';
     const LatLng userLocation = LatLng(6.5244, 3.3792);
-    const LatLng mechanicLocation = LatLng(6.5248, 3.3795);
+    final mechanicLocation = job?.mechanicLocation != null
+        ? LatLng(job!.mechanicLocation!.latitude, job.mechanicLocation!.longitude)
+        : const LatLng(6.5248, 3.3795);
 
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
@@ -111,16 +132,16 @@ class _UserMechanicArrivedScreenState
                   color: const Color(0x144CAF50),
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: const Color(0x334CAF50))),
-                child: const Row(children: [
-                  Icon(Icons.location_on_rounded,
+                child: Row(children: [
+                  const Icon(Icons.location_on_rounded,
                       color: AppColors.success, size: 18),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Kwame is here!', style: AppTypography.bodyLarge,
+                      Text('$mechanicName is here!', style: AppTypography.bodyLarge,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
-                      Text('Ready to get started',
+                      const Text('Ready to get started',
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
                     ],
@@ -129,7 +150,7 @@ class _UserMechanicArrivedScreenState
               ),
               AppButton(
                 label: 'Confirm Job Started',
-                onTap: () => context.go(RouteNames.userJobInProgress),
+                onTap: _confirmStarted,
               ),
             ]),
           ),

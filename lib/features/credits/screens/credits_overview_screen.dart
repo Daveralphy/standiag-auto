@@ -12,7 +12,10 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../core/utils/formatters.dart';
+import '../../../features/auth/models/user_model.dart';
 import '../../../features/credits/providers/credits_provider.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_skeleton.dart';
@@ -48,6 +51,8 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
     });
 
     final state = ref.watch(creditsProvider);
+    final type = ref.watch(currentUserTypeProvider);
+    final isMechanic = type == UserType.mechanic;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -59,7 +64,7 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userHome),
+                  onTap: () => context.go(RouteNames.homeFor(type)),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -75,7 +80,9 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
                 // History icon
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userCreditsHistory),
+                  onTap: () => context.go(isMechanic
+                      ? RouteNames.mechanicCreditsHistory
+                      : RouteNames.userCreditsHistory),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -131,7 +138,9 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                             const SizedBox(height: 16),
                             AppButton(
                               label: AppStrings.creditsBuy,
-                              onTap: () => context.go(RouteNames.userBuyCredits),
+                              onTap: () => context.go(isMechanic
+                                  ? RouteNames.mechanicBuyCredits
+                                  : RouteNames.userBuyCredits),
                               width: 140,
                               paddingV: 11,
                             ),
@@ -147,13 +156,20 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                             letterSpacing: 0.8),
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 10),
-                    const _CreditRule(
-                        label: AppStrings.creditsContactMechanic,
-                        cost: AppStrings.creditsContactCost),
-                    const SizedBox(height: 6),
-                    const _CreditRule(
-                        label: AppStrings.creditsOBDScan,
-                        cost: AppStrings.creditsScanCost),
+                    if (isMechanic)
+                      const Text(
+                          'Credits are earned and spent automatically as you take jobs.',
+                          style: AppTypography.bodySmall,
+                          overflow: TextOverflow.ellipsis, maxLines: 2)
+                    else ...[
+                      const _CreditRule(
+                          label: AppStrings.creditsContactMechanic,
+                          cost: AppStrings.creditsContactCost),
+                      const SizedBox(height: 6),
+                      const _CreditRule(
+                          label: AppStrings.creditsOBDScan,
+                          cost: AppStrings.creditsScanCost),
+                    ],
                     const SizedBox(height: 20),
 
                     // Recent activity
@@ -178,7 +194,7 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                       ...state.history.take(4).map(
                             (transaction) => _TransactionRow(
                               label: transaction.reason,
-                              date: transaction.createdAt.toIso8601String(),
+                              date: Formatters.relativeDate(transaction.createdAt),
                               isCredit: transaction.isCredit,
                               amount: transaction.amount,
                             ),

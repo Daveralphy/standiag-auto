@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +12,7 @@ import '../../../shared/providers/user_provider.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../mechanics/providers/mechanics_provider.dart';
+import '../../profile/screens/user_drawer_screen.dart';
 
 class UserMechanicsScreen extends ConsumerStatefulWidget {
   const UserMechanicsScreen({super.key});
@@ -31,66 +31,6 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
     SystemUiStyle.applyDark();
   }
 
-  Widget _buildUserDrawer() {
-    final userAsync = ref.watch(userProfileProvider);
-    return Drawer(
-      backgroundColor: const Color(0xFF111111),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              userAsync.when(
-                data: (user) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '@${user?.username ?? ''}',
-                      style: const TextStyle(fontFamily: 'Inter', fontSize: 20,
-                          fontWeight: FontWeight.w800, color: Colors.white,
-                          letterSpacing: -0.5),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(user?.email ?? '',
-                        style: const TextStyle(fontFamily: 'Inter', fontSize: 13,
-                            color: Color(0x59FFFFFF))),
-                  ],
-                ),
-                loading: () => Container(width: 160, height: 40,
-                    decoration: const BoxDecoration(color: Color(0x14FFFFFF))),
-                error: (_, __) => const SizedBox(height: 40),
-              ),
-              const SizedBox(height: 8),
-              const Divider(color: Color(0x14FFFFFF), height: 32),
-              _DrawerItem(icon: Icons.person_outline_rounded, label: 'My Profile',
-                  onTap: () => context.push(RouteNames.userProfile)),
-              _DrawerItem(icon: Icons.directions_car_outlined, label: 'My Vehicles',
-                  onTap: () => context.go(RouteNames.myVehicles)),
-              _DrawerItem(icon: Icons.work_outline_rounded, label: 'My Jobs',
-                  onTap: () => context.go(RouteNames.myJobs)),
-              _DrawerItem(icon: Icons.toll_rounded, label: 'Credits',
-                  onTap: () => context.go(RouteNames.userCredits)),
-              _DrawerItem(icon: Icons.settings_outlined, label: 'Settings',
-                  onTap: () => context.go(RouteNames.userSettings)),
-              const Spacer(),
-              const Divider(color: Color(0x14FFFFFF), height: 32),
-              _DrawerItem(icon: Icons.logout_rounded, label: 'Sign Out',
-                  color: AppColors.primary, onTap: _signOut),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
-    if (!mounted) return;
-    context.go(RouteNames.login);
-  }
-
-
   @override
   Widget build(BuildContext context) {
     final mechanicsAsync = ref.watch(mechanicsProvider);
@@ -98,7 +38,7 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.background,
-      drawer: _buildUserDrawer(),
+      drawer: const UserDrawerScreen(),
       body: Stack(
         children: [
           SafeArea(
@@ -256,7 +196,8 @@ class _MechanicListCard extends ConsumerWidget {
     final userAsync = ref.watch(mechanicUserProvider(mechanic.uid));
 
     return GestureDetector(
-      onTap: () => context.go(RouteNames.mechanicProfile),
+      onTap: () =>
+          context.go(RouteNames.mechanicProfile, extra: mechanic.uid),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -434,27 +375,3 @@ class _AvatarSkeleton extends StatelessWidget {
   );
 }
 
-class _DrawerItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color? color;
-  const _DrawerItem({required this.icon, required this.label,
-      required this.onTap, this.color});
-  @override
-  Widget build(BuildContext context) {
-    final c = color ?? Colors.white;
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(children: [
-          Icon(icon, color: c, size: 20),
-          const SizedBox(width: 14),
-          Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 15,
-              fontWeight: FontWeight.w600, color: c)),
-        ]),
-      ),
-    );
-  }
-}

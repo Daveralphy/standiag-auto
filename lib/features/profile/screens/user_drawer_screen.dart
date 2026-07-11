@@ -3,28 +3,42 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
-import '../../../shared/widget/system_ui_style.dart';
+import '../../../shared/widget/app_error_toast.dart';
+import '../../../shared/widget/log_out_dialog.dart';
 
-class UserDrawerScreen extends StatefulWidget {
+class UserDrawerScreen extends ConsumerStatefulWidget {
   const UserDrawerScreen({super.key});
 
   @override
-  State<UserDrawerScreen> createState() => _UserDrawerScreenState();
+  ConsumerState<UserDrawerScreen> createState() => _UserDrawerScreenState();
 }
 
-class _UserDrawerScreenState extends State<UserDrawerScreen> {
-  @override
-  void initState() {
-    super.initState();
-    SystemUiStyle.applyDark();
+class _UserDrawerScreenState extends ConsumerState<UserDrawerScreen> {
+  Future<void> _signOut() async {
+    final confirmed = await LogOutDialog.show(context);
+    if (!confirmed || !mounted) return;
+    try {
+      await ref.read(authControllerProvider).signOut();
+      if (!mounted) return;
+      context.go(RouteNames.login);
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      AppErrorToast.showMessage(
+        context,
+        ErrorHandler.handle(error, stackTrace).message,
+      );
+    }
   }
 
   @override
@@ -35,9 +49,9 @@ class _UserDrawerScreenState extends State<UserDrawerScreen> {
         : (authUser?.email?.split('@').first ?? 'User');
     final email = authUser?.email ?? '';
 
-    return Scaffold(
+    return Drawer(
       backgroundColor: AppColors.surface,
-      body: SafeArea(
+      child: SafeArea(
         child: Column(
           children: [
             // Profile header
@@ -63,7 +77,7 @@ class _UserDrawerScreenState extends State<UserDrawerScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => context.go(RouteNames.userHome),
+                    onTap: () => Navigator.of(context).pop(),
                     child: const Icon(Icons.close_rounded,
                         color: AppColors.textMuted, size: 20),
                   ),
@@ -124,12 +138,7 @@ class _UserDrawerScreenState extends State<UserDrawerScreen> {
               child: _DrawerItem(
                 icon: Icons.logout_rounded,
                 label: AppStrings.drawerLogOut,
-                onTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                  if (context.mounted) {
-                    context.go(RouteNames.login);
-                  }
-                },
+                onTap: _signOut,
                 isDestructive: true,
               ),
             ),

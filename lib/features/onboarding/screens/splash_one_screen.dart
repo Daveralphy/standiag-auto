@@ -1,10 +1,11 @@
-// Splash One — the system splash screen.
-// Shows immediately when the app launches.
-// Contains only the logo icon centered on the app background.
-// Navigates to Splash Two after a short delay.
+// Splash One — stands in for the native OS launch screen until this app
+// has a real one configured (see README "Known open items"). Advances as
+// soon as the first frame lands — no artificial hold — since its only job
+// is to paint the brand mark while Flutter finishes initializing.
 // The OS status bar is styled light (white icons) via SystemUiStyle.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -26,8 +27,9 @@ class _SplashOneScreenState extends State<SplashOneScreen> {
     // Apply white status bar icons — app background is dark
     SystemUiStyle.applyDark();
 
-    // Navigate to Splash Two after a short hold so the icon is visible
-    Future.delayed(const Duration(milliseconds: 1800), () {
+    // Advance right after the first frame renders — just enough for the
+    // logo to actually paint once, with no artificial delay after that.
+    SchedulerBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.go(RouteNames.splashTwo);
     });
   }

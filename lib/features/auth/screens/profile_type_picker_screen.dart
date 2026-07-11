@@ -3,24 +3,28 @@
 // Back button top-left navigates to login.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../models/user_model.dart';
+import '../providers/signup_draft_provider.dart';
 
 enum _ProfileType { carOwner, mechanic }
 
-class ProfileTypePickerScreen extends StatefulWidget {
+class ProfileTypePickerScreen extends ConsumerStatefulWidget {
   const ProfileTypePickerScreen({super.key});
 
   @override
-  State<ProfileTypePickerScreen> createState() =>
+  ConsumerState<ProfileTypePickerScreen> createState() =>
       _ProfileTypePickerScreenState();
 }
 
-class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
+class _ProfileTypePickerScreenState
+    extends ConsumerState<ProfileTypePickerScreen> {
   _ProfileType _selected = _ProfileType.carOwner;
 
   @override
@@ -31,8 +35,10 @@ class _ProfileTypePickerScreenState extends State<ProfileTypePickerScreen> {
 
   void _continue() {
     if (_selected == _ProfileType.carOwner) {
+      ref.read(signupDraftProvider.notifier).setType(UserType.carOwner);
       context.go(RouteNames.userSignupStepOne);
     } else {
+      ref.read(signupDraftProvider.notifier).setType(UserType.mechanic);
       context.go(RouteNames.mechanicSignupStepOne);
     }
   }

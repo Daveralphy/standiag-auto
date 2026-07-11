@@ -41,7 +41,28 @@ class ProfileState {
 class ProfileNotifier extends StateNotifier<ProfileState> {
   ProfileNotifier() : super(const ProfileState());
 
-  Future<void> fetchVehicles(String ownerId) async {
+  Future<void> fetchVehicles(String ownerId, {bool forceRefresh = false}) async {
+    if (!forceRefresh &&
+        !CacheManager.instance.isExpired(
+          box: CacheKeys.vehiclesBox,
+          key: CacheKeys.vehicles,
+          ttl: CacheTTL.vehicles,
+        )) {
+      final cached = CacheManager.instance.read<List<VehicleModel>>(
+        box: CacheKeys.vehiclesBox,
+        key: CacheKeys.vehicles,
+        fromJson: (json) => (json as List)
+            .map((entry) => VehicleModel.fromCache(
+                Map<String, dynamic>.from(entry as Map)))
+            .where((vehicle) => vehicle.ownerId == ownerId)
+            .toList(),
+      );
+      if (cached != null) {
+        state = state.copyWith(isLoading: false, vehicles: cached);
+        return;
+      }
+    }
+
     state = state.copyWith(isLoading: true, error: null);
     try {
       final query = await FirebaseFirestore.instance
@@ -52,7 +73,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       await CacheManager.instance.write(
         box: CacheKeys.vehiclesBox,
         key: CacheKeys.vehicles,
-        value: vehicles.map((vehicle) => vehicle.toFirestore()).toList(),
+        value: vehicles.map((vehicle) => vehicle.toCache()).toList(),
       );
       state = state.copyWith(isLoading: false, vehicles: vehicles);
     } catch (e) {
@@ -86,7 +107,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       await CacheManager.instance.write(
         box: CacheKeys.vehiclesBox,
         key: CacheKeys.vehicles,
-        value: state.vehicles.map((item) => item.toFirestore()).toList(),
+        value: state.vehicles.map((item) => item.toCache()).toList(),
       );
     } catch (e) {
       state = state.copyWith(
@@ -105,7 +126,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       await CacheManager.instance.write(
         box: CacheKeys.vehiclesBox,
         key: CacheKeys.vehicles,
-        value: state.vehicles.map((item) => item.toFirestore()).toList(),
+        value: state.vehicles.map((item) => item.toCache()).toList(),
       );
     } catch (e) {
       state = state.copyWith(

@@ -1,30 +1,56 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../providers/signup_draft_provider.dart';
 
-class OtpPhoneScreen extends StatefulWidget {
+class OtpPhoneScreen extends ConsumerStatefulWidget {
   const OtpPhoneScreen({super.key});
 
   @override
-  State<OtpPhoneScreen> createState() => _OtpPhoneScreenState();
+  ConsumerState<OtpPhoneScreen> createState() => _OtpPhoneScreenState();
 }
 
-class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
+class _OtpPhoneScreenState extends ConsumerState<OtpPhoneScreen> {
   final List<String> _digits = List.filled(6, '');
   int _countdown = 59;
   Timer? _timer;
   bool _isLoading = false;
+  String? _verificationId;
+
+  String get _e164Phone {
+    final raw = ref.read(signupDraftProvider).phone.trim();
+    return raw.startsWith('+') ? raw : '+$raw';
+  }
 
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
     _startCountdown();
+    _sendCode();
+  }
+
+  void _sendCode() {
+    ref.read(authControllerProvider).sendPhoneOtp(
+          phoneNumber: _e164Phone,
+          onCodeSent: (id) {
+            if (mounted) setState(() => _verificationId = id);
+          },
+          onVerificationFailed: (error) {
+            if (!mounted) return;
+            AppErrorToast.showMessage(
+                context, ErrorHandler.handle(error, StackTrace.current).message);
+          },
+        );
   }
 
   void _startCountdown() {
@@ -70,6 +96,39 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
   }
 
   bool get _isFull => _digits.every((d) => d.isNotEmpty);
+
+  void _resend() {
+    if (_countdown != 0) return;
+    setState(() => _countdown = 59);
+    _startCountdown();
+    _sendCode();
+  }
+
+  Future<void> _verify() async {
+    final verificationId = _verificationId;
+    if (verificationId == null) {
+      AppErrorToast.showMessage(
+          context, 'Still sending your code — try again in a moment.');
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authControllerProvider).verifyPhoneOtp(
+            verificationId: verificationId,
+            smsCode: _digits.join(),
+          );
+      if (!mounted) return;
+      final type = ref.read(signupDraftProvider).type;
+      ref.read(signupDraftProvider.notifier).reset();
+      context.go(RouteNames.homeFor(type));
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      AppErrorToast.showMessage(
+          context, ErrorHandler.handle(error, stackTrace).message);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +183,11 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => context.go(RouteNames.userHome),
+                        onTap: () {
+                          final type = ref.read(signupDraftProvider).type;
+                          ref.read(signupDraftProvider.notifier).reset();
+                          context.go(RouteNames.homeFor(type));
+                        },
                         child: const Text('Skip for now',
                             style: TextStyle(
                               fontFamily: 'Inter', fontSize: 14,
@@ -197,26 +260,29 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
                       ),
                       const SizedBox(height: 16),
                       Center(
-                        child: RichText(
-                          text: TextSpan(
-                            style: const TextStyle(
-                              fontFamily: 'Inter', fontSize: 14,
-                              color: Color(0x4DFFFFFF),
-                            ),
-                            children: [
-                              const TextSpan(text: "Didn't receive a code? "),
-                              TextSpan(
-                                text: _countdown == 0
-                                    ? 'Resend'
-                                    : 'Resend in $_countdownLabel',
-                                style: TextStyle(
-                                  color: _countdown == 0
-                                      ? AppColors.primary
-                                      : const Color(0x33FFFFFF),
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        child: GestureDetector(
+                          onTap: _resend,
+                          child: RichText(
+                            text: TextSpan(
+                              style: const TextStyle(
+                                fontFamily: 'Inter', fontSize: 14,
+                                color: Color(0x4DFFFFFF),
                               ),
-                            ],
+                              children: [
+                                const TextSpan(text: "Didn't receive a code? "),
+                                TextSpan(
+                                  text: _countdown == 0
+                                      ? 'Resend'
+                                      : 'Resend in $_countdownLabel',
+                                  style: TextStyle(
+                                    color: _countdown == 0
+                                        ? AppColors.primary
+                                        : const Color(0x33FFFFFF),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -232,15 +298,7 @@ class _OtpPhoneScreenState extends State<OtpPhoneScreen> {
                   child: Column(
                     children: [
                       GestureDetector(
-                        onTap: (_isFull && !_isLoading) ? () {
-                          setState(() => _isLoading = true);
-                          Future.delayed(const Duration(seconds: 2), () {
-                            if (!mounted) return;
-                            setState(() => _isLoading = false);
-                            if (!context.mounted) return;
-                            context.go(RouteNames.userHome);
-                          });
-                        } : null,
+                        onTap: (_isFull && !_isLoading) ? _verify : null,
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           width: double.infinity,

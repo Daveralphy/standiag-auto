@@ -10,6 +10,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../shared/providers/user_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
@@ -32,6 +33,7 @@ class _NotificationSettingsScreenState
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
+    final type = ref.watch(currentUserTypeProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -43,7 +45,7 @@ class _NotificationSettingsScreenState
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userSettings),
+                  onTap: () => context.go(RouteNames.settingsFor(type)),
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(

@@ -2,6 +2,7 @@
 // Mechanic nav bar, Users active, search icon top right.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -9,30 +10,43 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../providers/job_provider.dart';
 
-class MechanicJobCompletedScreen extends StatefulWidget {
-  const MechanicJobCompletedScreen({super.key});
+class MechanicJobCompletedScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const MechanicJobCompletedScreen({super.key, required this.jobId});
 
   @override
-  State<MechanicJobCompletedScreen> createState() =>
+  ConsumerState<MechanicJobCompletedScreen> createState() =>
       _MechanicJobCompletedScreenState();
 }
 
 class _MechanicJobCompletedScreenState
-    extends State<MechanicJobCompletedScreen> {
+    extends ConsumerState<MechanicJobCompletedScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final callerAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.carOwnerId));
+    final callerName = callerAsync?.valueOrNull != null
+        ? '${callerAsync!.valueOrNull!.firstName} ${callerAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Car Owner';
+    final ratingValue = (job?.rating ?? 0).round();
     const LatLng mechanicLocation = LatLng(6.5282, 3.3822);
     const LatLng userLocation = LatLng(6.5244, 3.3792);
 
@@ -132,15 +146,15 @@ class _MechanicJobCompletedScreenState
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   border: Border.all(color: AppColors.border)),
                 child: Column(children: [
-                  const Row(children: [
-                    AppAvatar(name: 'John Doe', size: 42),
-                    SizedBox(width: 10),
+                  Row(children: [
+                    AppAvatar(name: callerName, size: 42),
+                    const SizedBox(width: 10),
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('John Doe', style: AppTypography.heading4,
+                        Text(callerName, style: AppTypography.heading4,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
-                        Text('14 Park Avenue, Lekki',
+                        Text(job?.issue ?? '',
                             style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],
@@ -150,22 +164,34 @@ class _MechanicJobCompletedScreenState
                   const Text('Customer rating', style: AppTypography.bodySmall,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (i) {
-                      return Icon(
-                        i < 4 ? Icons.star_rounded : Icons.star_outline_rounded,
-                        color: i < 4 ? AppColors.amber : AppColors.textDisabled,
-                        size: 24,
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 6),
-                  Text('"Great work, very professional!"',
-                      style: AppTypography.bodySmall.copyWith(
-                          fontStyle: FontStyle.italic),
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis, maxLines: 2),
+                  if (job?.rating == null)
+                    const Text('Awaiting rating…',
+                        style: AppTypography.bodySmall,
+                        overflow: TextOverflow.ellipsis, maxLines: 1)
+                  else ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (i) {
+                        return Icon(
+                          i < ratingValue
+                              ? Icons.star_rounded
+                              : Icons.star_outline_rounded,
+                          color: i < ratingValue
+                              ? AppColors.amber
+                              : AppColors.textDisabled,
+                          size: 24,
+                        );
+                      }),
+                    ),
+                    if (job?.ratingComment?.isNotEmpty == true) ...[
+                      const SizedBox(height: 6),
+                      Text('"${job!.ratingComment}"',
+                          style: AppTypography.bodySmall.copyWith(
+                              fontStyle: FontStyle.italic),
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis, maxLines: 2),
+                    ],
+                  ],
                 ]),
               ),
             ]),

@@ -3,6 +3,7 @@
 // Map background showing mechanic en route.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -10,32 +11,46 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/live_map_canvas.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../providers/job_provider.dart';
 
-class UserMechanicAcceptedScreen extends StatefulWidget {
-  const UserMechanicAcceptedScreen({super.key});
+class UserMechanicAcceptedScreen extends ConsumerStatefulWidget {
+  final String jobId;
+  const UserMechanicAcceptedScreen({super.key, required this.jobId});
 
   @override
-  State<UserMechanicAcceptedScreen> createState() =>
+  ConsumerState<UserMechanicAcceptedScreen> createState() =>
       _UserMechanicAcceptedScreenState();
 }
 
 class _UserMechanicAcceptedScreenState
-    extends State<UserMechanicAcceptedScreen> {
+    extends ConsumerState<UserMechanicAcceptedScreen> {
   @override
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
   @override
   Widget build(BuildContext context) {
+    final job = ref.watch(jobProvider.select((s) => s.activeJob));
+    final mechanicAsync = job == null
+        ? null
+        : ref.watch(mechanicUserProvider(job.mechanicId));
+    final mechanicName = mechanicAsync?.valueOrNull != null
+        ? '${mechanicAsync!.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Mechanic';
     const LatLng userLocation = LatLng(6.5244, 3.3792);
-    const LatLng mechanicLocation = LatLng(6.5280, 3.3820);
+    final mechanicLocation = job?.mechanicLocation != null
+        ? LatLng(job!.mechanicLocation!.latitude, job.mechanicLocation!.longitude)
+        : const LatLng(6.5280, 3.3820);
 
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
@@ -132,14 +147,14 @@ class _UserMechanicAcceptedScreenState
                   ),
                   const SizedBox(height: 14),
                   Row(children: [
-                    const AppAvatar(name: 'Kwame Asante', size: 42),
+                    AppAvatar(name: mechanicName, size: 42),
                     const SizedBox(width: 10),
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Kwame Asante', style: AppTypography.heading4,
+                        Text(mechanicName, style: AppTypography.heading4,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
-                        Text('7 min away · 1.2 km',
+                        Text(job?.issue ?? '',
                             style: AppTypography.caption.copyWith(
                                 color: AppColors.primary),
                             overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -149,7 +164,8 @@ class _UserMechanicAcceptedScreenState
                   const SizedBox(height: 14),
                   AppButton(
                     label: 'Live · Tap to track',
-                    onTap: () => context.go(RouteNames.userTracking),
+                    onTap: () => context.go(RouteNames.userTracking,
+                        extra: widget.jobId),
                   ),
                 ]),
               ),
