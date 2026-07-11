@@ -11,7 +11,6 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_radius.dart';
-import '../../core/constants/app_spacing.dart';
 
 /// A single pin on [AppDarkMap]. [child] is the marker's visual (an icon in
 /// a colored circle, matching the rest of the app's iconography) rather
