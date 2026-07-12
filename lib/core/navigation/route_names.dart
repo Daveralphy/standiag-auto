@@ -55,11 +55,13 @@ class RouteNames {
 
   // User profile and drawer screens
   static const String userProfile = '/user/profile';
+  static const String userProfileEdit = '/user/profile/edit';
   static const String myVehicles = '/user/vehicles';
   static const String addVehicle = '/user/add-vehicle';
   static const String editVehicle = '/user/edit-vehicle';
   static const String serviceHistory = '/user/service-history';
   static const String userScanHistory = '/user/scan-history';
+  static const String scanDetail = '/user/scan-detail';
 
   // User credits
   static const String userCredits = '/user/credits';

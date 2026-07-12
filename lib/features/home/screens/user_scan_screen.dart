@@ -11,6 +11,7 @@ import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/health_gauge.dart';
+import '../../../shared/widget/obd_device_picker_sheet.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../profile/screens/user_drawer_screen.dart';
@@ -60,7 +61,7 @@ class _UserScanScreenState extends ConsumerState<UserScanScreen> {
                   subtitle: 'Diagnose your car',
                   trailingIcon: Icons.history_rounded,
                   onTrailingTap: () =>
-                      context.go(RouteNames.userScanHistory),
+                      context.push(RouteNames.userScanHistory),
                 ),
                 const SizedBox(height: 20),
 
@@ -90,7 +91,12 @@ class _UserScanScreenState extends ConsumerState<UserScanScreen> {
                           AppSpacing.navBarClearance),
                       child: Column(
                         children: [
-                          ObdStatusPill(connected: scanState.isConnected),
+                          GestureDetector(
+                            onTap: () => ObdDevicePickerSheet.show(context),
+                            child: ObdStatusPill(
+                                connected: scanState.isConnected,
+                                connectedName: scanState.connectedDeviceName),
+                          ),
                           const SizedBox(height: 20),
                           HealthGauge(score: latestScoreForVehicle),
                           const SizedBox(height: 20),
@@ -101,7 +107,9 @@ class _UserScanScreenState extends ConsumerState<UserScanScreen> {
                           Text(
                             vehicle == null
                                 ? 'Add a vehicle first, then connect your\nOBD-II adapter to run a full diagnostic.'
-                                : 'Connect your OBD-II adapter via Bluetooth\nand tap Scan to run a full diagnostic of\n${vehicle.displayName}.',
+                                : !scanState.isConnected
+                                    ? 'Connect your OBD-II adapter via Bluetooth\nto run a full diagnostic of ${vehicle.displayName}.'
+                                    : 'Tap Scan to run a full diagnostic of\n${vehicle.displayName}.',
                             style: AppTypography.body,
                             textAlign: TextAlign.center,
                           ),
@@ -111,6 +119,12 @@ class _UserScanScreenState extends ConsumerState<UserScanScreen> {
                             AppButton(
                               label: 'Add a Vehicle',
                               onTap: () => context.push(RouteNames.addVehicle),
+                            )
+                          else if (!scanState.isConnected)
+                            AppButton(
+                              label: 'Connect Adapter',
+                              isLoading: scanState.isConnectingDevice,
+                              onTap: () => ObdDevicePickerSheet.show(context),
                             )
                           else
                             AppButton(

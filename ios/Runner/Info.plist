@@ -47,5 +47,9 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSBluetoothAlwaysUsageDescription</key>
+		<string>StanDiag Auto uses Bluetooth to connect to your OBD-II adapter for vehicle diagnostics.</string>
+		<key>NSBluetoothPeripheralUsageDescription</key>
+		<string>StanDiag Auto uses Bluetooth to connect to your OBD-II adapter for vehicle diagnostics.</string>
 	</dict>
 </plist>

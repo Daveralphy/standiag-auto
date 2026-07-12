@@ -52,6 +52,36 @@ class ErrorHandler {
   /// Classifies a raw exception into the correct AppErrorType.
   static AppErrorType _classify(Object exception) {
     final String raw = exception.toString().toLowerCase();
+    final String typeName = exception.runtimeType.toString();
+
+    // Bluetooth/OBD exceptions from flutter_blue_plus (FlutterBluePlusException)
+    // and our own Elm327Service (Elm327ConnectionException) are checked by
+    // type name first — flutter_blue_plus's own exception text never
+    // actually contains the word "bluetooth", so the generic keyword checks
+    // further below never matched it and every real adapter error fell
+    // through to the generic "Something went wrong" message.
+    if (typeName == 'FlutterBluePlusException' ||
+        typeName == 'Elm327ConnectionException') {
+      if (raw.contains('permission') || raw.contains('rejected')) {
+        return AppErrorType.bluetoothPermissionDenied;
+      }
+      if (raw.contains(' off') ||
+          raw.contains('disabled') ||
+          raw.contains('turn it on') ||
+          raw.contains('turned off')) {
+        return AppErrorType.bluetoothDisabled;
+      }
+      if (raw.contains('no serial') ||
+          raw.contains("doesn't look like") ||
+          raw.contains('not connected') ||
+          raw.contains('device is disconnected')) {
+        return AppErrorType.bluetoothDeviceNotFound;
+      }
+      if (raw.contains('scan')) {
+        return AppErrorType.scanFailed;
+      }
+      return AppErrorType.bluetoothConnectionFailed;
+    }
 
     // Firebase Auth error codes
     if (raw.contains('wrong-password') || raw.contains('wrong_password')) {

@@ -159,11 +159,21 @@ class _HealthGaugePainter extends CustomPainter {
 /// is no fabricated "connected" default.
 class ObdStatusPill extends StatelessWidget {
   final bool connected;
-  const ObdStatusPill({super.key, required this.connected});
+
+  /// Name of the connected adapter, when known. Shown instead of the generic
+  /// "OBD Adapter Connected" label so the user can see which device it is.
+  final String? connectedName;
+
+  const ObdStatusPill({super.key, required this.connected, this.connectedName});
 
   @override
   Widget build(BuildContext context) {
     final color = connected ? AppColors.success : AppColors.textMuted;
+    final label = connected
+        ? (connectedName != null && connectedName!.isNotEmpty
+            ? 'Connected · $connectedName'
+            : 'OBD Adapter Connected')
+        : 'OBD Adapter Not Connected — Tap to Connect';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
@@ -192,7 +202,7 @@ class ObdStatusPill extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            connected ? 'OBD Adapter Connected' : 'OBD Adapter Not Connected',
+            label,
             style: AppTypography.bodySmall.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,

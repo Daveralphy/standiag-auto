@@ -53,7 +53,9 @@ import '../../features/profile/screens/mechanic_profile_edit_screen.dart';
 import '../../features/profile/screens/my_jobs_screen.dart';
 import '../../features/profile/screens/my_vehicles_screen.dart';
 import '../../features/profile/screens/service_history_screen.dart';
+import '../../features/profile/screens/user_profile_edit_screen.dart';
 import '../../features/profile/screens/user_profile_screen.dart';
+import '../../features/scan/screens/scan_detail_screen.dart';
 import '../../features/scan/screens/scan_history_screen.dart';
 import '../../features/settings/screens/appearance_screen.dart';
 import '../../features/settings/screens/change_password_screen.dart';
@@ -276,6 +278,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               MechanicJobCompletedScreen(jobId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.userProfile,
           builder: (_, __) => const UserProfileScreen()),
+      GoRoute(path: RouteNames.userProfileEdit,
+          builder: (_, __) => const UserProfileEditScreen()),
       GoRoute(path: RouteNames.mechanicProfileView,
           builder: (_, __) => const MechanicProfileOwnScreen()),
       GoRoute(path: RouteNames.mechanicProfileEdit,
@@ -293,6 +297,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (_, __) => const ServiceHistoryScreen()),
       GoRoute(path: RouteNames.userScanHistory,
           builder: (_, __) => const ScanHistoryScreen()),
+      GoRoute(path: RouteNames.scanDetail,
+          builder: (_, state) =>
+              ScanDetailScreen(scanId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.jobHistory,
           builder: (_, __) => const JobHistoryScreen()),
       GoRoute(path: RouteNames.userCredits,

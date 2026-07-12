@@ -109,9 +109,26 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
                       itemBuilder: (_, __) => const _ScanCardSkeleton(),
                     )
                   : state.history.isEmpty
-                      ? const Center(
-                          child: Text('No scans yet.',
-                              style: AppTypography.body),
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xxl),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.speed_rounded,
+                                    color: Color(0x33FFFFFF), size: 48),
+                                const SizedBox(height: 16),
+                                const Text('No scans yet',
+                                    style: AppTypography.heading3),
+                                const SizedBox(height: 8),
+                                const Text(
+                                    'Connect your OBD-II adapter and run a scan to see your vehicle\'s diagnostic history here.',
+                                    style: AppTypography.body,
+                                    textAlign: TextAlign.center),
+                              ],
+                            ),
+                          ),
                         )
                       : ListView.separated(
                           padding: const EdgeInsets.symmetric(
@@ -120,8 +137,11 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
                           itemCount: state.history.length,
                           separatorBuilder: (_, __) =>
                               const SizedBox(height: 11),
-                          itemBuilder: (_, i) =>
-                              _ScanCard(scan: state.history[i]),
+                          itemBuilder: (_, i) => GestureDetector(
+                            onTap: () => context.push(RouteNames.scanDetail,
+                                extra: state.history[i].id),
+                            child: _ScanCard(scan: state.history[i]),
+                          ),
                         ),
             ),
           ],

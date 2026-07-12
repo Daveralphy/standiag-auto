@@ -135,7 +135,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => context.go(RouteNames.userSettings),
+                    onTap: () => context.go(RouteNames.userProfileEdit),
                     child: Container(
                       width: 32,
                       height: 32,

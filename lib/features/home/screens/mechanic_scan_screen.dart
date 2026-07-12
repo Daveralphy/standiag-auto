@@ -15,6 +15,7 @@ import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/health_gauge.dart';
+import '../../../shared/widget/obd_device_picker_sheet.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../jobs/providers/job_provider.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -68,22 +69,29 @@ class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
                   scaffoldKey: _scaffoldKey,
                   title: AppStrings.homeMechanicScanTitle,
                   subtitle: AppStrings.homeMechanicScanSubtitle,
-                  trailingIcon: Icons.notifications_outlined,
-                  onTrailingTap: () {},
+                  trailingIcon: Icons.history_rounded,
+                  onTrailingTap: () => context.go(RouteNames.jobHistory),
                 ),
                 const SizedBox(height: 20),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.pageHorizontal),
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.pageHorizontal, 0,
+                        AppSpacing.pageHorizontal,
+                        AppSpacing.navBarClearance),
                     child: Column(
                       children: [
-                        ObdStatusPill(connected: scanState.isConnected),
+                        GestureDetector(
+                          onTap: () => ObdDevicePickerSheet.show(context),
+                          child: ObdStatusPill(
+                              connected: scanState.isConnected,
+                              connectedName: scanState.connectedDeviceName),
+                        ),
                         const SizedBox(height: 20),
                         HealthGauge(score: scanState.latestScan?.healthScore),
                         const SizedBox(height: 20),
                         const Text(
-                          AppStrings.homeDiagnoseCar,
+                          'Vehicle Diagnostics',
                           style: AppTypography.heading2,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -92,19 +100,26 @@ class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
                         const SizedBox(height: 8),
                         Text(
                           vehicle == null
-                              ? 'You have no active job to diagnose right now.'
-                              : AppStrings.homeOBDHint,
+                              ? "You don't have an active job right now. Accept a job request to start diagnosing a customer's vehicle."
+                              : !scanState.isConnected
+                                  ? 'Connect your OBD-II adapter via Bluetooth to run a full diagnostic of ${vehicle.displayName}.'
+                                  : 'Tap Scan to run a full diagnostic of ${vehicle.displayName}.',
                           style: AppTypography.body,
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
-                        if (vehicle != null && job != null)
-                          AppButton(
-                            label: 'Tap to Scan',
-                            isLoading: scanState.isScanning,
-                            onTap: () =>
-                                _startScan(vehicle.id, job.carOwnerId),
-                          ),
+                        AppButton(
+                          label: !scanState.isConnected
+                              ? 'Connect Adapter'
+                              : 'Tap to Scan',
+                          isLoading: scanState.isScanning ||
+                              scanState.isConnectingDevice,
+                          onTap: vehicle == null || job == null
+                              ? null
+                              : !scanState.isConnected
+                                  ? () => ObdDevicePickerSheet.show(context)
+                                  : () => _startScan(vehicle.id, job.carOwnerId),
+                        ),
                         if (scanState.error != null) ...[
                           const SizedBox(height: 12),
                           Text(scanState.error!,
@@ -112,7 +127,6 @@ class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
                                   .copyWith(color: AppColors.primary),
                               textAlign: TextAlign.center),
                         ],
-                        const SizedBox(height: AppSpacing.navBarClearance),
                       ],
                     ),
                   ),
