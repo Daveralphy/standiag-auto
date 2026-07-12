@@ -109,11 +109,18 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         isSaving: false,
         vehicles: [...state.vehicles, storedVehicle],
       );
-      await CacheManager.instance.write(
-        box: CacheKeys.vehiclesBox,
-        key: CacheKeys.vehicles,
-        value: state.vehicles.map((item) => item.toCache()).toList(),
-      );
+      // The vehicle is already saved and in state at this point — a cache
+      // write failure is a local-cache concern only and must never be
+      // reported back to the caller as a failed save.
+      try {
+        await CacheManager.instance.write(
+          box: CacheKeys.vehiclesBox,
+          key: CacheKeys.vehicles,
+          value: state.vehicles.map((item) => item.toCache()).toList(),
+        );
+      } catch (_) {
+        // Ignore — the Firestore write and in-memory state already succeeded.
+      }
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -143,11 +150,15 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
             if (v.id == vehicle.id) vehicle else v,
         ],
       );
-      await CacheManager.instance.write(
-        box: CacheKeys.vehiclesBox,
-        key: CacheKeys.vehicles,
-        value: state.vehicles.map((item) => item.toCache()).toList(),
-      );
+      try {
+        await CacheManager.instance.write(
+          box: CacheKeys.vehiclesBox,
+          key: CacheKeys.vehicles,
+          value: state.vehicles.map((item) => item.toCache()).toList(),
+        );
+      } catch (_) {
+        // Ignore — the Firestore write and in-memory state already succeeded.
+      }
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -166,11 +177,15 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       state = state.copyWith(
         vehicles: state.vehicles.where((v) => v.id != vehicleId).toList(),
       );
-      await CacheManager.instance.write(
-        box: CacheKeys.vehiclesBox,
-        key: CacheKeys.vehicles,
-        value: state.vehicles.map((item) => item.toCache()).toList(),
-      );
+      try {
+        await CacheManager.instance.write(
+          box: CacheKeys.vehiclesBox,
+          key: CacheKeys.vehicles,
+          value: state.vehicles.map((item) => item.toCache()).toList(),
+        );
+      } catch (_) {
+        // Ignore — the Firestore delete and in-memory state already succeeded.
+      }
     } catch (e) {
       state = state.copyWith(
         error: ErrorHandler.handle(e, StackTrace.current,

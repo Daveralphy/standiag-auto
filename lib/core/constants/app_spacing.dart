@@ -88,7 +88,7 @@ class AppSpacing {
   static const double tagGap = xs;
 
   /// Bottom padding to clear the floating nav bar.
-  static const double navBarClearance = 90;
+  static const double navBarClearance = 106;
 
   /// Distance from screen bottom edge to nav bar bottom.
   static const double navBarBottomOffset = xl3;
@@ -97,13 +97,13 @@ class AppSpacing {
   static const double navBarSideOffset = xl3;
 
   /// Height of the floating nav bar.
-  static const double navBarHeight = 60;
+  static const double navBarHeight = 72;
 
   /// Size of the active nav item protruding circle.
-  static const double navBarActiveSize = 46;
+  static const double navBarActiveSize = 50;
 
-  /// How far the active nav item protrudes above the nav bar.
-  static const double navBarActiveProtrude = 18;
+  /// How far the active nav item (circle + label) lifts above center.
+  static const double navBarActiveLift = 10;
 
   /// Standard icon button size (bell, search, history top-right buttons).
   static const double iconButtonSize = 32;

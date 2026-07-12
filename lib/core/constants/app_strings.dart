@@ -230,6 +230,13 @@ class AppStrings {
   static const String vehicleFieldColour = 'Colour';
   static const String vehicleFieldPlate = 'Plate Number';
   static const String vehicleFieldFuel = 'Fuel Type';
+  static const String vehicleHintMake = 'e.g. Toyota';
+  static const String vehicleHintModel = 'e.g. Corolla';
+  static const String vehicleHintYear = 'e.g. 2019';
+  static const String vehicleHintType = 'e.g. Sedan, SUV, Hatchback';
+  static const String vehicleHintColour = 'e.g. Red';
+  static const String vehicleHintPlate = 'e.g. ABC-123-XY';
+  static const String vehicleHintFuel = 'e.g. Petrol, Diesel, Electric';
 
   // ─── History ───────────────────────────────────────────────────────────────
 

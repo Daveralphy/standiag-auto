@@ -74,7 +74,7 @@ class AppNavBar extends StatelessWidget {
                   color: activeItem == NavBarItem.scan
                       ? Colors.white
                       : AppColors.textMuted,
-                  size: 20,
+                  size: 26,
                 ),
                 label: 'Scan',
                 isActive: activeItem == NavBarItem.scan,
@@ -85,7 +85,7 @@ class AppNavBar extends StatelessWidget {
                   color: activeItem == NavBarItem.home
                       ? Colors.white
                       : AppColors.textMuted,
-                  size: 20,
+                  size: 26,
                 ),
                 label: 'Home',
                 isActive: activeItem == NavBarItem.home,
@@ -97,13 +97,13 @@ class AppNavBar extends StatelessWidget {
                         color: activeItem == NavBarItem.third
                             ? Colors.white
                             : AppColors.textMuted,
-                        size: 20,
+                        size: 26,
                       )
                     : _UsersIcon(
                         color: activeItem == NavBarItem.third
                             ? Colors.white
                             : AppColors.textMuted,
-                        size: 20,
+                        size: 26,
                       ),
                 label: userType == NavBarUserType.carOwner
                     ? 'Mechanics'
@@ -156,33 +156,36 @@ class _ActiveItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: const BoxDecoration(
-            gradient: AppColors.primaryButtonGradient,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.navBarActiveGlow,
-                blurRadius: 12,
-                offset: Offset(0, 2),
-              ),
-            ],
+    return Transform.translate(
+      offset: const Offset(0, -AppSpacing.navBarActiveLift),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: AppSpacing.navBarActiveSize,
+            height: AppSpacing.navBarActiveSize,
+            decoration: const BoxDecoration(
+              gradient: AppColors.primaryButtonGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.navBarActiveGlow,
+                  blurRadius: 12,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(child: icon),
           ),
-          child: Center(child: icon),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: AppTypography.labelActive,
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: AppTypography.labelActive,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -198,7 +201,7 @@ class _InactiveItem extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         icon,
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           label,
           style: AppTypography.labelInactive,

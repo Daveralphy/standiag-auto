@@ -157,7 +157,7 @@ class AppTypography {
     height: 1.4,
   );
 
-  /// 11px, weight 600. Used for nav bar labels and status bar time.
+  /// 11px, weight 600. Used for the status bar time.
   static const TextStyle label = TextStyle(
     fontFamily: _fontFamily,
     fontSize: 11,
@@ -166,19 +166,19 @@ class AppTypography {
     height: 1.0,
   );
 
-  /// 11px, weight 700. Used for active nav bar label.
+  /// 13px, weight 700. Used for the active nav bar label.
   static const TextStyle labelActive = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: FontWeight.w700,
     color: AppColors.primary,
     height: 1.0,
   );
 
-  /// 11px, weight 600. Used for inactive nav bar label.
+  /// 13px, weight 600. Used for inactive nav bar labels.
   static const TextStyle labelInactive = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: FontWeight.w600,
     color: AppColors.textMuted,
     height: 1.0,
@@ -227,28 +227,28 @@ class AppTypography {
 
   // ─── Input ─────────────────────────────────────────────────────────────────
 
-  /// 14px, weight 500. Used for text inside input fields.
+  /// 16px, weight 500. Used for text inside input fields.
   static const TextStyle input = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: FontWeight.w500,
     color: AppColors.textPrimary,
     height: 1.0,
   );
 
-  /// 11.5px, weight 600. Used for floating input field labels.
+  /// 13px, weight 600. Used for floating input field labels.
   static const TextStyle inputLabel = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 11.5,
+    fontSize: 13,
     fontWeight: FontWeight.w600,
     color: AppColors.textMuted,
     height: 1.0,
   );
 
-  /// 11.5px, weight 600. Used for focused floating input field labels.
+  /// 13px, weight 600. Used for focused floating input field labels.
   static const TextStyle inputLabelFocused = TextStyle(
     fontFamily: _fontFamily,
-    fontSize: 11.5,
+    fontSize: 13,
     fontWeight: FontWeight.w600,
     color: AppColors.primary,
     height: 1.0,

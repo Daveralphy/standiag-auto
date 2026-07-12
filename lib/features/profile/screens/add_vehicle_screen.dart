@@ -12,8 +12,10 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/data/vehicle_reference_data.dart';
 import '../../../features/profile/models/vehicle_model.dart';
 import '../../../features/profile/providers/profile_provider.dart';
+import '../../../shared/widget/app_autocomplete_field.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_text_field.dart';
@@ -62,7 +64,11 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       return;
     }
     final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
+    if (userId == null) {
+      AppErrorToast.showMessage(
+          context, 'You need to be signed in to add a vehicle.');
+      return;
+    }
 
     setState(() => _isLoading = true);
     final success = await ref.read(profileProvider.notifier).addVehicle(
@@ -141,32 +147,42 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         style: AppTypography.body,
                         maxLines: 2, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 22),
-                    AppTextField(label: AppStrings.vehicleFieldMake,
+                    AppAutocompleteField(
+                        label: AppStrings.vehicleFieldMake,
+                        hint: AppStrings.vehicleHintMake,
                         controller: _makeController,
-                        textInputAction: TextInputAction.next),
+                        suggestionsBuilder: VehicleReferenceData.makes),
                     const SizedBox(height: 16),
-                    AppTextField(label: AppStrings.vehicleFieldModel,
+                    AppAutocompleteField(
+                        label: AppStrings.vehicleFieldModel,
+                        hint: AppStrings.vehicleHintModel,
                         controller: _modelController,
-                        textInputAction: TextInputAction.next),
+                        suggestionsBuilder: (query) => VehicleReferenceData
+                            .modelsFor(_makeController.text, query)),
                     const SizedBox(height: 16),
                     AppTextField(label: AppStrings.vehicleFieldYear,
+                        hint: AppStrings.vehicleHintYear,
                         controller: _yearController,
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.next),
                     const SizedBox(height: 16),
                     AppTextField(label: AppStrings.vehicleFieldType,
+                        hint: AppStrings.vehicleHintType,
                         controller: _typeController,
                         textInputAction: TextInputAction.next),
                     const SizedBox(height: 16),
                     AppTextField(label: AppStrings.vehicleFieldColour,
+                        hint: AppStrings.vehicleHintColour,
                         controller: _colourController,
                         textInputAction: TextInputAction.next),
                     const SizedBox(height: 16),
                     AppTextField(label: AppStrings.vehicleFieldPlate,
+                        hint: AppStrings.vehicleHintPlate,
                         controller: _plateController,
                         textInputAction: TextInputAction.next),
                     const SizedBox(height: 16),
                     AppTextField(label: AppStrings.vehicleFieldFuel,
+                        hint: AppStrings.vehicleHintFuel,
                         controller: _fuelController,
                         textInputAction: TextInputAction.done),
                     const SizedBox(height: 32),

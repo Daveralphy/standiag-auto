@@ -109,7 +109,7 @@ class _AppTextFieldState extends State<AppTextField> {
       children: [
         // ─── Input Field ────────────────────────────────────────────────────
         Container(
-          height: widget.maxLines > 1 ? null : 48,
+          height: widget.maxLines > 1 ? null : 50,
           decoration: BoxDecoration(
             color: const Color(0x0AFFFFFF), // 4% white — matches HTML design
             borderRadius: BorderRadius.circular(AppRadius.input),
