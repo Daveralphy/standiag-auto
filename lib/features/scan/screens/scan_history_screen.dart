@@ -12,6 +12,8 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../core/utils/formatters.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../models/scan_model.dart';
 import '../providers/scan_provider.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_skeleton.dart';
@@ -62,10 +64,16 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
               ),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userHome),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.userHome);
+                    }
+                  },
                   child: Container(
-                    width: 32,
-                    height: 32,
+                    width: 30,
+                    height: 30,
                     decoration: BoxDecoration(
                       color: const Color(0x12FFFFFF),
                       borderRadius: BorderRadius.circular(AppRadius.full),
@@ -100,18 +108,21 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (_, __) => const _ScanCardSkeleton(),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.pageHorizontal,
-                      ),
-                      itemCount: state.history.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) => _ScanCard(
-                        vehicle: state.history[i].vehicleId,
-                        score: state.history[i].healthScore,
-                        date: Formatters.relativeDate(state.history[i].createdAt),
-                      ),
-                    ),
+                  : state.history.isEmpty
+                      ? const Center(
+                          child: Text('No scans yet.',
+                              style: AppTypography.body),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.pageHorizontal,
+                          ),
+                          itemCount: state.history.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 11),
+                          itemBuilder: (_, i) =>
+                              _ScanCard(scan: state.history[i]),
+                        ),
             ),
           ],
         ),
@@ -120,76 +131,82 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
   }
 }
 
-class _ScanCard extends StatelessWidget {
-  final String vehicle;
-  final int score;
-  final String date;
-
-  const _ScanCard({
-    required this.vehicle,
-    required this.score,
-    required this.date,
-  });
+class _ScanCard extends ConsumerWidget {
+  final ScanModel scan;
+  const _ScanCard({required this.scan});
 
   Color get _scoreColor {
-    if (score >= 8) return AppColors.success;
-    if (score >= 5) return AppColors.amber;
+    if (scan.healthScore >= 8) return AppColors.success;
+    if (scan.healthScore >= 5) return AppColors.amber;
     return AppColors.primary;
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vehicleAsync = ref.watch(vehicleByIdProvider(scan.vehicleId));
+    final vehicleName = vehicleAsync.valueOrNull?.displayName ?? 'Vehicle';
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl2),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.xl2),
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: _scoreColor.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-            border: Border.all(color: _scoreColor.withValues(alpha: 0.3)),
-          ),
-          child: Center(
-            child: Text(
-              '$score',
-              style: AppTypography.heading3.copyWith(color: _scoreColor),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                vehicle,
-                style: AppTypography.bodyLarge,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+                scan.healthScore.toString(),
+                style: AppTypography.healthScore
+                    .copyWith(fontSize: 22, letterSpacing: -1),
               ),
-              const SizedBox(height: 3),
-              Text(
-                date,
-                style: AppTypography.caption,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
+              const SizedBox(width: 5),
+              const Text('/ 10',
+                  style: AppTypography.caption,
+                  overflow: TextOverflow.ellipsis, maxLines: 1),
             ],
           ),
-        ),
-        const Text('/10',
-            style: AppTypography.caption,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1),
-      ]),
+          const SizedBox(height: 2),
+          Text(vehicleName,
+              style: AppTypography.body,
+              overflow: TextOverflow.ellipsis, maxLines: 1),
+          const SizedBox(height: 2),
+          Text(Formatters.shortDate(scan.createdAt),
+              style: AppTypography.caption,
+              overflow: TextOverflow.ellipsis, maxLines: 1),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Health Score',
+                  style: AppTypography.caption,
+                  overflow: TextOverflow.ellipsis, maxLines: 1),
+              Text(scan.healthLabel,
+                  style: TextStyle(
+                    fontFamily: 'Inter', fontSize: 12,
+                    fontWeight: FontWeight.w700, color: _scoreColor,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.full),
+            child: SizedBox(
+              height: 3,
+              child: LinearProgressIndicator(
+                value: (scan.healthScore.clamp(0, 10)) / 10,
+                backgroundColor: const Color(0x14FFFFFF),
+                valueColor: AlwaysStoppedAnimation(_scoreColor),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

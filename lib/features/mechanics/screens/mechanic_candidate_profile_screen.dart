@@ -75,8 +75,14 @@ class _MechanicCandidateProfileScreenState
                   AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.mechanicCard,
-                      extra: widget.mechanicId),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.mechanicCard,
+                          extra: widget.mechanicId);
+                    }
+                  },
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(

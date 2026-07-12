@@ -64,9 +64,15 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
                   AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(isMechanic
-                      ? RouteNames.mechanicCredits
-                      : RouteNames.userCredits),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(isMechanic
+                          ? RouteNames.mechanicCredits
+                          : RouteNames.userCredits);
+                    }
+                  },
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -96,15 +102,35 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
                         child: TransactionRowSkeleton(),
                       ),
                     )
-                  : ListView.separated(
+                  : state.history.isEmpty
+                      ? const Center(
+                          child: Text('No credit activity yet.',
+                              style: AppTypography.body),
+                        )
+                      : ListView.builder(
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.pageHorizontal),
                       itemCount: state.history.length,
-                      separatorBuilder: (_, __) => const Divider(
-                          color: AppColors.borderSubtle, height: 1),
                       itemBuilder: (_, i) {
                         final transaction = state.history[i];
-                        return Padding(
+                        final showMonthHeader = i == 0 ||
+                            Formatters.monthYear(state.history[i - 1].createdAt) !=
+                                Formatters.monthYear(transaction.createdAt);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (showMonthHeader)
+                              Padding(
+                                padding: EdgeInsets.only(top: i == 0 ? 0 : 8, bottom: 8),
+                                child: Text(
+                                    Formatters.monthYear(transaction.createdAt)
+                                        .toUpperCase(),
+                                    style: AppTypography.microBold.copyWith(
+                                        color: AppColors.textMuted,
+                                        letterSpacing: 0.8)),
+                              ),
+                            const Divider(color: AppColors.borderSubtle, height: 1),
+                            Padding(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           child: Row(children: [
                             Container(
@@ -149,6 +175,8 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
                                   fontWeight: FontWeight.w700),
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
                           ]),
+                            ),
+                          ],
                         );
                       },
                     ),

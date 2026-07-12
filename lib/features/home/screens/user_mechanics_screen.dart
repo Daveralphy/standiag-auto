@@ -48,7 +48,7 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
             position: LatLng(entry.mechanic.location!.latitude,
                 entry.mechanic.location!.longitude),
             child: const AppDarkMapPin(icon: Icons.build_rounded),
-            onTap: () => context.go(RouteNames.mechanicProfile,
+            onTap: () => context.push(RouteNames.mechanicProfile,
                 extra: entry.mechanic.uid),
           ),
     ];

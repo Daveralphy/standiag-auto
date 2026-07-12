@@ -40,7 +40,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.homeFor(type)),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.homeFor(type));
+                    }
+                  },
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -62,41 +68,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.pageHorizontal),
                 children: [
+                  const _SectionLabel('Preferences'),
                   _SettingsItem(
                     icon: Icons.notifications_outlined,
                     label: AppStrings.settingsNotifications,
                     onTap: () =>
-                        context.go(RouteNames.notificationSettingsFor(type)),
+                        context.push(RouteNames.notificationSettingsFor(type)),
                   ),
                   _SettingsItem(
                     icon: Icons.language_outlined,
                     label: AppStrings.settingsLanguage,
-                    onTap: () => context.go(RouteNames.languageFor(type)),
+                    onTap: () => context.push(RouteNames.languageFor(type)),
                   ),
                   _SettingsItem(
                     icon: Icons.dark_mode_outlined,
                     label: AppStrings.settingsAppearance,
-                    onTap: () => context.go(RouteNames.appearanceFor(type)),
+                    onTap: () => context.push(RouteNames.appearanceFor(type)),
                   ),
                   _SettingsItem(
                     icon: Icons.lock_outline_rounded,
                     label: AppStrings.settingsPrivacy,
-                    onTap: () => context.go(RouteNames.privacyFor(type)),
+                    onTap: () => context.push(RouteNames.privacyFor(type)),
                   ),
                   _SettingsItem(
                     icon: Icons.key_outlined,
                     label: AppStrings.settingsChangePassword,
                     onTap: () =>
-                        context.go(RouteNames.changePasswordFor(type)),
+                        context.push(RouteNames.changePasswordFor(type)),
                   ),
                   const SizedBox(height: 8),
-                  const Divider(color: AppColors.borderSubtle),
-                  const SizedBox(height: 8),
+                  const _SectionLabel('Account'),
                   _SettingsItem(
                     icon: Icons.delete_outline_rounded,
                     label: AppStrings.settingsDeleteAccount,
                     onTap: () =>
-                        context.go(RouteNames.deleteAccountFor(type)),
+                        context.push(RouteNames.deleteAccountFor(type)),
                     isDestructive: true,
                   ),
                 ],
@@ -104,6 +110,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 4),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          fontFamily: 'Inter', fontSize: 10, fontWeight: FontWeight.w700,
+          color: Color(0x40FFFFFF), letterSpacing: 0.8,
+        ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
       ),
     );
   }

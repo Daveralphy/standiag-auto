@@ -64,7 +64,13 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.homeFor(type)),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.homeFor(type));
+                    }
+                  },
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(

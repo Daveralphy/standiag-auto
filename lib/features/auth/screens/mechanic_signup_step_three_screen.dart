@@ -66,7 +66,7 @@ class _MechanicSignupStepThreeScreenState
     try {
       await ref.read(authControllerProvider).signUp(ref.read(signupDraftProvider));
       if (!mounted) return;
-      context.go(RouteNames.otpEmail);
+      context.push(RouteNames.otpEmail);
     } catch (error, stackTrace) {
       if (!mounted) return;
       AppErrorToast.showMessage(
@@ -121,8 +121,13 @@ class _MechanicSignupStepThreeScreenState
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () => context.go(
-                            RouteNames.mechanicSignupStepTwo),
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(RouteNames.mechanicSignupStepTwo);
+                          }
+                        },
                         child: Container(
                           width: 26, height: 26,
                           decoration: BoxDecoration(

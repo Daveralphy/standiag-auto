@@ -79,15 +79,24 @@ class _MyVehiclesScreenState extends ConsumerState<MyVehiclesScreen> {
                   onTap: () => context.push(RouteNames.addVehicle),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                        horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppColors.primarySubtle,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.primaryBorder)),
-                    child: Text(AppStrings.vehiclesAdd,
-                        style: AppTypography.captionSmall.copyWith(
-                            color: AppColors.primary),
-                        overflow: TextOverflow.ellipsis, maxLines: 1)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.add_rounded,
+                            size: 14, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text(AppStrings.vehiclesAdd,
+                            style: AppTypography.captionSmall.copyWith(
+                                color: AppColors.primary),
+                            overflow: TextOverflow.ellipsis, maxLines: 1),
+                      ],
+                    ),
+                  ),
                 ),
               ]),
             ),
@@ -98,21 +107,74 @@ class _MyVehiclesScreenState extends ConsumerState<MyVehiclesScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.pageHorizontal),
                       itemCount: 4,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (_, __) => const VehicleCardSkeleton(),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.pageHorizontal),
-                      itemCount: state.vehicles.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) => _VehicleCard(
-                        make: state.vehicles[i].make,
-                        model: state.vehicles[i].displayName,
-                        plate: state.vehicles[i].plateNumber,
-                        fuelType: state.vehicles[i].fuelType,
-                      ),
-                    ),
+                  : state.vehicles.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xxl),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.directions_car_outlined,
+                                    color: Color(0x33FFFFFF), size: 48),
+                                const SizedBox(height: 16),
+                                const Text('No vehicles yet',
+                                    style: AppTypography.heading3),
+                                const SizedBox(height: 8),
+                                const Text(
+                                    'Add your first vehicle to start diagnosing it with OBD.',
+                                    style: AppTypography.body,
+                                    textAlign: TextAlign.center),
+                                const SizedBox(height: 20),
+                                GestureDetector(
+                                  onTap: () =>
+                                      context.push(RouteNames.addVehicle),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      gradient:
+                                          AppColors.primaryButtonGradient,
+                                      borderRadius: BorderRadius.circular(
+                                          AppRadius.full),
+                                    ),
+                                    child: const Text('Add a Vehicle',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        )),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.pageHorizontal),
+                          itemCount: state.vehicles.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (_, i) => _VehicleCard(
+                            name:
+                                '${state.vehicles[i].make} ${state.vehicles[i].model}',
+                            year: state.vehicles[i].year,
+                            meta: [
+                              state.vehicles[i].type,
+                              state.vehicles[i].colour,
+                              state.vehicles[i].fuelType,
+                            ].where((s) => s.isNotEmpty).join(' · '),
+                            plate: state.vehicles[i].plateNumber,
+                            onEdit: () => context.push(
+                                RouteNames.editVehicle,
+                                extra: state.vehicles[i].id),
+                          ),
+                        ),
             ),
           ],
         ),
@@ -122,14 +184,18 @@ class _MyVehiclesScreenState extends ConsumerState<MyVehiclesScreen> {
 }
 
 class _VehicleCard extends StatelessWidget {
-  final String make;
-  final String model;
+  final String name;
+  final String year;
+  final String meta;
   final String plate;
-  final String fuelType;
+  final VoidCallback onEdit;
 
   const _VehicleCard({
-    required this.make, required this.model,
-    required this.plate, required this.fuelType,
+    required this.name,
+    required this.year,
+    required this.meta,
+    required this.plate,
+    required this.onEdit,
   });
 
   @override
@@ -138,43 +204,47 @@ class _VehicleCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.xl2),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.border)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Icon(Icons.directions_car_outlined,
-              color: AppColors.primary, size: 20),
-          const SizedBox(width: 10),
-          Expanded(child: Text('$make $model',
-              style: AppTypography.bodyLarge,
-              overflow: TextOverflow.ellipsis, maxLines: 1)),
-        ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: _Tag(plate)),
-          const SizedBox(width: 6),
-          Expanded(child: _Tag(fuelType)),
-        ]),
-      ]),
-    );
-  }
-}
-
-class _Tag extends StatelessWidget {
-  final String label;
-  const _Tag(this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
-        borderRadius: BorderRadius.circular(AppRadius.full),
-        border: Border.all(color: AppColors.border)),
-      child: Text(label,
-          style: AppTypography.micro,
-          overflow: TextOverflow.ellipsis, maxLines: 1),
+        borderRadius: BorderRadius.circular(AppRadius.xl2),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: AppTypography.bodyLarge,
+                    overflow: TextOverflow.ellipsis, maxLines: 1),
+                if (year.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(year,
+                      style: AppTypography.captionLarge
+                          .copyWith(color: AppColors.textMuted),
+                      overflow: TextOverflow.ellipsis, maxLines: 1),
+                ],
+                if (meta.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(meta,
+                      style: AppTypography.caption,
+                      overflow: TextOverflow.ellipsis, maxLines: 1),
+                ],
+                if (plate.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(plate,
+                      style: AppTypography.caption,
+                      overflow: TextOverflow.ellipsis, maxLines: 1),
+                ],
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: onEdit,
+            child: const Icon(Icons.edit_outlined,
+                color: AppColors.textMuted, size: 16),
+          ),
+        ],
+      ),
     );
   }
 }

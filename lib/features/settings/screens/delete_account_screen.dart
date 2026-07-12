@@ -153,7 +153,13 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   Align(
                     alignment: Alignment.topRight,
                     child: GestureDetector(
-                      onTap: () => context.go(RouteNames.settingsFor(type)),
+                      onTap: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go(RouteNames.settingsFor(type));
+                        }
+                      },
                       child: Container(
                         width: 26,
                         height: 26,
@@ -206,7 +212,13 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                     Expanded(
                       child: AppButton(
                         label: AppStrings.deleteAccountCancel,
-                        onTap: () => context.go(RouteNames.settingsFor(type)),
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(RouteNames.settingsFor(type));
+                          }
+                        },
                         variant: AppButtonVariant.ghost,
                       ),
                     ),

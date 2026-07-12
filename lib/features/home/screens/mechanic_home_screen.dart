@@ -71,7 +71,8 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                   showGreeting: true,
                   subtitle: 'Your Dashboard',
                   trailingIcon: Icons.notifications_outlined,
-                  onTrailingTap: () {},
+                  onTrailingTap: () =>
+                      context.push(RouteNames.mechanicNotifications),
                 ),
                 const SizedBox(height: 20),
 
@@ -452,7 +453,7 @@ class _ActiveJobTile extends ConsumerWidget {
                   child: const Text('Close Job',
                       style: TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary,
                       )),

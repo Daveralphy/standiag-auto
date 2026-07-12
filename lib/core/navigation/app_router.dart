@@ -47,6 +47,7 @@ import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_one_screen.dart';
 import '../../features/onboarding/screens/splash_two_screen.dart';
 import '../../features/profile/screens/add_vehicle_screen.dart';
+import '../../features/profile/screens/edit_vehicle_screen.dart';
 import '../../features/profile/screens/job_history_screen.dart';
 import '../../features/profile/screens/mechanic_profile_edit_screen.dart';
 import '../../features/profile/screens/my_jobs_screen.dart';
@@ -59,6 +60,7 @@ import '../../features/settings/screens/change_password_screen.dart';
 import '../../features/settings/screens/delete_account_screen.dart';
 import '../../features/settings/screens/help_support_screen.dart';
 import '../../features/settings/screens/language_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/settings/screens/notification_settings_screen.dart';
 import '../../features/settings/screens/privacy_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -282,6 +284,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (_, __) => const MyVehiclesScreen()),
       GoRoute(path: RouteNames.addVehicle,
           builder: (_, __) => const AddVehicleScreen()),
+      GoRoute(path: RouteNames.editVehicle,
+          builder: (_, state) =>
+              EditVehicleScreen(vehicleId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.myJobs,
           builder: (_, __) => const MyJobsScreen()),
       GoRoute(path: RouteNames.serviceHistory,
@@ -302,6 +307,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (_, __) => const BuyCreditsScreen()),
       GoRoute(path: RouteNames.mechanicCreditsHistory,
           builder: (_, __) => const CreditsHistoryScreen()),
+      GoRoute(path: RouteNames.userNotifications,
+          builder: (_, __) => const NotificationsScreen()),
       GoRoute(path: RouteNames.userSettings,
           builder: (_, __) => const SettingsScreen()),
       GoRoute(path: RouteNames.userNotificationSettings,
@@ -326,6 +333,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (_, __) => const DeleteAccountScreen()),
       GoRoute(path: RouteNames.userHelpSupport,
           builder: (_, __) => const HelpSupportScreen()),
+      GoRoute(path: RouteNames.mechanicNotifications,
+          builder: (_, __) => const NotificationsScreen()),
       GoRoute(path: RouteNames.mechanicSettings,
           builder: (_, __) => const SettingsScreen()),
       GoRoute(path: RouteNames.mechanicNotificationSettings,

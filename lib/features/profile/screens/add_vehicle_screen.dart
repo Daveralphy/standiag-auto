@@ -54,6 +54,41 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     super.dispose();
   }
 
+  Future<void> _save() async {
+    if (_makeController.text.trim().isEmpty ||
+        _modelController.text.trim().isEmpty) {
+      AppErrorToast.showMessage(
+          context, 'Please fill in at least the make and model.');
+      return;
+    }
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    setState(() => _isLoading = true);
+    final success = await ref.read(profileProvider.notifier).addVehicle(
+          VehicleModel(
+            id: '',
+            ownerId: userId,
+            make: _makeController.text.trim(),
+            model: _modelController.text.trim(),
+            year: _yearController.text.trim(),
+            type: _typeController.text.trim(),
+            colour: _colourController.text.trim(),
+            plateNumber: _plateController.text.trim(),
+            fuelType: _fuelController.text.trim(),
+          ),
+        );
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    if (success) {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(RouteNames.myVehicles);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<ProfileState>(profileProvider, (_, next) {
@@ -72,7 +107,13 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.myVehicles),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.myVehicles);
+                    }
+                  },
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -131,28 +172,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     const SizedBox(height: 32),
                     AppButton(
                       label: AppStrings.addVehicleSave,
-                      onTap: () {
-                        final userId = FirebaseAuth.instance.currentUser?.uid;
-                        if (userId == null) return;
-                        setState(() => _isLoading = true);
-                        ref.read(profileProvider.notifier).addVehicle(
-                              VehicleModel(
-                                id: '',
-                                ownerId: userId,
-                                make: _makeController.text.trim(),
-                                model: _modelController.text.trim(),
-                                year: _yearController.text.trim(),
-                                type: _typeController.text.trim(),
-                                colour: _colourController.text.trim(),
-                                plateNumber: _plateController.text.trim(),
-                                fuelType: _fuelController.text.trim(),
-                              ),
-                            ).then((_) {
-                          if (!context.mounted) return;
-                          setState(() => _isLoading = false);
-                          context.go(RouteNames.myVehicles);
-                        });
-                      },
+                      onTap: _isLoading ? null : _save,
                       isLoading: _isLoading,
                     ),
                     const SizedBox(height: 24),

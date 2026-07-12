@@ -96,7 +96,7 @@ class _OtpEmailScreenState extends ConsumerState<OtpEmailScreen> {
             'Not verified yet — open the link we emailed you, then try again.');
         return;
       }
-      context.go(RouteNames.otpPhone);
+      context.push(RouteNames.otpPhone);
     } catch (error, stackTrace) {
       if (!mounted) return;
       AppErrorToast.showMessage(
@@ -146,9 +146,15 @@ class _OtpEmailScreenState extends ConsumerState<OtpEmailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: () => context.go(draftType == UserType.mechanic
-                            ? RouteNames.mechanicSignupStepThree
-                            : RouteNames.userSignupStepThree),
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(draftType == UserType.mechanic
+                                ? RouteNames.mechanicSignupStepThree
+                                : RouteNames.userSignupStepThree);
+                          }
+                        },
                         child: Container(
                           width: 36, height: 36,
                           decoration: BoxDecoration(
@@ -162,7 +168,7 @@ class _OtpEmailScreenState extends ConsumerState<OtpEmailScreen> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => context.go(RouteNames.otpPhone),
+                        onTap: () => context.push(RouteNames.otpPhone),
                         child: const Text('Skip for now',
                             style: TextStyle(
                               fontFamily: 'Inter', fontSize: 14,

@@ -36,10 +36,10 @@ class _ProfileTypePickerScreenState
   void _continue() {
     if (_selected == _ProfileType.carOwner) {
       ref.read(signupDraftProvider.notifier).setType(UserType.carOwner);
-      context.go(RouteNames.userSignupStepOne);
+      context.push(RouteNames.userSignupStepOne);
     } else {
       ref.read(signupDraftProvider.notifier).setType(UserType.mechanic);
-      context.go(RouteNames.mechanicSignupStepOne);
+      context.push(RouteNames.mechanicSignupStepOne);
     }
   }
 
@@ -89,7 +89,13 @@ class _ProfileTypePickerScreenState
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
                   child: GestureDetector(
-                    onTap: () => context.go(RouteNames.login),
+                    onTap: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(RouteNames.login);
+                      }
+                    },
                     child: Container(
                       width: 36, height: 36,
                       decoration: BoxDecoration(

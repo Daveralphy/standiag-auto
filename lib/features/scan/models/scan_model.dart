@@ -20,7 +20,7 @@ class ScanModel {
   });
 
   String get healthLabel {
-    if (healthScore >= 8) return 'Excellent';
+    if (healthScore >= 8) return 'Good';
     if (healthScore >= 5) return 'Fair';
     return 'Poor';
   }

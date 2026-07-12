@@ -1,4 +1,6 @@
 // Service History screen — user's past mechanic jobs.
+// Matches design/history_screens.html Screen 1: title/vehicle/mechanic name/
+// date/completed-badge card, no rating stars (those live in Job History).
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,8 @@ import '../../../core/navigation/route_names.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../features/jobs/models/job_model.dart';
 import '../../../features/jobs/providers/job_provider.dart';
+import '../../../features/mechanics/providers/mechanics_provider.dart';
+import '../../../features/profile/providers/profile_provider.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/system_ui_style.dart';
@@ -65,9 +69,15 @@ class _ServiceHistoryScreenState extends ConsumerState<ServiceHistoryScreen> {
               ),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userHome),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.userHome);
+                    }
+                  },
                   child: Container(
-                    width: 32, height: 32,
+                    width: 30, height: 30,
                     decoration: BoxDecoration(
                       color: const Color(0x12FFFFFF),
                       borderRadius: BorderRadius.circular(AppRadius.full),
@@ -88,25 +98,23 @@ class _ServiceHistoryScreenState extends ConsumerState<ServiceHistoryScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.pageHorizontal),
                       itemCount: 4,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (_, __) => const SizedBox(height: 11),
                       itemBuilder: (_, __) => const _HistoryCardSkeleton(),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.pageHorizontal),
-                      itemCount: history.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) {
-                        final job = history[i];
-                        return _HistoryCard(
-                          title: job.issue,
-                          subtitle: job.mechanicId,
-                          date: Formatters.relativeDate(
-                              job.completedAt ?? job.createdAt),
-                          rating: job.rating?.round() ?? 0,
-                        );
-                      },
-                    ),
+                  : history.isEmpty
+                      ? const Center(
+                          child: Text('No completed services yet.',
+                              style: AppTypography.body),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.pageHorizontal),
+                          itemCount: history.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 11),
+                          itemBuilder: (_, i) =>
+                              _HistoryCard(job: history[i]),
+                        ),
             ),
           ],
         ),
@@ -115,42 +123,62 @@ class _ServiceHistoryScreenState extends ConsumerState<ServiceHistoryScreen> {
   }
 }
 
-class _HistoryCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String date;
-  final int rating;
-
-  const _HistoryCard({
-    required this.title,
-    required this.subtitle,
-    required this.date,
-    required this.rating,
-  });
+class _HistoryCard extends ConsumerWidget {
+  final JobModel job;
+  const _HistoryCard({required this.job});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vehicleAsync = ref.watch(vehicleByIdProvider(job.vehicleId));
+    final mechanicAsync = ref.watch(mechanicUserProvider(job.mechanicId));
+    final vehicleName = vehicleAsync.valueOrNull?.displayName;
+    final mechanicName = mechanicAsync.valueOrNull != null
+        ? '${mechanicAsync.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
+            .trim()
+        : null;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl2),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.xl2),
         border: Border.all(color: AppColors.border)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(child: Text(title, style: AppTypography.bodyLarge,
-              overflow: TextOverflow.ellipsis, maxLines: 1)),
-          Row(children: List.generate(5, (i) => Icon(
-            i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
-            color: i < rating ? AppColors.amber : AppColors.textDisabled,
-            size: 12))),
-        ]),
-        const SizedBox(height: 4),
-        Text(subtitle, style: AppTypography.body,
+        Text(job.issue, style: AppTypography.bodyLarge,
             overflow: TextOverflow.ellipsis, maxLines: 1),
-        const SizedBox(height: 4),
-        Text(date, style: AppTypography.caption,
+        if (vehicleName != null) ...[
+          const SizedBox(height: 3),
+          Text(vehicleName, style: AppTypography.body,
+              overflow: TextOverflow.ellipsis, maxLines: 1),
+        ],
+        const SizedBox(height: 3),
+        Text(mechanicName ?? 'Mechanic', style: AppTypography.caption,
             overflow: TextOverflow.ellipsis, maxLines: 1),
+        Text(
+            Formatters.shortDate(job.completedAt ?? job.createdAt),
+            style: AppTypography.caption,
+            overflow: TextOverflow.ellipsis, maxLines: 1),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: const Color(0x1A4CAF50),
+            borderRadius: BorderRadius.circular(AppRadius.full),
+            border: Border.all(color: const Color(0x334CAF50)),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_rounded, color: AppColors.success, size: 11),
+              SizedBox(width: 4),
+              Text('Completed',
+                  style: TextStyle(
+                    fontFamily: 'Inter', fontSize: 11.5,
+                    fontWeight: FontWeight.w700, color: AppColors.success,
+                  )),
+            ],
+          ),
+        ),
       ]),
     );
   }
@@ -165,19 +193,13 @@ class _HistoryCardSkeleton extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.xl2),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.xl2),
         border: Border.all(color: AppColors.border),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(child: AppSkeleton.wide(height: 14)),
-              SizedBox(width: 12),
-              AppSkeleton(width: 70, height: 12),
-            ],
-          ),
+          AppSkeleton.wide(height: 14),
           SizedBox(height: 8),
           AppSkeleton(width: 120, height: 11),
           SizedBox(height: 6),

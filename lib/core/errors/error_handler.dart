@@ -143,8 +143,10 @@ class ErrorHandler {
     return exception.runtimeType.toString();
   }
 
-  /// Logs the full technical error to Crashlytics.
-  /// Developers see this in the Firebase console. Users never see it.
+  /// Logs the full technical error to Crashlytics, and to the console —
+  /// the console line is what shows up directly in `flutter run`'s output,
+  /// which is the fastest way to see the real cause of an error the UI
+  /// only shows a sanitized message for.
   static void _log({
     required Object exception,
     required StackTrace stackTrace,
@@ -153,6 +155,10 @@ class ErrorHandler {
     String? userType,
     String? screen,
   }) {
+    // ignore: avoid_print
+    print(
+        '[AppError] screen=${screen ?? '?'} type=${error.type} code=${error.code} exception=$exception');
+
     FirebaseCrashlytics.instance.recordError(
       exception,
       stackTrace,

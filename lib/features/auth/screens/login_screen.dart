@@ -378,7 +378,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   // Sign up
                   Center(
                     child: GestureDetector(
-                      onTap: () => context.go(RouteNames.profileTypePicker),
+                      onTap: () => context.push(RouteNames.profileTypePicker),
                       child: RichText(
                         text: const TextSpan(
                           style: TextStyle(

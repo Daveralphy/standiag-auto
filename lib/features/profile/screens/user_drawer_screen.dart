@@ -69,7 +69,7 @@ class _UserDrawerScreenState extends ConsumerState<UserDrawerScreen> {
                         Text(displayName,
                             style: const TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 19,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary,
                               letterSpacing: -0.4,
@@ -79,7 +79,7 @@ class _UserDrawerScreenState extends ConsumerState<UserDrawerScreen> {
                         Text(email.isNotEmpty ? email : '@user',
                             style: const TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 13,
+                              fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: AppColors.textMuted,
                             ),
@@ -110,32 +110,32 @@ class _UserDrawerScreenState extends ConsumerState<UserDrawerScreen> {
                   _DrawerItem(
                     icon: Icons.directions_car_outlined,
                     label: AppStrings.drawerMyVehicles,
-                    onTap: () => context.go(RouteNames.myVehicles),
+                    onTap: () => context.push(RouteNames.myVehicles),
                   ),
                   _DrawerItem(
                     icon: Icons.history_rounded,
                     label: AppStrings.drawerServiceHistory,
-                    onTap: () => context.go(RouteNames.serviceHistory),
+                    onTap: () => context.push(RouteNames.serviceHistory),
                   ),
                   _DrawerItem(
                     icon: Icons.qr_code_scanner_rounded,
                     label: AppStrings.drawerScanHistory,
-                    onTap: () => context.go(RouteNames.userScanHistory),
+                    onTap: () => context.push(RouteNames.userScanHistory),
                   ),
                   _DrawerItem(
                     icon: Icons.monetization_on_outlined,
                     label: AppStrings.drawerCredits,
-                    onTap: () => context.go(RouteNames.userCredits),
+                    onTap: () => context.push(RouteNames.userCredits),
                   ),
                   _DrawerItem(
                     icon: Icons.settings_outlined,
                     label: AppStrings.drawerSettings,
-                    onTap: () => context.go(RouteNames.userSettings),
+                    onTap: () => context.push(RouteNames.userSettings),
                   ),
                   _DrawerItem(
                     icon: Icons.help_outline_rounded,
                     label: AppStrings.drawerHelp,
-                    onTap: () => context.go(RouteNames.userHelpSupport),
+                    onTap: () => context.push(RouteNames.userHelpSupport),
                   ),
                 ],
               ),

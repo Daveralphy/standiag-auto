@@ -57,6 +57,7 @@ class RouteNames {
   static const String userProfile = '/user/profile';
   static const String myVehicles = '/user/vehicles';
   static const String addVehicle = '/user/add-vehicle';
+  static const String editVehicle = '/user/edit-vehicle';
   static const String serviceHistory = '/user/service-history';
   static const String userScanHistory = '/user/scan-history';
 
@@ -64,6 +65,8 @@ class RouteNames {
   static const String userCredits = '/user/credits';
   static const String userBuyCredits = '/user/buy-credits';
   static const String userCreditsHistory = '/user/credits-history';
+
+  static const String userNotifications = '/user/notifications';
 
   // User settings
   static const String userSettings = '/user/settings';
@@ -104,6 +107,8 @@ class RouteNames {
   static const String mechanicBuyCredits = '/mechanic/buy-credits';
   static const String mechanicCreditsHistory = '/mechanic/credits-history';
 
+  static const String mechanicNotifications = '/mechanic/notifications';
+
   // Mechanic settings (shares same screens as user settings)
   static const String mechanicSettings = '/mechanic/settings';
   static const String mechanicNotificationSettings =
@@ -127,6 +132,9 @@ class RouteNames {
 
   static String homeFor(UserType type) =>
       type == UserType.mechanic ? mechanicHome : userHome;
+
+  static String notificationsFor(UserType type) =>
+      type == UserType.mechanic ? mechanicNotifications : userNotifications;
 
   static String settingsFor(UserType type) =>
       type == UserType.mechanic ? mechanicSettings : userSettings;

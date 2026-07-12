@@ -118,6 +118,7 @@ class _AppDarkMapState extends State<AppDarkMap> {
               subdomains: const ['a', 'b', 'c', 'd'],
               userAgentPackageName: 'com.standiagauto.standiag_auto',
               maxZoom: 20,
+              retinaMode: RetinaMode.isHighDensity(context),
               errorTileCallback: (tile, error, stackTrace) {},
             ),
             if (widget.radiusMeters != null)
@@ -126,30 +127,18 @@ class _AppDarkMapState extends State<AppDarkMap> {
                   point: circleCenter,
                   radius: widget.radiusMeters!,
                   useRadiusInMeter: true,
-                  color: AppColors.primarySubtle,
+                  color: const Color(0x00000000),
                   borderColor: AppColors.primaryBorder,
-                  borderStrokeWidth: 2,
+                  borderStrokeWidth: 1.5,
                 ),
               ]),
             MarkerLayer(markers: [
               if (_currentLocation != null)
                 Marker(
                   point: _currentLocation!,
-                  width: 22,
-                  height: 22,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary,
-                      border: Border.all(color: Colors.white, width: 2.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.5),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                  ),
+                  width: 64,
+                  height: 64,
+                  child: const _UserLocationPin(),
                 ),
               for (final marker in widget.markers)
                 Marker(
@@ -219,6 +208,59 @@ class _AppDarkMapState extends State<AppDarkMap> {
         ),
       ],
       ),
+    );
+  }
+}
+
+/// The device's own position on the map — a soft glow ring, a mid ring, a
+/// solid core and a white center dot, matching the "user pin" used
+/// throughout the design's map screens (radial glow + layered circles).
+class _UserLocationPin extends StatelessWidget {
+  const _UserLocationPin();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                AppColors.primary.withValues(alpha: 0.35),
+                AppColors.primary.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.primary.withValues(alpha: 0.18),
+          ),
+        ),
+        Container(
+          width: 16,
+          height: 16,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.primary,
+          ),
+        ),
+        Container(
+          width: 7,
+          height: 7,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -69,7 +69,7 @@ class _MechanicDrawerScreenState extends ConsumerState<MechanicDrawerScreen> {
                         Text(displayName,
                             style: const TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 19,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary,
                               letterSpacing: -0.4,
@@ -79,7 +79,7 @@ class _MechanicDrawerScreenState extends ConsumerState<MechanicDrawerScreen> {
                         Text(email.isNotEmpty ? email : '@mechanic',
                             style: const TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 13,
+                              fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: AppColors.textMuted,
                             ),
@@ -108,27 +108,27 @@ class _MechanicDrawerScreenState extends ConsumerState<MechanicDrawerScreen> {
                   _DrawerItem(
                     icon: Icons.work_outline_rounded,
                     label: AppStrings.drawerMyJobs,
-                    onTap: () => context.go(RouteNames.myJobs),
+                    onTap: () => context.push(RouteNames.myJobs),
                   ),
                   _DrawerItem(
                     icon: Icons.history_rounded,
                     label: AppStrings.drawerJobHistory,
-                    onTap: () => context.go(RouteNames.jobHistory),
+                    onTap: () => context.push(RouteNames.jobHistory),
                   ),
                   _DrawerItem(
                     icon: Icons.monetization_on_outlined,
                     label: AppStrings.drawerCredits,
-                    onTap: () => context.go(RouteNames.mechanicCredits),
+                    onTap: () => context.push(RouteNames.mechanicCredits),
                   ),
                   _DrawerItem(
                     icon: Icons.settings_outlined,
                     label: AppStrings.drawerSettings,
-                    onTap: () => context.go(RouteNames.mechanicSettings),
+                    onTap: () => context.push(RouteNames.mechanicSettings),
                   ),
                   _DrawerItem(
                     icon: Icons.help_outline_rounded,
                     label: AppStrings.drawerHelp,
-                    onTap: () => context.go(RouteNames.mechanicHelpSupport),
+                    onTap: () => context.push(RouteNames.mechanicHelpSupport),
                   ),
                 ],
               ),

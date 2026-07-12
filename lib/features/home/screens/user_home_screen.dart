@@ -8,8 +8,10 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../jobs/models/job_model.dart';
@@ -72,7 +74,8 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                   showGreeting: true,
                   subtitle: 'Your Dashboard',
                   trailingIcon: Icons.notifications_outlined,
-                  onTrailingTap: () {},
+                  onTrailingTap: () =>
+                      context.push(RouteNames.userNotifications),
                 ),
                 const SizedBox(height: 20),
 
@@ -90,78 +93,6 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                                   onAddVehicle: () =>
                                       context.push(RouteNames.addVehicle))
                               : _VehicleCard(vehicle: vehicle),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // ─── Nearby Mechanics ────────────────────────────
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal),
-                          child: Row(
-                            children: [
-                              const Expanded(
-                                child: Text('Nearby Mechanics',
-                                    style: AppTypography.heading3,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1),
-                              ),
-                              GestureDetector(
-                                onTap: () =>
-                                    context.go(RouteNames.userMechanics),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('See all',
-                                        style: AppTypography.bodySmall
-                                            .copyWith(
-                                                color: AppColors.primary)),
-                                    const SizedBox(width: 2),
-                                    const Icon(Icons.arrow_forward_rounded,
-                                        size: 14, color: AppColors.primary),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-
-                        SizedBox(
-                          height: 132,
-                          child: mechanicsAsync.when(
-                            data: (mechanics) {
-                              if (mechanics.isEmpty) {
-                                return const Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.pageHorizontal),
-                                  child: Text(
-                                      'No mechanics available nearby.',
-                                      style: AppTypography.body),
-                                );
-                              }
-                              return ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.pageHorizontal),
-                                itemCount: mechanics.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(width: 10),
-                                itemBuilder: (_, i) =>
-                                    _MiniMechanicCard(entry: mechanics[i]),
-                              );
-                            },
-                            loading: () => ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.pageHorizontal),
-                              itemCount: 3,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 10),
-                              itemBuilder: (_, __) =>
-                                  const _MiniMechanicCardSkeleton(),
-                            ),
-                            error: (_, __) => const SizedBox.shrink(),
-                          ),
                         ),
                         const SizedBox(height: 24),
 
@@ -198,13 +129,80 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                               const SizedBox(width: 10),
                               _QuickAction(
                                   icon: Icons.qr_code_scanner_rounded,
-                                  label: 'Last Scan',
+                                  label: 'Previous Scan',
                                   sublabel: latestScan == null
                                       ? 'No scans yet'
                                       : _relativeDays(latestScan.createdAt),
                                   onTap: () => context
                                       .go(RouteNames.userScanHistory)),
                             ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // ─── Nearby Mechanics ────────────────────────────
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.pageHorizontal),
+                          child: Row(
+                            children: [
+                              const Expanded(
+                                child: Text('Nearby Mechanics',
+                                    style: AppTypography.heading3,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1),
+                              ),
+                              GestureDetector(
+                                onTap: () =>
+                                    context.go(RouteNames.userMechanics),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('See all',
+                                        style: AppTypography.bodySmall
+                                            .copyWith(
+                                                color: AppColors.primary)),
+                                    const SizedBox(width: 2),
+                                    const Icon(Icons.arrow_forward_rounded,
+                                        size: 14, color: AppColors.primary),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.pageHorizontal),
+                          child: mechanicsAsync.when(
+                            data: (mechanics) {
+                              if (mechanics.isEmpty) {
+                                return const Text(
+                                    'No mechanics available nearby.',
+                                    style: AppTypography.body);
+                              }
+                              final preview = mechanics.take(3).toList();
+                              return Column(
+                                children: [
+                                  for (int i = 0; i < preview.length; i++) ...[
+                                    if (i > 0) const SizedBox(height: 10),
+                                    _MiniMechanicCard(entry: preview[i]),
+                                  ],
+                                ],
+                              );
+                            },
+                            loading: () => const Column(
+                              children: [
+                                _MiniMechanicCardSkeleton(),
+                                SizedBox(height: 10),
+                                _MiniMechanicCardSkeleton(),
+                                SizedBox(height: 10),
+                                _MiniMechanicCardSkeleton(),
+                              ],
+                            ),
+                            error: (_, __) => const SizedBox.shrink(),
                           ),
                         ),
                     ],
@@ -317,63 +315,76 @@ class _MiniMechanicCard extends ConsumerWidget {
     final mechanic = entry.mechanic;
     final userAsync = ref.watch(mechanicUserProvider(mechanic.uid));
     return GestureDetector(
-      onTap: () => context.go(RouteNames.mechanicProfile, extra: mechanic.uid),
+      onTap: () => context.push(RouteNames.mechanicProfile, extra: mechanic.uid),
       child: Container(
-        width: 128,
+        width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.xl),
           border: Border.all(color: AppColors.border),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0x14E8281E),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0x1AE8281E)),
-              ),
-              child: const Icon(Icons.person_outline_rounded,
-                  color: AppColors.primary, size: 20),
-            ),
-            const SizedBox(height: 10),
             userAsync.when(
-              data: (user) => Text(
-                user != null ? '${user.firstName} ${user.lastName}'.trim() : 'Mechanic',
-                style: AppTypography.bodyLarge,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+              data: (user) => AppAvatar(
+                name: user != null
+                    ? '${user.firstName} ${user.lastName}'.trim()
+                    : 'Mechanic',
+                imageUrl: user?.profilePhoto,
+                size: 44,
               ),
-              loading: () => Container(
-                  width: 80, height: 12,
-                  decoration: BoxDecoration(
-                      color: const Color(0x14FFFFFF),
-                      borderRadius: BorderRadius.circular(4))),
-              error: (_, __) =>
-                  const Text('Mechanic', style: AppTypography.bodyLarge),
+              loading: () => const AppSkeleton.circle(size: 44),
+              error: (_, __) => const AppAvatar(name: 'Mechanic', size: 44),
             ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.star_rounded,
-                    color: AppColors.primary, size: 12),
-                const SizedBox(width: 2),
-                Text(mechanic.rating.toStringAsFixed(1),
-                    style: AppTypography.caption),
-              ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  userAsync.when(
+                    data: (user) => Text(
+                      user != null
+                          ? '${user.firstName} ${user.lastName}'.trim()
+                          : 'Mechanic',
+                      style: AppTypography.bodyLarge,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    loading: () => Container(
+                        width: 100, height: 13,
+                        decoration: BoxDecoration(
+                            color: const Color(0x14FFFFFF),
+                            borderRadius: BorderRadius.circular(4))),
+                    error: (_, __) =>
+                        const Text('Mechanic', style: AppTypography.bodyLarge),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.star_rounded,
+                          color: AppColors.primary, size: 12),
+                      const SizedBox(width: 2),
+                      Text(mechanic.rating.toStringAsFixed(1),
+                          style: AppTypography.caption),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          entry.distanceKm != null
+                              ? '${entry.distanceKm!.toStringAsFixed(1)} km away'
+                              : 'Distance unknown',
+                          style: AppTypography.caption,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              entry.distanceKm != null
-                  ? '${entry.distanceKm!.toStringAsFixed(1)} km away'
-                  : 'Distance unknown',
-              style: AppTypography.caption,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textDisabled, size: 18),
           ],
         ),
       ),
@@ -386,27 +397,31 @@ class _MiniMechanicCardSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 128,
+      width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.xl),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Container(width: 40, height: 40,
-              decoration: BoxDecoration(color: const Color(0x14FFFFFF),
-                  borderRadius: BorderRadius.circular(10))),
-          const SizedBox(height: 10),
-          Container(width: 90, height: 12,
-              decoration: BoxDecoration(color: const Color(0x14FFFFFF),
-                  borderRadius: BorderRadius.circular(4))),
-          const SizedBox(height: 6),
-          Container(width: 60, height: 10,
-              decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
-                  borderRadius: BorderRadius.circular(4))),
+          const AppSkeleton.circle(size: 44),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(width: 100, height: 13,
+                    decoration: BoxDecoration(color: const Color(0x14FFFFFF),
+                        borderRadius: BorderRadius.circular(4))),
+                const SizedBox(height: 6),
+                Container(width: 70, height: 10,
+                    decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
+                        borderRadius: BorderRadius.circular(4))),
+              ],
+            ),
+          ),
         ],
       ),
     );

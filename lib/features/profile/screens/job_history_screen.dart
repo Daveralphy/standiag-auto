@@ -65,7 +65,13 @@ class _JobHistoryScreenState extends ConsumerState<JobHistoryScreen> {
               ),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.mechanicHome),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.mechanicHome);
+                    }
+                  },
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(

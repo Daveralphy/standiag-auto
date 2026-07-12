@@ -61,7 +61,7 @@ class _MechanicSignupStepTwoScreenState
           expertise: _selectedExpertise,
           yearsOfExperience: years,
         );
-    context.go(RouteNames.mechanicSignupStepThree);
+    context.push(RouteNames.mechanicSignupStepThree);
   }
 
   void _toggleExpertise(String item) {
@@ -112,8 +112,13 @@ class _MechanicSignupStepTwoScreenState
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () => context.go(
-                            RouteNames.mechanicSignupStepOne),
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(RouteNames.mechanicSignupStepOne);
+                          }
+                        },
                         child: Container(
                           width: 26, height: 26,
                           decoration: BoxDecoration(

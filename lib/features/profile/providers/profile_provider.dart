@@ -79,12 +79,17 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: ErrorHandler.handle(e, StackTrace.current).message,
+        error: ErrorHandler.handle(e, StackTrace.current,
+                screen: 'ProfileProvider.fetchVehicles')
+            .message,
       );
     }
   }
 
-  Future<void> addVehicle(VehicleModel vehicle) async {
+  /// Returns true on success, false on failure — callers should only
+  /// navigate away on true, not assume the write succeeded just because
+  /// the future completed (it always completes; errors go to state.error).
+  Future<bool> addVehicle(VehicleModel vehicle) async {
     state = state.copyWith(isSaving: true, error: null);
     try {
       final doc = FirebaseFirestore.instance.collection('vehicles').doc();
@@ -109,11 +114,49 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         key: CacheKeys.vehicles,
         value: state.vehicles.map((item) => item.toCache()).toList(),
       );
+      return true;
     } catch (e) {
       state = state.copyWith(
         isSaving: false,
-        error: ErrorHandler.handle(e, StackTrace.current).message,
+        error: ErrorHandler.handle(e, StackTrace.current,
+                screen: 'ProfileProvider.addVehicle')
+            .message,
       );
+      return false;
+    }
+  }
+
+  /// Updates an existing vehicle's fields. Returns true on success, false
+  /// on failure (see [addVehicle]'s doc for why callers must check this
+  /// instead of assuming the write succeeded once the future completes).
+  Future<bool> updateVehicle(VehicleModel vehicle) async {
+    state = state.copyWith(isSaving: true, error: null);
+    try {
+      await FirebaseFirestore.instance
+          .collection('vehicles')
+          .doc(vehicle.id)
+          .update(vehicle.toFirestore());
+      state = state.copyWith(
+        isSaving: false,
+        vehicles: [
+          for (final v in state.vehicles)
+            if (v.id == vehicle.id) vehicle else v,
+        ],
+      );
+      await CacheManager.instance.write(
+        box: CacheKeys.vehiclesBox,
+        key: CacheKeys.vehicles,
+        value: state.vehicles.map((item) => item.toCache()).toList(),
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isSaving: false,
+        error: ErrorHandler.handle(e, StackTrace.current,
+                screen: 'ProfileProvider.updateVehicle')
+            .message,
+      );
+      return false;
     }
   }
 
@@ -130,7 +173,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       );
     } catch (e) {
       state = state.copyWith(
-        error: ErrorHandler.handle(e, StackTrace.current).message,
+        error: ErrorHandler.handle(e, StackTrace.current,
+                screen: 'ProfileProvider.deleteVehicle')
+            .message,
       );
     }
   }

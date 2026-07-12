@@ -54,7 +54,7 @@ class _UserSignupStepTwoScreenState
           email: email,
           address: _addressController.text.trim(),
         );
-    context.go(RouteNames.userSignupStepThree);
+    context.push(RouteNames.userSignupStepThree);
   }
 
   @override
@@ -96,7 +96,13 @@ class _UserSignupStepTwoScreenState
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () => context.go(RouteNames.userSignupStepOne),
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(RouteNames.userSignupStepOne);
+                          }
+                        },
                         child: Container(
                           width: 26, height: 26,
                           decoration: BoxDecoration(

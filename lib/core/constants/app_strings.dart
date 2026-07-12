@@ -77,6 +77,7 @@ class AppStrings {
   static const String fieldEmail = 'Email Address';
   static const String fieldAddress = 'Address';
   static const String fieldUsername = 'Username';
+  static const String fieldFullName = 'Full Name';
   static const String fieldPassword = 'Password';
   static const String fieldConfirmPassword = 'Confirm Password';
   static const String fieldWorkshop = 'Workshop Address';
@@ -321,6 +322,12 @@ class AppStrings {
   static const String buyCreditsPayPrefix = 'Pay ';
 
   static const String creditsHistoryTitle = 'Transactions';
+
+  // ─── Notifications ─────────────────────────────────────────────────────────
+
+  static const String notificationsEmptyTitle = 'No notifications yet';
+  static const String notificationsEmptyBody =
+      "We'll let you know when there's something new.";
 
   // ─── General UI ────────────────────────────────────────────────────────────
 

@@ -224,7 +224,7 @@ class _MechanicCardScreenState extends ConsumerState<MechanicCardScreen> {
                       Expanded(
                         child: AppButton(
                           label: 'View Profile',
-                          onTap: () => context.go(RouteNames.mechanicProfile,
+                          onTap: () => context.push(RouteNames.mechanicProfile,
                               extra: widget.mechanicId),
                           variant: AppButtonVariant.ghost,
                         ),

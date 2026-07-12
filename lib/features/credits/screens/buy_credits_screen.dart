@@ -12,6 +12,7 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_error_toast.dart';
@@ -76,7 +77,13 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
                   AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userCredits),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.userCredits);
+                    }
+                  },
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
@@ -208,7 +215,7 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
                                           maxLines: 1)),
                                   ],
                                 ]),
-                                Text('₦${_formatPrice(b.priceNaira)}',
+                                Text(Formatters.naira(b.priceNaira),
                                     style: AppTypography.body.copyWith(
                                         color: AppColors.textMuted),
                                     overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -221,7 +228,9 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
 
                     const SizedBox(height: 24),
                     AppButton(
-                      label: AppStrings.buyCreditsConfirm,
+                      label: _selectedBundle != null
+                          ? 'Pay ${Formatters.naira(_bundles[_selectedBundle!].priceNaira)}'
+                          : AppStrings.buyCreditsConfirm,
                       onTap: _selectedBundle != null ? _purchase : null,
                       isLoading: creditsState.isPurchasing,
                     ),
@@ -234,14 +243,6 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
         ),
       ),
     );
-  }
-
-  String _formatPrice(int price) {
-    if (price >= 1000) {
-      return '${(price / 1000).toStringAsFixed(1)}k'
-          .replaceAll('.0k', 'k');
-    }
-    return price.toString();
   }
 }
 

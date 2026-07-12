@@ -52,7 +52,7 @@ class _UserSignupStepOneScreenState
           gender: _gender!,
           dob: _dobController.text.trim(),
         );
-    context.go(RouteNames.userSignupStepTwo);
+    context.push(RouteNames.userSignupStepTwo);
   }
 
   @override
@@ -94,7 +94,13 @@ class _UserSignupStepOneScreenState
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () => context.go(RouteNames.profileTypePicker),
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(RouteNames.profileTypePicker);
+                          }
+                        },
                         child: Container(
                           width: 26, height: 26,
                           decoration: BoxDecoration(

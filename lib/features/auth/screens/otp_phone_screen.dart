@@ -169,7 +169,13 @@ class _OtpPhoneScreenState extends ConsumerState<OtpPhoneScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: () => context.go(RouteNames.otpEmail),
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(RouteNames.otpEmail);
+                          }
+                        },
                         child: Container(
                           width: 36, height: 36,
                           decoration: BoxDecoration(

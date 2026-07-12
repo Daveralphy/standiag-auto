@@ -72,7 +72,13 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
               ),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.settingsFor(type)),
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.settingsFor(type));
+                    }
+                  },
                   child: Container(
                     width: 32,
                     height: 32,

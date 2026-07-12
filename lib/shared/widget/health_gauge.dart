@@ -21,7 +21,7 @@ class HealthGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fraction = score == null ? 0.0 : (score!.clamp(0, 10)) / 10;
+    final fraction = score == null ? null : (score!.clamp(0, 10)) / 10;
     return SizedBox(
       width: size,
       height: size * 0.66,
@@ -61,7 +61,7 @@ class HealthGauge extends StatelessWidget {
 }
 
 class _HealthGaugePainter extends CustomPainter {
-  final double fraction;
+  final double? fraction;
   const _HealthGaugePainter({required this.fraction});
 
   @override
@@ -86,18 +86,46 @@ class _HealthGaugePainter extends CustomPainter {
       ..color = const Color(0xFF1A1A1A);
     canvas.drawArc(rect, startAngle, totalSweep, false, track);
 
-    if (fraction > 0) {
-      final progress = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 10
-        ..strokeCap = StrokeCap.round
-        ..shader = const LinearGradient(
-          colors: [AppColors.success, AppColors.warning, AppColors.primary],
-        ).createShader(rect);
-      canvas.drawArc(rect, startAngle, totalSweep * fraction, false, progress);
+    // Tick labels (0 / 5 / 10) along the arc, always shown — this is what
+    // reads it as "a gauge with a scale" rather than a bare needle.
+    for (final tick in [
+      (angle: startAngle, label: '0'),
+      (angle: startAngle + totalSweep / 2, label: '5'),
+      (angle: startAngle + totalSweep, label: '10'),
+    ]) {
+      final tickPoint = Offset(
+        center.dx + (radius + 14) * math.cos(tick.angle),
+        center.dy + (radius + 14) * math.sin(tick.angle),
+      );
+      final tp = TextPainter(
+        text: TextSpan(
+          text: tick.label,
+          style: const TextStyle(
+            fontFamily: 'Inter', fontSize: 9,
+            color: Color(0x33FFFFFF), fontWeight: FontWeight.w500,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, tickPoint - Offset(tp.width / 2, tp.height / 2));
     }
 
-    final needleAngle = startAngle + totalSweep * fraction;
+    // The needle and its hub only appear once a real score exists — an
+    // idle needle pinned hard against one edge with nothing else on the
+    // dial reads as broken rather than "no data yet".
+    if (fraction == null) return;
+
+    final progress = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.round
+      ..shader = const LinearGradient(
+        colors: [AppColors.success, AppColors.warning, AppColors.primary],
+      ).createShader(rect);
+    canvas.drawArc(
+        rect, startAngle, totalSweep * fraction!, false, progress);
+
+    final needleAngle = startAngle + totalSweep * fraction!;
     final needleEnd = Offset(
       center.dx + (radius - 18) * math.cos(needleAngle),
       center.dy + (radius - 18) * math.sin(needleAngle),
