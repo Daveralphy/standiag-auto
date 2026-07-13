@@ -109,20 +109,20 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
                       itemBuilder: (_, __) => const _ScanCardSkeleton(),
                     )
                   : state.history.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                                 horizontal: AppSpacing.xxl),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.speed_rounded,
+                                Icon(Icons.speed_rounded,
                                     color: Color(0x33FFFFFF), size: 48),
-                                const SizedBox(height: 16),
-                                const Text('No scans yet',
+                                SizedBox(height: 16),
+                                Text('No scans yet',
                                     style: AppTypography.heading3),
-                                const SizedBox(height: 8),
-                                const Text(
+                                SizedBox(height: 8),
+                                Text(
                                     'Connect your OBD-II adapter and run a scan to see your vehicle\'s diagnostic history here.',
                                     style: AppTypography.body,
                                     textAlign: TextAlign.center),

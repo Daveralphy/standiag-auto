@@ -93,22 +93,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       itemBuilder: (_, __) => const _NotificationSkeleton(),
                     )
                   : state.notifications.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                                 horizontal: AppSpacing.xxl),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
+                                Icon(
                                     Icons.notifications_none_rounded,
                                     color: Color(0x33FFFFFF), size: 48),
-                                const SizedBox(height: 16),
-                                const Text(
+                                SizedBox(height: 16),
+                                Text(
                                     AppStrings.notificationsEmptyTitle,
                                     style: AppTypography.heading3),
-                                const SizedBox(height: 8),
-                                const Text(
+                                SizedBox(height: 8),
+                                Text(
                                     AppStrings.notificationsEmptyBody,
                                     style: AppTypography.body,
                                     textAlign: TextAlign.center),

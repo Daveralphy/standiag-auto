@@ -199,12 +199,12 @@ class _ScanDetailBody extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppRadius.card),
                 border: Border.all(color: const Color(0x334CAF50)),
               ),
-              child: Row(
+              child: const Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded,
+                  Icon(Icons.check_circle_rounded,
                       color: AppColors.success, size: 18),
-                  const SizedBox(width: 10),
-                  const Expanded(
+                  SizedBox(width: 10),
+                  Expanded(
                     child: Text('No trouble codes found — this scan came back clean.',
                         style: AppTypography.body),
                   ),
