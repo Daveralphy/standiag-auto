@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 
 import 'app_error.dart';
 import 'error_messages.dart';
@@ -14,6 +15,13 @@ import 'error_messages.dart';
 class ErrorHandler {
   // Private constructor — this class is never instantiated.
   ErrorHandler._();
+
+  // Crashlytics only ships plugin support for Android, iOS, and macOS, and
+  // needs a live Firebase app — calling it on web/Windows/Linux, or in a
+  // widget test with no Firebase.initializeApp(), throws and would crash
+  // the very error handler that's supposed to catch failures gracefully.
+  static bool get _crashlyticsSupported =>
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS || Platform.isMacOS);
 
   /// Converts any exception into an AppError with a user-friendly message.
   /// Also logs the raw technical details to Crashlytics.
@@ -189,6 +197,7 @@ class ErrorHandler {
     print(
         '[AppError] screen=${screen ?? '?'} type=${error.type} code=${error.code} exception=$exception');
 
+    if (!_crashlyticsSupported) return;
     FirebaseCrashlytics.instance.recordError(
       exception,
       stackTrace,

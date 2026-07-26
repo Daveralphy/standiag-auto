@@ -170,10 +170,10 @@ class _VerifyPasswordChangeScreenState
                               currentPassword: widget.currentPassword,
                               newPassword: widget.newPassword,
                             );
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         context.go(RouteNames.settingsFor(type));
                       } catch (error, stackTrace) {
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         AppErrorToast.showMessage(context,
                             ErrorHandler.handle(error, stackTrace).message);
                       } finally {
