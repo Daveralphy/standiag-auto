@@ -13,9 +13,9 @@ import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
-import '../../../shared/widget/live_map_canvas.dart';
+import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/job_model.dart';
 import '../providers/job_provider.dart';
 
@@ -64,29 +64,23 @@ class _MechanicPostCallScreenState
       backgroundColor: AppColors.mapBackground,
       body: Stack(
         children: [
-          LiveMapCanvas(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(6.5265, 3.3810),
-              zoom: 14.2,
-            ),
-            markers: {
-              buildMapMarker(
-                markerId: 'mechanic-location',
+          AppMap(
+            initialCenter: const LatLng(6.5265, 3.3810),
+            initialZoom: 14.2,
+            markers: [
+              AppMapMarker(
+                id: 'mechanic-location',
                 position: mechanicLocation,
-                icon: buildMechanicMarkerIcon(),
-                infoWindowTitle: 'You',
+                child: buildMechanicMarkerIcon(),
               ),
-              buildMapMarker(
-                markerId: 'user-location',
+              AppMapMarker(
+                id: 'user-location',
                 position: userLocation,
-                icon: buildUserMarkerIcon(),
-                infoWindowTitle: 'John Doe',
+                child: buildUserMarkerIcon(),
               ),
-            },
+            ],
             enableCurrentLocation: true,
-            showCurrentLocationButton: false,
-            showZoomControls: false,
-            showCompass: false,
+            showMapControls: false,
           ),
 
           Positioned(top: 0, left: 0, right: 0, height: 140,

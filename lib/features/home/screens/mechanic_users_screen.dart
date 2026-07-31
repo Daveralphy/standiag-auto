@@ -16,7 +16,7 @@ import '../../../features/jobs/providers/job_provider.dart';
 import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
-import '../../../shared/widget/app_dark_map.dart';
+import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/map_search_bar.dart';
@@ -58,11 +58,11 @@ class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
     final markers = [
       for (final job in requests)
         if (job.carOwnerLocation != null)
-          AppDarkMapMarker(
+          AppMapMarker(
             id: job.id,
             position: LatLng(
                 job.carOwnerLocation!.latitude, job.carOwnerLocation!.longitude),
-            child: const AppDarkMapPin(icon: Icons.person_outline_rounded),
+            child: const AppMapPin(icon: Icons.person_outline_rounded),
           ),
     ];
 
@@ -81,11 +81,17 @@ class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
       drawer: const MechanicDrawerScreen(),
       body: Stack(
         children: [
-          AppDarkMap(
+          AppMap(
             initialCenter: const LatLng(6.5244, 3.3792),
             initialZoom: 13.2,
             markers: markers,
-            radiusMeters: 2000,
+            circles: const [
+              AppMapCircle(
+                id: 'service-radius',
+                center: LatLng(6.5244, 3.3792),
+                radiusMeters: 2000,
+              ),
+            ],
           ),
 
           // ─── Top gradient ─────────────────────────────────────────────

@@ -14,9 +14,9 @@ import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_badge.dart';
 import '../../../shared/widget/app_button.dart';
-import '../../../shared/widget/live_map_canvas.dart';
+import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import '../providers/mechanics_provider.dart';
 import '../../jobs/providers/job_provider.dart';
 
@@ -67,38 +67,32 @@ class _MechanicCardScreenState extends ConsumerState<MechanicCardScreen> {
       backgroundColor: AppColors.mapBackground,
       body: Stack(
         children: [
-          LiveMapCanvas(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(6.5244, 3.3792),
-              zoom: 13.5,
-            ),
-            markers: {
-              buildMapMarker(
-                markerId: 'user-location',
+          AppMap(
+            initialCenter: const LatLng(6.5244, 3.3792),
+            initialZoom: 13.5,
+            markers: [
+              AppMapMarker(
+                id: 'user-location',
                 position: const LatLng(6.5244, 3.3792),
-                icon: buildUserMarkerIcon(),
-                infoWindowTitle: 'Your location',
+                child: buildUserMarkerIcon(),
               ),
-              buildMapMarker(
-                markerId: 'mechanic-location',
+              AppMapMarker(
+                id: 'mechanic-location',
                 position: const LatLng(6.5290, 3.3830),
-                icon: buildMechanicMarkerIcon(),
-                infoWindowTitle: 'Kwame Asante',
+                child: buildMechanicMarkerIcon(),
               ),
-            },
-            polylines: {
-              buildDashedRoutePolyline(
-                polylineId: 'search-route',
-                points: const [
+            ],
+            polylines: const [
+              AppMapPolyline(
+                id: 'search-route',
+                points: [
                   LatLng(6.5244, 3.3792),
                   LatLng(6.5290, 3.3830),
                 ],
               ),
-            },
+            ],
             enableCurrentLocation: true,
-            showCurrentLocationButton: false,
-            showZoomControls: false,
-            showCompass: false,
+            showMapControls: false,
           ),
 
           // Top gradient

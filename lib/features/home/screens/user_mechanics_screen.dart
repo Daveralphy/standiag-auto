@@ -13,7 +13,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/app_avatar.dart';
-import '../../../shared/widget/app_dark_map.dart';
+import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/map_search_bar.dart';
@@ -54,11 +54,11 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
     final markers = [
       for (final entry in mechanics)
         if (entry.mechanic.location != null)
-          AppDarkMapMarker(
+          AppMapMarker(
             id: entry.mechanic.uid,
             position: LatLng(entry.mechanic.location!.latitude,
                 entry.mechanic.location!.longitude),
-            child: const AppDarkMapPin(icon: Icons.build_rounded),
+            child: const AppMapPin(icon: Icons.build_rounded),
             onTap: () => context.push(RouteNames.mechanicProfile,
                 extra: entry.mechanic.uid),
           ),
@@ -82,7 +82,7 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
       drawer: const UserDrawerScreen(),
       body: Stack(
         children: [
-          AppDarkMap(
+          AppMap(
             initialCenter: const LatLng(6.5244, 3.3792),
             initialZoom: 13.2,
             markers: markers,

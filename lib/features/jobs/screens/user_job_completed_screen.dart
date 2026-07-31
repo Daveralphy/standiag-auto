@@ -15,9 +15,9 @@ import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_badge.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
-import '../../../shared/widget/live_map_canvas.dart';
+import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import '../providers/job_provider.dart';
 
 class UserJobCompletedScreen extends ConsumerStatefulWidget {
@@ -60,29 +60,23 @@ class _UserJobCompletedScreenState
       backgroundColor: AppColors.mapBackground,
       body: Stack(
         children: [
-          LiveMapCanvas(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(6.5244, 3.3792),
-              zoom: 15.2,
-            ),
-            markers: {
-              buildMapMarker(
-                markerId: 'user-location',
+          AppMap(
+            initialCenter: const LatLng(6.5244, 3.3792),
+            initialZoom: 15.2,
+            markers: [
+              AppMapMarker(
+                id: 'user-location',
                 position: userLocation,
-                icon: buildUserMarkerIcon(),
-                infoWindowTitle: 'Your location',
+                child: buildUserMarkerIcon(),
               ),
-              buildMapMarker(
-                markerId: 'mechanic-location',
+              AppMapMarker(
+                id: 'mechanic-location',
                 position: mechanicLocation,
-                icon: buildMechanicMarkerIcon(),
-                infoWindowTitle: 'Kwame Asante',
+                child: buildMechanicMarkerIcon(),
               ),
-            },
+            ],
             enableCurrentLocation: true,
-            showCurrentLocationButton: false,
-            showZoomControls: false,
-            showCompass: false,
+            showMapControls: false,
           ),
 
           Positioned(top: 0, left: 0, right: 0, height: 140,

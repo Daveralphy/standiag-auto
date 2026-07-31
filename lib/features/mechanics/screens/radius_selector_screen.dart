@@ -4,7 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
@@ -12,7 +12,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/widget/app_button.dart';
-import '../../../shared/widget/live_map_canvas.dart';
+import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
 class RadiusSelectorScreen extends StatefulWidget {
@@ -38,27 +38,25 @@ class _RadiusSelectorScreenState extends State<RadiusSelectorScreen> {
       backgroundColor: AppColors.mapBackground,
       body: Stack(
         children: [
-          LiveMapCanvas(
-            initialCameraPosition: CameraPosition(target: _center, zoom: 13.5),
-            markers: {
-              buildMapMarker(
-                markerId: 'search-center',
+          AppMap(
+            initialCenter: _center,
+            initialZoom: 13.5,
+            markers: [
+              AppMapMarker(
+                id: 'search-center',
                 position: _center,
-                icon: buildDestinationMarkerIcon(),
-                infoWindowTitle: 'Search area',
+                child: buildDestinationMarkerIcon(),
               ),
-            },
-            circles: {
-              buildRadiusCircle(
-                circleId: 'search-radius',
+            ],
+            circles: [
+              AppMapCircle(
+                id: 'search-radius',
                 center: _center,
                 radiusMeters: _radius * 1000,
               ),
-            },
+            ],
             enableCurrentLocation: true,
-            showCurrentLocationButton: false,
-            showZoomControls: false,
-            showCompass: false,
+            showMapControls: false,
           ),
 
           // Top gradient

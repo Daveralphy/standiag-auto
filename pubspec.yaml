@@ -34,11 +34,10 @@ dependencies:
   hive_flutter: ^1.1.0            # Persistent local cache
 
   # ─── Maps ──────────────────────────────────────────────────────────────────
-  google_maps_flutter: ^2.10.0    # Job-flow map screens (in-app call/tracking)
-  flutter_map: ^7.0.2             # Free, no-API-key map for the two nav tabs
-  vector_map_tiles: ^8.0.0        # Vector tiles (CARTO Dark Matter) for AppDarkMap — sharp at any zoom, no raster blur
-  vector_tile_renderer: ^5.2.1    # ThemeReader — used directly to rebuild a brightened label theme
-  http: ^1.2.0                    # Fetches the Dark Matter style.json once to brighten its label colors
+  flutter_map: ^7.0.2             # Free, no-API-key vector map (CARTO Positron) — sharp at any zoom, no raster blur
+  vector_map_tiles: ^8.0.0        # Vector tile rendering for AppMap
+  vector_tile_renderer: ^5.2.1    # ThemeReader — used directly to rebuild the map's label theme
+  http: ^1.2.0                    # Fetches the Positron style.json once per app run
   latlong2: ^0.9.1                # LatLng type used by flutter_map
 
   # ─── Calls ─────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
@@ -13,7 +13,7 @@ import '../../../core/navigation/route_names.dart';
 import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_nav_bar.dart';
-import '../../../shared/widget/live_map_canvas.dart';
+import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../providers/job_provider.dart';
 
@@ -52,35 +52,29 @@ class _UserTrackingScreenState extends ConsumerState<UserTrackingScreen> {
       backgroundColor: AppColors.mapBackground,
       body: Stack(
         children: [
-          LiveMapCanvas(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(6.5244, 3.3792),
-              zoom: 13.5,
-            ),
-            markers: {
-              buildMapMarker(
-                markerId: 'user-location',
+          AppMap(
+            initialCenter: const LatLng(6.5244, 3.3792),
+            initialZoom: 13.5,
+            markers: [
+              AppMapMarker(
+                id: 'user-location',
                 position: userLocation,
-                icon: buildUserMarkerIcon(),
-                infoWindowTitle: 'Your location',
+                child: buildUserMarkerIcon(),
               ),
-              buildMapMarker(
-                markerId: 'mechanic-location',
+              AppMapMarker(
+                id: 'mechanic-location',
                 position: mechanicLocation,
-                icon: buildMechanicMarkerIcon(),
-                infoWindowTitle: 'Kwame Asante',
+                child: buildMechanicMarkerIcon(),
               ),
-            },
-            polylines: {
-              buildDashedRoutePolyline(
-                polylineId: 'tracking-route',
+            ],
+            polylines: [
+              AppMapPolyline(
+                id: 'tracking-route',
                 points: [userLocation, mechanicLocation],
               ),
-            },
+            ],
             enableCurrentLocation: true,
-            showCurrentLocationButton: false,
-            showZoomControls: false,
-            showCompass: false,
+            showMapControls: false,
           ),
           Positioned(
             top: 0,
