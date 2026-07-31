@@ -231,3 +231,20 @@ final pendingJobForMechanicProvider =
       .snapshots()
       .map((snap) => snap.docs.isEmpty ? null : JobModel.fromFirestore(snap.docs.first));
 });
+
+/// Real-time listener for a job just assigned to this mechanic through the
+/// quote flow — created directly in the `accepted` state (no call, no
+/// pending review) once the car owner picks their quote. The counterpart
+/// to [pendingJobForMechanicProvider] for that flow: it's what routes the
+/// mechanic straight to the en-route screen instead of an incoming call.
+/// Foreground only, watched from mechanic_home_screen while the app is open.
+final acceptedJobForMechanicProvider =
+    StreamProvider.family<JobModel?, String>((ref, mechanicId) {
+  return FirebaseFirestore.instance
+      .collection('jobs')
+      .where('mechanicId', isEqualTo: mechanicId)
+      .where('status', isEqualTo: JobStatus.accepted.value)
+      .limit(1)
+      .snapshots()
+      .map((snap) => snap.docs.isEmpty ? null : JobModel.fromFirestore(snap.docs.first));
+});

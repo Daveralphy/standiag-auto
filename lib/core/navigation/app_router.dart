@@ -39,10 +39,8 @@ import '../../features/jobs/screens/user_rate_mechanic_screen.dart';
 import '../../features/jobs/screens/user_tracking_screen.dart';
 import '../../features/mechanics/screens/in_app_call_screen.dart';
 import '../../features/mechanics/screens/mechanic_candidate_profile_screen.dart';
-import '../../features/mechanics/screens/mechanic_card_screen.dart';
 import '../../features/profile/screens/mechanic_profile_screen.dart';
-import '../../features/mechanics/screens/radius_selector_screen.dart';
-import '../../features/mechanics/screens/searching_screen.dart';
+import '../../features/mechanics/screens/send_quote_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_one_screen.dart';
 import '../../features/onboarding/screens/splash_two_screen.dart';
@@ -70,6 +68,7 @@ import '../../features/settings/screens/verify_password_change_screen.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/providers/user_provider.dart';
 import 'route_names.dart';
+import 'tab_shell.dart';
 
 // Bridges Riverpod's auth state to GoRouter's Listenable-based refresh hook,
 // so the router re-evaluates `redirect` the moment auth state changes (e.g.
@@ -198,40 +197,71 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (_, __) =>
             const NoTransitionPage(child: MechanicSignupStepThreeScreen()),
       ),
-      // No-transition pages: these six are the bottom-nav tabs for each
-      // profile type. The header and nav bar sit in the exact same place on
-      // all three, so switching tabs should read as content swapping in
-      // place, not as a new page sliding/fading in.
-      GoRoute(path: RouteNames.userHome,
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: UserHomeScreen())),
-      GoRoute(path: RouteNames.userScan,
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: UserScanScreen())),
-      GoRoute(path: RouteNames.userMechanics,
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: UserMechanicsScreen())),
-      GoRoute(path: RouteNames.mechanicHome,
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: MechanicHomeScreen())),
-      GoRoute(path: RouteNames.mechanicScan,
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: MechanicScanScreen())),
-      GoRoute(path: RouteNames.mechanicUsers,
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: MechanicUsersScreen())),
+      // These six are the bottom-nav tabs for each profile type, grouped
+      // into one persistent shell per profile type (branch order matches
+      // AppNavBar's own left-to-right order: Scan, Home, Mechanics/Users).
+      // A StatefulShellRoute keeps every branch's screen alive in memory
+      // across tab switches — including its map, if it has one — instead
+      // of tearing it down and rebuilding it on every switch the way a
+      // plain GoRoute per tab did.
+      StatefulShellRoute.indexedStack(
+        builder: (_, __, navigationShell) =>
+            UserTabShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: RouteNames.userScan,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: UserScanScreen())),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: RouteNames.userHome,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: UserHomeScreen())),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: RouteNames.userMechanics,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: UserMechanicsScreen())),
+          ]),
+        ],
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (_, __, navigationShell) =>
+            MechanicTabShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: RouteNames.mechanicScan,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: MechanicScanScreen())),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: RouteNames.mechanicHome,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: MechanicHomeScreen())),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: RouteNames.mechanicUsers,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: MechanicUsersScreen())),
+          ]),
+        ],
+      ),
 
-      GoRoute(path: RouteNames.radiusSelector,
-          builder: (_, __) => const RadiusSelectorScreen()),
-      GoRoute(path: RouteNames.searching,
-          builder: (_, state) =>
-              SearchingScreen(radiusKm: state.extra as double? ?? 5.0)),
-      GoRoute(path: RouteNames.mechanicCard,
-          builder: (_, state) =>
-              MechanicCardScreen(mechanicId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.mechanicProfile,
-          builder: (_, state) => MechanicCandidateProfileScreen(
-              mechanicId: state.extra as String? ?? '')),
+          builder: (_, state) {
+            final extra = state.extra;
+            if (extra is Map) {
+              return MechanicCandidateProfileScreen(
+                mechanicId: extra['mechanicId'] as String? ?? '',
+                requestId: extra['requestId'] as String?,
+              );
+            }
+            return MechanicCandidateProfileScreen(
+                mechanicId: extra as String? ?? '');
+          }),
+      GoRoute(path: RouteNames.sendQuote,
+          builder: (_, state) =>
+              SendQuoteScreen(requestId: state.extra as String? ?? '')),
       GoRoute(path: RouteNames.inAppCall,
           builder: (_, state) {
             final extra = state.extra as Map<String, dynamic>? ?? const {};

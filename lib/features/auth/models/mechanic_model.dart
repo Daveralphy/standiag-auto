@@ -13,6 +13,11 @@ class MechanicModel {
   final bool isVisible;
   final GeoPoint? location;
 
+  /// This device's current push-notification token — kept fresh by
+  /// fcm_token_service.dart so a Cloud Function can alert this mechanic
+  /// when a car owner broadcasts a service request nearby.
+  final String? fcmToken;
+
   const MechanicModel({
     required this.uid,
     required this.workshopAddress,
@@ -23,6 +28,7 @@ class MechanicModel {
     required this.credits,
     required this.isVisible,
     this.location,
+    this.fcmToken,
   });
 
   factory MechanicModel.fromFirestore(DocumentSnapshot doc) {
@@ -37,6 +43,7 @@ class MechanicModel {
       credits: data['credits'] ?? 0,
       isVisible: data['isVisible'] ?? false,
       location: data['location'] as GeoPoint?,
+      fcmToken: data['fcmToken'] as String?,
     );
   }
 
@@ -51,6 +58,7 @@ class MechanicModel {
       'credits': credits,
       'isVisible': isVisible,
       if (location != null) 'location': location,
+      if (fcmToken != null) 'fcmToken': fcmToken,
     };
   }
 
@@ -63,6 +71,7 @@ class MechanicModel {
     int? credits,
     bool? isVisible,
     GeoPoint? location,
+    String? fcmToken,
   }) {
     return MechanicModel(
       uid: uid,
@@ -74,6 +83,7 @@ class MechanicModel {
       credits: credits ?? this.credits,
       isVisible: isVisible ?? this.isVisible,
       location: location ?? this.location,
+      fcmToken: fcmToken ?? this.fcmToken,
     );
   }
 }

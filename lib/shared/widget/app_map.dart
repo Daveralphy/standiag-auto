@@ -55,7 +55,7 @@ class AppMapPolyline {
   });
 }
 
-/// A radius circle, e.g. the search-radius preview on RadiusSelectorScreen.
+/// A radius circle, e.g. a mechanic's service-area preview on the map.
 class AppMapCircle {
   final String id;
   final LatLng center;
@@ -106,13 +106,26 @@ class _AppMapState extends State<AppMap> {
   bool _isRecentering = false;
   Style? _vectorStyle;
   double _rotation = 0;
+  bool _hasCenteredOnFix = false;
 
   @override
   void initState() {
     super.initState();
+    // Every AppMap this app session (across screens and tab switches) shares
+    // one last-known GPS fix — a fresh instance shows it immediately instead
+    // of sitting on the loading pill through another full GPS resolve, which
+    // is most of what made the map feel like it was "reloading" on every
+    // navigation even though nothing actually changed.
+    final cached = _LastKnownLocation.value;
+    if (cached != null) {
+      _currentLocation = cached;
+      _locationPermissionGranted = true;
+      _isResolvingLocation = false;
+      _hasCenteredOnFix = true;
+    }
     if (widget.enableCurrentLocation) {
       _loadCurrentLocation();
-    } else {
+    } else if (cached == null) {
       _isResolvingLocation = false;
     }
     _loadVectorStyle();
@@ -163,12 +176,20 @@ class _AppMapState extends State<AppMap> {
       final position = await Geolocator.getCurrentPosition();
       if (!mounted) return;
       final location = LatLng(position.latitude, position.longitude);
+      _LastKnownLocation.value = location;
       setState(() {
         _currentLocation = location;
         _locationPermissionGranted = true;
         _isResolvingLocation = false;
       });
-      _controller.move(location, widget.initialZoom);
+      // Only snap the camera to this fix the first time one lands for this
+      // instance — a cached fix from a previous screen has already centered
+      // it, and re-centering on every later refresh would fight the user's
+      // own panning/zooming.
+      if (!_hasCenteredOnFix) {
+        _hasCenteredOnFix = true;
+        _controller.move(location, widget.initialZoom);
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -399,6 +420,16 @@ class _AppMapState extends State<AppMap> {
       errorTileCallback: (tile, error, stackTrace) {},
     );
   }
+}
+
+/// The most recent GPS fix from any [AppMap] instance this app session —
+/// shared so a new instance (a fresh screen, a tab switch that rebuilds its
+/// route) starts centered on it immediately instead of sitting on
+/// [widget.initialCenter] and the loading pill through another full GPS
+/// resolve every single time.
+class _LastKnownLocation {
+  _LastKnownLocation._();
+  static LatLng? value;
 }
 
 /// Fetches CARTO's Positron style once per app run and caches the result so

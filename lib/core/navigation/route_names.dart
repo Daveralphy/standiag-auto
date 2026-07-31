@@ -39,9 +39,6 @@ class RouteNames {
   static const String userMechanics = '/user/mechanics';
 
   // Mechanic search flow
-  static const String radiusSelector = '/user/radius-selector';
-  static const String searching = '/user/searching';
-  static const String mechanicCard = '/user/mechanic-card';
   static const String mechanicProfile = '/user/mechanic-profile';
   static const String inAppCall = '/user/in-app-call';
 
@@ -92,6 +89,9 @@ class RouteNames {
   static const String mechanicIncomingCall = '/mechanic/incoming-call';
   static const String mechanicActiveCall = '/mechanic/active-call';
   static const String mechanicPostCall = '/mechanic/post-call';
+
+  // Quote flow — mechanic side
+  static const String sendQuote = '/mechanic/send-quote';
 
   // Job flow — mechanic side
   static const String mechanicEnRoute = '/mechanic/en-route';

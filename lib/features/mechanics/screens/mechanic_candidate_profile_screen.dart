@@ -1,7 +1,15 @@
 // Mechanic Candidate Profile screen — full profile view of a mechanic the
-// car owner is considering, shown from the mechanic card or search results.
-// Not to be confused with profile/screens/mechanic_profile_screen.dart,
+// car owner is considering, shown from the map, search results, or an
+// incoming quote. Not to be confused with profile/screens/mechanic_profile_screen.dart,
 // which is a mechanic's view of their OWN profile.
+//
+// Two modes, based on whether [requestId] is set:
+//  - No requestId: the car owner picked this mechanic directly (map pin or
+//    search) — "Call Mechanic" starts the existing direct-call flow.
+//  - With requestId: they're here from one of this mechanic's quotes on an
+//    open request — this screen shows that quote and "Accept & Start Job"
+//    finalizes it (creates the job already in the accepted state and sends
+//    the mechanic straight en route), no call involved.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,11 +26,18 @@ import '../../../shared/widget/app_badge.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../providers/mechanics_provider.dart';
+import '../../jobs/models/quote_model.dart';
 import '../../jobs/providers/job_provider.dart';
+import '../../jobs/providers/service_request_provider.dart';
 
 class MechanicCandidateProfileScreen extends ConsumerStatefulWidget {
   final String mechanicId;
-  const MechanicCandidateProfileScreen({super.key, required this.mechanicId});
+  final String? requestId;
+  const MechanicCandidateProfileScreen({
+    super.key,
+    required this.mechanicId,
+    this.requestId,
+  });
 
   @override
   ConsumerState<MechanicCandidateProfileScreen> createState() =>
@@ -31,7 +46,7 @@ class MechanicCandidateProfileScreen extends ConsumerStatefulWidget {
 
 class _MechanicCandidateProfileScreenState
     extends ConsumerState<MechanicCandidateProfileScreen> {
-  bool _isCalling = false;
+  bool _isBusy = false;
 
   @override
   void initState() {
@@ -40,7 +55,7 @@ class _MechanicCandidateProfileScreenState
   }
 
   Future<void> _callMechanic() async {
-    setState(() => _isCalling = true);
+    setState(() => _isBusy = true);
     final carOwnerId = ref.read(currentUserIdProvider);
     if (carOwnerId == null) return;
     final jobId = await ref.read(jobProvider.notifier).createJob(
@@ -54,6 +69,20 @@ class _MechanicCandidateProfileScreenState
         extra: {'jobId': jobId, 'mechanicId': widget.mechanicId});
   }
 
+  Future<void> _acceptQuote(QuoteModel quote) async {
+    setState(() => _isBusy = true);
+    final request = ref.read(serviceRequestByIdProvider(widget.requestId!)).valueOrNull;
+    if (request == null) {
+      setState(() => _isBusy = false);
+      return;
+    }
+    final jobId = await ref
+        .read(serviceRequestProvider.notifier)
+        .acceptQuote(request: request, quote: quote);
+    if (!mounted) return;
+    context.go(RouteNames.userMechanicAccepted, extra: jobId);
+  }
+
   @override
   Widget build(BuildContext context) {
     final mechanicAsync = ref.watch(mechanicByIdProvider(widget.mechanicId));
@@ -64,6 +93,16 @@ class _MechanicCandidateProfileScreenState
     final mechanicName = mechanicUser != null
         ? '${mechanicUser.firstName} ${mechanicUser.lastName}'.trim()
         : 'Mechanic';
+
+    QuoteModel? quote;
+    if (widget.requestId != null) {
+      final quotes =
+          ref.watch(quotesForRequestProvider(widget.requestId!)).valueOrNull;
+      final matches =
+          quotes?.where((q) => q.mechanicId == widget.mechanicId) ?? const [];
+      quote = matches.isEmpty ? null : matches.first;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -79,8 +118,7 @@ class _MechanicCandidateProfileScreenState
                     if (context.canPop()) {
                       context.pop();
                     } else {
-                      context.go(RouteNames.mechanicCard,
-                          extra: widget.mechanicId);
+                      context.go(RouteNames.userMechanics);
                     }
                   },
                   child: Container(
@@ -155,11 +193,49 @@ class _MechanicCandidateProfileScreenState
                         ]),
                       ]),
                     ),
+                    if (quote != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.xl2),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(children: [
+                              const Expanded(
+                                child: Text('Their Quote',
+                                    style: AppTypography.heading4,
+                                    overflow: TextOverflow.ellipsis, maxLines: 1),
+                              ),
+                              Text('₦${quote.price.toStringAsFixed(0)}',
+                                  style: AppTypography.heading3
+                                      .copyWith(color: AppColors.primary),
+                                  overflow: TextOverflow.ellipsis, maxLines: 1),
+                            ]),
+                            if (quote.note != null &&
+                                quote.note!.trim().isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(quote.note!,
+                                  style: AppTypography.bodySmall,
+                                  overflow: TextOverflow.ellipsis, maxLines: 3),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     AppButton(
-                      label: 'Call Mechanic',
-                      onTap: _callMechanic,
-                      isLoading: _isCalling,
+                      label:
+                          quote != null ? 'Accept Quote & Start Job' : 'Call Mechanic',
+                      onTap: quote != null
+                          ? () => _acceptQuote(quote!)
+                          : _callMechanic,
+                      isLoading: _isBusy,
                     ),
                     const SizedBox(height: 24),
                   ],

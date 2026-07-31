@@ -2,6 +2,12 @@
 // for both CarOwner and Mechanic. Same avatar-opens-drawer affordance, same
 // two-line title shape, same trailing icon button style — so all three tabs
 // read as one cohesive section instead of three different-looking screens.
+//
+// The two map screens (User Mechanics, Mechanic Users) also use this same
+// header for their search-by-name affordance via [isSearching]: the avatar
+// and layout stay pixel-identical, only the title area becomes a live text
+// field and the trailing icon becomes a close button — so tapping search
+// never feels like a different screen, just this one with the keyboard up.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,8 +32,26 @@ class AppScreenHeader extends ConsumerWidget {
   final IconData trailingIcon;
   final VoidCallback? onTrailingTap;
 
+  /// When true, the title/subtitle area becomes a live search field and the
+  /// trailing button becomes a close (X) button. Requires
+  /// [searchController], [onSearchChanged] and [onSearchClose].
+  final bool isSearching;
+  final TextEditingController? searchController;
+  final String searchHint;
+  final ValueChanged<String>? onSearchChanged;
+  final VoidCallback? onSearchClose;
+
   static const double avatarSize = 48;
   static const double iconButtonSize = 44;
+
+  static const TextStyle _titleStyle = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 23,
+    fontWeight: FontWeight.w800,
+    color: AppColors.textPrimary,
+    letterSpacing: -0.5,
+    height: 1.15,
+  );
 
   const AppScreenHeader({
     super.key,
@@ -37,8 +61,19 @@ class AppScreenHeader extends ConsumerWidget {
     this.showGreeting = false,
     this.title,
     this.onTrailingTap,
-  }) : assert(showGreeting || title != null,
-            'title is required when showGreeting is false');
+    this.isSearching = false,
+    this.searchController,
+    this.searchHint = 'Search',
+    this.onSearchChanged,
+    this.onSearchClose,
+  })  : assert(showGreeting || title != null,
+            'title is required when showGreeting is false'),
+        assert(
+            !isSearching ||
+                (searchController != null &&
+                    onSearchChanged != null &&
+                    onSearchClose != null),
+            'searchController, onSearchChanged and onSearchClose are required when isSearching is true');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,49 +104,58 @@ class AppScreenHeader extends ConsumerWidget {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  showGreeting
-                      ? userAsync.when(
-                          data: (user) =>
-                              'Hi, ${(user?.firstName.isNotEmpty ?? false) ? user!.firstName : 'there'} 👋',
-                          loading: () => '',
-                          error: (_, __) => 'Hi, there 👋',
-                        )
-                      : title!,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 23,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.5,
-                    height: 1.15,
+            child: isSearching
+                ? TextField(
+                    controller: searchController,
+                    autofocus: true,
+                    onChanged: onSearchChanged,
+                    style: _titleStyle,
+                    cursorColor: AppColors.primary,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: searchHint,
+                      hintStyle: _titleStyle.copyWith(
+                          color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                    ),
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        showGreeting
+                            ? userAsync.when(
+                                data: (user) =>
+                                    'Hi, ${(user?.firstName.isNotEmpty ?? false) ? user!.firstName : 'there'} 👋',
+                                loading: () => '',
+                                error: (_, __) => 'Hi, there 👋',
+                              )
+                            : title!,
+                        style: _titleStyle,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                          height: 1.3,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
                   ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                    height: 1.3,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ],
-            ),
           ),
           const SizedBox(width: 10),
           GestureDetector(
-            onTap: onTrailingTap,
+            onTap: isSearching ? onSearchClose : onTrailingTap,
             child: Container(
               width: iconButtonSize,
               height: iconButtonSize,
@@ -120,7 +164,8 @@ class AppScreenHeader extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppRadius.full),
                 border: Border.all(color: AppColors.border),
               ),
-              child: Icon(trailingIcon, size: 20, color: AppColors.textMuted),
+              child: Icon(isSearching ? Icons.close_rounded : trailingIcon,
+                  size: 20, color: AppColors.textMuted),
             ),
           ),
         ],

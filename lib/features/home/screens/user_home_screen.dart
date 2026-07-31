@@ -10,7 +10,6 @@ import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
-import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
@@ -210,13 +209,6 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                 ),
               ],
             ),
-          ),
-          AppNavBar(
-            activeItem: NavBarItem.home,
-            userType: NavBarUserType.carOwner,
-            onScanTap: () => context.go(RouteNames.userScan),
-            onHomeTap: () {},
-            onThirdTap: () => context.go(RouteNames.userMechanics),
           ),
         ],
       ),

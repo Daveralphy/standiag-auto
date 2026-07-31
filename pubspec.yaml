@@ -28,7 +28,7 @@ dependencies:
   cloud_firestore: ^5.6.6
   firebase_storage: ^12.4.5
   firebase_crashlytics: ^4.3.4
-  firebase_messaging: ^15.2.5     # Push notifications for incoming calls
+  firebase_messaging: ^15.2.5     # Push notifications — mechanics get alerted to nearby service requests
 
   # ─── Local Cache ───────────────────────────────────────────────────────────
   hive_flutter: ^1.1.0            # Persistent local cache

@@ -12,7 +12,6 @@ import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_button.dart';
-import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/health_gauge.dart';
 import '../../../shared/widget/obd_device_picker_sheet.dart';
@@ -133,13 +132,6 @@ class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
                 ),
               ],
             ),
-          ),
-          AppNavBar(
-            activeItem: NavBarItem.scan,
-            userType: NavBarUserType.mechanic,
-            onScanTap: () {},
-            onHomeTap: () => context.go(RouteNames.mechanicHome),
-            onThirdTap: () => context.go(RouteNames.mechanicUsers),
           ),
         ],
       ),

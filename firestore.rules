@@ -1,0 +1,110 @@
+// Firestore security rules for StanDiag Auto.
+//
+// DRAFT — NOT YET DEPLOYED. No rules file existed in this repo before this
+// one, so there is no local record of whatever rules are currently live on
+// the Firebase project. Before running `firebase deploy --only firestore:rules`,
+// pull the current live rules (Firebase console → Firestore → Rules, or
+// `firebase firestore:rules get`) and diff them against this draft —
+// deploying blind will REPLACE whatever's live right now.
+//
+// The one deliberately loose spot: serviceRequests/{id}/quotes/{mechanicId}
+// allows the request's own car owner to update a quote document that isn't
+// theirs (to mark it declined when they accept a different one). That's
+// the one place this app writes into another user's data from the client.
+// A callable Cloud Function would be a tighter fit for that specific write
+// and is worth revisiting before this ships.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // ─── Users ──────────────────────────────────────────────────────────
+    // Any signed-in user can read a profile (names/photos shown across the
+    // app), but only edit their own.
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSelf(userId);
+    }
+
+    // ─── Mechanics ──────────────────────────────────────────────────────
+    // Same shape as users: browsable by anyone signed in, editable only by
+    // the mechanic themselves (including their own fcmToken field).
+    match /mechanics/{mechanicId} {
+      allow read: if isSignedIn();
+      allow write: if isSelf(mechanicId);
+    }
+
+    // ─── Vehicles ───────────────────────────────────────────────────────
+    match /vehicles/{vehicleId} {
+      allow read, update, delete: if isSignedIn() &&
+          resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+          request.resource.data.ownerId == request.auth.uid;
+    }
+
+    // ─── Scans ──────────────────────────────────────────────────────────
+    match /scans/{scanId} {
+      allow read, update, delete: if isSignedIn() &&
+          resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+          request.resource.data.ownerId == request.auth.uid;
+    }
+
+    // ─── Notifications ──────────────────────────────────────────────────
+    // Read/dismiss your own; created only by trusted backend code, never
+    // directly by a client.
+    match /notifications/{notificationId} {
+      allow read, update, delete: if isSignedIn() &&
+          resource.data.userId == request.auth.uid;
+      allow create: if false;
+    }
+
+    // ─── Jobs ───────────────────────────────────────────────────────────
+    // Visible and writable by the two parties on it — the car owner who
+    // created it and the mechanic assigned to it.
+    match /jobs/{jobId} {
+      allow read: if isSignedIn() &&
+          (resource.data.carOwnerId == request.auth.uid ||
+           resource.data.mechanicId == request.auth.uid);
+      allow create: if isSignedIn() &&
+          request.resource.data.carOwnerId == request.auth.uid;
+      allow update: if isSignedIn() &&
+          (resource.data.carOwnerId == request.auth.uid ||
+           resource.data.mechanicId == request.auth.uid);
+    }
+
+    // ─── Service Requests + Quotes ──────────────────────────────────────
+    // Requests themselves: readable by any signed-in user (mechanics need
+    // to discover open ones), created and updated (e.g. cancelled) only by
+    // the car owner who broadcast it.
+    match /serviceRequests/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+          request.resource.data.carOwnerId == request.auth.uid;
+      allow update: if isSignedIn() &&
+          resource.data.carOwnerId == request.auth.uid;
+
+      // Quotes: readable by any signed-in user (the car owner watches them
+      // live; a mechanic can see their own). Writable by the mechanic who
+      // owns that quote — or by the request's car owner, but only to flip
+      // its status (accepting one quote declines the rest).
+      match /quotes/{mechanicId} {
+        allow read: if isSignedIn();
+        allow create, update: if isSignedIn() && (
+          request.auth.uid == mechanicId ||
+          (get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.carOwnerId
+              == request.auth.uid &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']))
+        );
+      }
+    }
+  }
+}

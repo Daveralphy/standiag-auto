@@ -17,12 +17,13 @@ import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/providers/user_provider.dart';
+import '../../../shared/services/fcm_token_service.dart';
 import '../../../shared/widget/app_button.dart';
-import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../jobs/models/job_model.dart';
 import '../../jobs/providers/job_provider.dart';
+import '../../jobs/providers/service_request_provider.dart';
 import '../../mechanics/providers/mechanics_provider.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../profile/screens/mechanic_drawer_screen.dart';
@@ -41,6 +42,12 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
   void initState() {
     super.initState();
     SystemUiStyle.applyDark();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final mechanicId = ref.read(currentUserIdProvider);
+      if (mechanicId != null) {
+        registerMechanicFcmToken(mechanicId);
+      }
+    });
   }
 
   @override
@@ -53,6 +60,15 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
         final job = next.valueOrNull;
         if (job != null && previous?.valueOrNull?.id != job.id) {
           context.push(RouteNames.mechanicIncomingCall, extra: job.id);
+        }
+      });
+      // Counterpart for the quote flow: a job that lands directly in the
+      // accepted state (the car owner picked this mechanic's quote) skips
+      // the incoming-call screen entirely and goes straight to en route.
+      ref.listen(acceptedJobForMechanicProvider(mechanicId), (previous, next) {
+        final job = next.valueOrNull;
+        if (job != null && previous?.valueOrNull?.id != job.id) {
+          context.push(RouteNames.mechanicEnRoute, extra: job.id);
         }
       });
     }
@@ -132,6 +148,48 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                           }),
                         const SizedBox(height: 24),
 
+                        // ─── Nearby open requests — car owners who
+                        // broadcast a search; quote to be considered ──────
+                        const Text(
+                          'NEARBY REQUESTS',
+                          style: AppTypography.captionLarge,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        const SizedBox(height: 10),
+                        if (mechanicId == null)
+                          const _JobTileSkeleton()
+                        else
+                          Consumer(builder: (context, ref, _) {
+                            final requestsAsync = ref
+                                .watch(nearbyServiceRequestsProvider(mechanicId));
+                            return requestsAsync.when(
+                              data: (requests) => requests.isEmpty
+                                  ? const Text(
+                                      'No one nearby is searching for a mechanic right now.',
+                                      style: AppTypography.body)
+                                  : Column(
+                                      children: [
+                                        for (final entry in requests) ...[
+                                          _NearbyRequestTile(entry: entry),
+                                          const SizedBox(height: 10),
+                                        ],
+                                      ],
+                                    ),
+                              loading: () => const Column(
+                                children: [
+                                  _JobTileSkeleton(),
+                                  SizedBox(height: 10),
+                                  _JobTileSkeleton(),
+                                ],
+                              ),
+                              error: (_, __) => const Text(
+                                  'Unable to load nearby requests.',
+                                  style: AppTypography.body),
+                            );
+                          }),
+                        const SizedBox(height: 24),
+
                         // ─── Active section ───────────────────────────────
                         if (mechanicId != null)
                           Consumer(builder: (context, ref, _) {
@@ -164,14 +222,6 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                 ),
               ],
             ),
-          ),
-
-          AppNavBar(
-            activeItem: NavBarItem.home,
-            userType: NavBarUserType.mechanic,
-            onScanTap: () => context.go(RouteNames.mechanicScan),
-            onHomeTap: () {},
-            onThirdTap: () => context.go(RouteNames.mechanicUsers),
           ),
         ],
       ),
@@ -368,6 +418,81 @@ class _PendingJobTile extends ConsumerWidget {
                 child: const Icon(Icons.call_rounded,
                     color: Colors.white, size: 18),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One open service request a mechanic can respond to with a quote — no
+/// job exists yet, so unlike [_PendingJobTile] this always routes to the
+/// send-quote screen rather than a call.
+class _NearbyRequestTile extends ConsumerWidget {
+  final NearbyServiceRequest entry;
+  const _NearbyRequestTile({required this.entry});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final request = entry.request;
+    final ownerAsync = ref.watch(mechanicUserProvider(request.carOwnerId));
+    final ownerName = ownerAsync.valueOrNull != null
+        ? '${ownerAsync.valueOrNull!.firstName} ${ownerAsync.valueOrNull!.lastName}'
+            .trim()
+        : 'Car Owner';
+
+    return GestureDetector(
+      onTap: () => context.push(RouteNames.sendQuote, extra: request.id),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.xl2),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(ownerName,
+                      style: AppTypography.heading4,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1),
+                  const SizedBox(height: 2),
+                  Text(request.issue,
+                      style: AppTypography.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1),
+                  if (entry.distanceKm != null) ...[
+                    const SizedBox(height: 2),
+                    Text('${entry.distanceKm!.toStringAsFixed(1)} km away',
+                        style: AppTypography.caption,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryButtonGradient,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+              child: const Text('Quote',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1),
             ),
           ],
         ),
