@@ -1,4 +1,4 @@
-// Displays the live tracking map while the mechanic is en route.
+﻿// Displays the live tracking map while the mechanic is en route.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +13,7 @@ import '../../../core/navigation/route_names.dart';
 import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/notched_nav_bar.dart';
 import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../providers/job_provider.dart';
@@ -163,12 +164,19 @@ class _UserTrackingScreenState extends ConsumerState<UserTrackingScreen> {
               ),
             ),
           ),
-          AppNavBar(
-            activeItem: NavBarItem.third,
-            userType: NavBarUserType.carOwner,
-            onScanTap: () => context.go(RouteNames.userScan),
-            onHomeTap: () => context.go(RouteNames.userHome),
-            onThirdTap: () {},
+          NotchedNavBar(
+            activeIndex: 1,
+            onScanTap: () => context.go(RouteNames.userVehicle),
+            items: [
+              AppNavItem(icon: Icons.home_rounded, label: 'Home',
+                  onTap: () => context.go(RouteNames.userHome)),
+              AppNavItem(icon: Icons.build_rounded, label: 'Mechanics',
+                  onTap: () {}),
+              AppNavItem(icon: Icons.directions_car_rounded, label: 'Vehicle',
+                  onTap: () => context.go(RouteNames.userVehicle)),
+              AppNavItem(icon: Icons.person_rounded, label: 'Profile',
+                  onTap: () => context.go(RouteNames.userProfile)),
+            ],
           ),
         ],
       ),

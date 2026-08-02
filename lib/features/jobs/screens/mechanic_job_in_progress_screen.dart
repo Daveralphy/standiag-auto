@@ -1,4 +1,4 @@
-// Mechanic Job In Progress screen — mechanic side during active job.
+﻿// Mechanic Job In Progress screen â€” mechanic side during active job.
 // Mechanic nav bar, Users active, search icon top right.
 // Mark job as done button.
 
@@ -148,11 +148,15 @@ class _MechanicJobInProgressScreenState
           ),
 
           AppNavBar(
-            activeItem: NavBarItem.third,
-            userType: NavBarUserType.mechanic,
-            onScanTap: () => context.go(RouteNames.mechanicScan),
-            onHomeTap: () => context.go(RouteNames.mechanicHome),
-            onThirdTap: () {},
+            activeIndex: 2,
+            items: [
+              AppNavItem(icon: Icons.qr_code_scanner_rounded, label: 'Scan',
+                  onTap: () => context.go(RouteNames.mechanicScan)),
+              AppNavItem(icon: Icons.home_rounded, label: 'Home',
+                  onTap: () => context.go(RouteNames.mechanicHome)),
+              AppNavItem(icon: Icons.groups_rounded, label: 'Users',
+                  onTap: () {}),
+            ],
           ),
         ],
       ),

@@ -1,4 +1,4 @@
-// Mechanic Post Call screen — after call ends, mechanic decides to accept or reject job.
+﻿// Mechanic Post Call screen â€” after call ends, mechanic decides to accept or reject job.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -158,11 +158,15 @@ class _MechanicPostCallScreenState
           ),
 
           AppNavBar(
-            activeItem: NavBarItem.third,
-            userType: NavBarUserType.mechanic,
-            onScanTap: () => context.go(RouteNames.mechanicScan),
-            onHomeTap: () => context.go(RouteNames.mechanicHome),
-            onThirdTap: () => context.go(RouteNames.mechanicUsers),
+            activeIndex: 2,
+            items: [
+              AppNavItem(icon: Icons.qr_code_scanner_rounded, label: 'Scan',
+                  onTap: () => context.go(RouteNames.mechanicScan)),
+              AppNavItem(icon: Icons.home_rounded, label: 'Home',
+                  onTap: () => context.go(RouteNames.mechanicHome)),
+              AppNavItem(icon: Icons.groups_rounded, label: 'Users',
+                  onTap: () => context.go(RouteNames.mechanicUsers)),
+            ],
           ),
         ],
       ),

@@ -24,11 +24,12 @@ import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
+import '../../jobs/models/job_model.dart';
 import '../../jobs/models/quote_model.dart';
 import '../../jobs/models/service_request_model.dart';
+import '../../jobs/providers/job_provider.dart';
 import '../../jobs/providers/service_request_provider.dart';
 import '../../mechanics/providers/mechanics_provider.dart';
-import '../../profile/screens/user_drawer_screen.dart';
 
 // The radius nearby mechanics are alerted within — fixed, no manual step.
 const double _searchRadiusKm = 15.0;
@@ -43,11 +44,7 @@ class UserMechanicsScreen extends ConsumerStatefulWidget {
 
 class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen>
     with SingleTickerProviderStateMixin {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _issueController = TextEditingController();
-  bool _isSearching = false;
-  String _searchQuery = '';
   bool _isFindingMechanic = false;
 
   late final AnimationController _pulseController;
@@ -68,7 +65,6 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen>
 
   @override
   void dispose() {
-    _searchController.dispose();
     _issueController.dispose();
     _pulseController.dispose();
     final request = ref.read(serviceRequestProvider).activeRequest;
@@ -137,6 +133,24 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen>
         .declineQuote(request.id, quote.mechanicId);
   }
 
+  /// Where the active-job header icon leads — depends on the mechanic's
+  /// current status, matching each job-flow screen's own place in the
+  /// sequence.
+  String? _activeJobRoute(JobModel job) {
+    switch (job.status) {
+      case JobStatus.accepted:
+        return RouteNames.userMechanicAccepted;
+      case JobStatus.enRoute:
+        return RouteNames.userTracking;
+      case JobStatus.arrived:
+        return RouteNames.userMechanicArrived;
+      case JobStatus.inProgress:
+        return RouteNames.userJobInProgress;
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mechanicsAsync = ref.watch(nearbyMechanicsProvider);
@@ -154,27 +168,19 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen>
           ),
     ];
 
-    // Only resolved once the user's actually typed something — avoids
-    // triggering a name lookup for every nearby mechanic on every build.
-    final searchResults = _searchQuery.trim().isEmpty
-        ? const <NearbyMechanic>[]
-        : mechanics.where((entry) {
-            final user =
-                ref.watch(mechanicUserProvider(entry.mechanic.uid)).valueOrNull;
-            if (user == null) return false;
-            final name = '${user.firstName} ${user.lastName}'.trim().toLowerCase();
-            return name.contains(_searchQuery.trim().toLowerCase());
-          }).toList();
-
     final activeRequest = ref.watch(serviceRequestProvider).activeRequest;
     final quotesAsync = _isFindingMechanic && activeRequest != null
         ? ref.watch(quotesForRequestProvider(activeRequest.id))
         : null;
 
+    final carOwnerId = ref.watch(currentUserIdProvider);
+    final activeJob = carOwnerId == null
+        ? null
+        : ref.watch(activeJobForCarOwnerProvider(carOwnerId)).valueOrNull;
+    final activeJobRoute = activeJob == null ? null : _activeJobRoute(activeJob);
+
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: AppColors.mapBackground,
-      drawer: const UserDrawerScreen(),
       body: Stack(
         children: [
           AppMap(
@@ -195,40 +201,21 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen>
               color: AppColors.mapBackground,
               child: SafeArea(
                 bottom: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppScreenHeader(
-                      scaffoldKey: _scaffoldKey,
-                      title: 'Great Mechanics',
-                      subtitle: 'Standby Nearby',
-                      trailingIcon: Icons.search_rounded,
-                      onTrailingTap: () =>
-                          setState(() => _isSearching = true),
-                      isSearching: _isSearching,
-                      searchController: _searchController,
-                      searchHint: 'Search mechanics by name',
-                      onSearchChanged: (value) =>
-                          setState(() => _searchQuery = value),
-                      onSearchClose: () => setState(() {
-                        _isSearching = false;
-                        _searchQuery = '';
-                        _searchController.clear();
-                      }),
-                    ),
-                    if (_isSearching && _searchQuery.trim().isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.pageHorizontal),
-                        child: _SearchResultsList(results: searchResults),
-                      ),
-                  ],
+                child: AppScreenHeader(
+                  title: 'Mechanics',
+                  subtitle: 'Standby Nearby',
+                  trailingIcon: Icons.route_rounded,
+                  trailingBadge: activeJobRoute != null,
+                  onTrailingTap: activeJobRoute == null
+                      ? null
+                      : () => context.push(activeJobRoute,
+                          extra: activeJob!.id),
                 ),
               ),
             ),
           ),
 
-          if (!_isSearching && !_isFindingMechanic) ...[
+          if (!_isFindingMechanic) ...[
             if (mechanicsAsync.isLoading)
               const Positioned(
                 top: 90,
@@ -434,69 +421,6 @@ class _StatusPill extends StatelessWidget {
           style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
           overflow: TextOverflow.ellipsis,
           maxLines: 1),
-    );
-  }
-}
-
-/// Dropdown of mechanics matching the current search text — tap one to view
-/// their profile.
-class _SearchResultsList extends ConsumerWidget {
-  final List<NearbyMechanic> results;
-  const _SearchResultsList({required this.results});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 320),
-      decoration: BoxDecoration(
-        color: const Color(0xE1141414),
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: results.isEmpty
-          ? const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl4),
-              child: Text('No mechanics found with that name.',
-                  style: AppTypography.body, textAlign: TextAlign.center),
-            )
-          : ListView.separated(
-              shrinkWrap: true,
-              padding: const EdgeInsets.all(AppSpacing.md),
-              itemCount: results.length,
-              separatorBuilder: (_, __) =>
-                  const Divider(color: AppColors.borderSubtle, height: 1),
-              itemBuilder: (context, i) {
-                final entry = results[i];
-                final user =
-                    ref.watch(mechanicUserProvider(entry.mechanic.uid)).valueOrNull;
-                final name = user != null
-                    ? '${user.firstName} ${user.lastName}'.trim()
-                    : 'Mechanic';
-                return GestureDetector(
-                  onTap: () => context.push(RouteNames.mechanicProfile,
-                      extra: entry.mechanic.uid),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Row(
-                      children: [
-                        AppAvatar(
-                            name: name, imageUrl: user?.profilePhoto, size: 36),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(name,
-                              style: AppTypography.bodyLarge,
-                              overflow: TextOverflow.ellipsis, maxLines: 1),
-                        ),
-                        if (entry.distanceKm != null)
-                          Text('${entry.distanceKm!.toStringAsFixed(1)} km',
-                              style: AppTypography.caption,
-                              overflow: TextOverflow.ellipsis, maxLines: 1),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
     );
   }
 }

@@ -1,4 +1,4 @@
-// User Rate Mechanic screen — user taps stars and leaves optional comment.
+﻿// User Rate Mechanic screen â€” user taps stars and leaves optional comment.
 // Map background, user nav Mechanics active, search icon top right.
 
 import 'package:flutter/material.dart';
@@ -16,6 +16,7 @@ import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/notched_nav_bar.dart';
 import '../../../shared/widget/app_text_field.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../providers/job_provider.dart';
@@ -197,12 +198,19 @@ class _UserRateMechanicScreenState
             ),
           ),
 
-          AppNavBar(
-            activeItem: NavBarItem.third,
-            userType: NavBarUserType.carOwner,
-            onScanTap: () => context.go(RouteNames.userScan),
-            onHomeTap: () => context.go(RouteNames.userHome),
-            onThirdTap: () {},
+          NotchedNavBar(
+            activeIndex: 1,
+            onScanTap: () => context.go(RouteNames.userVehicle),
+            items: [
+              AppNavItem(icon: Icons.home_rounded, label: 'Home',
+                  onTap: () => context.go(RouteNames.userHome)),
+              AppNavItem(icon: Icons.build_rounded, label: 'Mechanics',
+                  onTap: () {}),
+              AppNavItem(icon: Icons.directions_car_rounded, label: 'Vehicle',
+                  onTap: () => context.go(RouteNames.userVehicle)),
+              AppNavItem(icon: Icons.person_rounded, label: 'Profile',
+                  onTap: () => context.go(RouteNames.userProfile)),
+            ],
           ),
         ],
       ),

@@ -1,4 +1,4 @@
-// User Job Completed screen — job is done, user prompted to rate mechanic.
+﻿// User Job Completed screen â€” job is done, user prompted to rate mechanic.
 // Map background, user nav Mechanics active, search icon top right.
 
 import 'package:flutter/material.dart';
@@ -15,6 +15,7 @@ import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_badge.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/notched_nav_bar.dart';
 import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:latlong2/latlong.dart';
@@ -161,7 +162,7 @@ class _UserJobCompletedScreenState
                           RatingStars(rating: mechanicRating, starSize: 11),
                           const SizedBox(width: 4),
                           Flexible(child: Text(
-                              '${mechanicRating.toStringAsFixed(1)} · $mechanicJobs jobs',
+                              '${mechanicRating.toStringAsFixed(1)} Â· $mechanicJobs jobs',
                               style: AppTypography.caption,
                               overflow: TextOverflow.ellipsis, maxLines: 1)),
                         ]),
@@ -192,12 +193,19 @@ class _UserJobCompletedScreenState
             ]),
           ),
 
-          AppNavBar(
-            activeItem: NavBarItem.third,
-            userType: NavBarUserType.carOwner,
-            onScanTap: () => context.go(RouteNames.userScan),
-            onHomeTap: () => context.go(RouteNames.userHome),
-            onThirdTap: () {},
+          NotchedNavBar(
+            activeIndex: 1,
+            onScanTap: () => context.go(RouteNames.userVehicle),
+            items: [
+              AppNavItem(icon: Icons.home_rounded, label: 'Home',
+                  onTap: () => context.go(RouteNames.userHome)),
+              AppNavItem(icon: Icons.build_rounded, label: 'Mechanics',
+                  onTap: () {}),
+              AppNavItem(icon: Icons.directions_car_rounded, label: 'Vehicle',
+                  onTap: () => context.go(RouteNames.userVehicle)),
+              AppNavItem(icon: Icons.person_rounded, label: 'Profile',
+                  onTap: () => context.go(RouteNames.userProfile)),
+            ],
           ),
         ],
       ),

@@ -218,6 +218,28 @@ final activeJobForMechanicProvider =
   return snap.docs.isEmpty ? null : JobModel.fromFirestore(snap.docs.first);
 });
 
+/// Real-time listener for this car owner's current active job (any status
+/// from accepted through in-progress) — used by the Mechanics tab's
+/// active-job header icon so it reflects the mechanic's live status
+/// (en route → arrived → in progress) without a manual refresh. One of the
+/// Rule-13-sanctioned live-query cases, same reasoning as the mechanic-side
+/// equivalent above.
+final activeJobForCarOwnerProvider =
+    StreamProvider.family<JobModel?, String>((ref, carOwnerId) {
+  return FirebaseFirestore.instance
+      .collection('jobs')
+      .where('carOwnerId', isEqualTo: carOwnerId)
+      .where('status', whereIn: [
+        JobStatus.accepted.value,
+        JobStatus.enRoute.value,
+        JobStatus.arrived.value,
+        JobStatus.inProgress.value,
+      ])
+      .limit(1)
+      .snapshots()
+      .map((snap) => snap.docs.isEmpty ? null : JobModel.fromFirestore(snap.docs.first));
+});
+
 /// Real-time listener for an incoming job request addressed to this
 /// mechanic — the one Rule-13-sanctioned case for this query. Foreground
 /// only: it's watched from mechanic_home_screen while the app is open.

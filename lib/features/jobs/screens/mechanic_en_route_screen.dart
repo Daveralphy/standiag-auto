@@ -1,4 +1,4 @@
-// Mechanic En Route screen — mechanic navigating to user location.
+﻿// Mechanic En Route screen â€” mechanic navigating to user location.
 // Mechanic nav bar, Users active, search icon top right.
 
 import 'dart:async';
@@ -188,11 +188,15 @@ class _MechanicEnRouteScreenState extends ConsumerState<MechanicEnRouteScreen> {
           ),
 
           AppNavBar(
-            activeItem: NavBarItem.third,
-            userType: NavBarUserType.mechanic,
-            onScanTap: () => context.go(RouteNames.mechanicScan),
-            onHomeTap: () => context.go(RouteNames.mechanicHome),
-            onThirdTap: () {},
+            activeIndex: 2,
+            items: [
+              AppNavItem(icon: Icons.qr_code_scanner_rounded, label: 'Scan',
+                  onTap: () => context.go(RouteNames.mechanicScan)),
+              AppNavItem(icon: Icons.home_rounded, label: 'Home',
+                  onTap: () => context.go(RouteNames.mechanicHome)),
+              AppNavItem(icon: Icons.groups_rounded, label: 'Users',
+                  onTap: () {}),
+            ],
           ),
         ],
       ),

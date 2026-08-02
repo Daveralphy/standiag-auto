@@ -24,7 +24,7 @@ import '../../features/home/screens/mechanic_scan_screen.dart';
 import '../../features/home/screens/mechanic_users_screen.dart';
 import '../../features/home/screens/user_home_screen.dart';
 import '../../features/home/screens/user_mechanics_screen.dart';
-import '../../features/home/screens/user_scan_screen.dart';
+import '../../features/home/screens/user_vehicle_screen.dart';
 import '../../features/jobs/screens/mechanic_active_call_screen.dart';
 import '../../features/jobs/screens/mechanic_en_route_screen.dart';
 import '../../features/jobs/screens/mechanic_incoming_call_screen.dart';
@@ -197,22 +197,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (_, __) =>
             const NoTransitionPage(child: MechanicSignupStepThreeScreen()),
       ),
-      // These six are the bottom-nav tabs for each profile type, grouped
-      // into one persistent shell per profile type (branch order matches
-      // AppNavBar's own left-to-right order: Scan, Home, Mechanics/Users).
-      // A StatefulShellRoute keeps every branch's screen alive in memory
-      // across tab switches — including its map, if it has one — instead
-      // of tearing it down and rebuilding it on every switch the way a
-      // plain GoRoute per tab did.
+      // The bottom-nav tabs for each profile type, grouped into one
+      // persistent shell per profile type. Branch order matches
+      // AppNavBar's own left-to-right order — car owner: Home, Mechanics,
+      // Vehicle, Profile; mechanic: Scan, Home, Users. A StatefulShellRoute
+      // keeps every branch's screen alive in memory across tab switches —
+      // including its map, if it has one — instead of tearing it down and
+      // rebuilding it on every switch the way a plain GoRoute per tab did.
       StatefulShellRoute.indexedStack(
         builder: (_, __, navigationShell) =>
             UserTabShell(navigationShell: navigationShell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: RouteNames.userScan,
-                pageBuilder: (_, __) =>
-                    const NoTransitionPage(child: UserScanScreen())),
-          ]),
           StatefulShellBranch(routes: [
             GoRoute(path: RouteNames.userHome,
                 pageBuilder: (_, __) =>
@@ -222,6 +217,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(path: RouteNames.userMechanics,
                 pageBuilder: (_, __) =>
                     const NoTransitionPage(child: UserMechanicsScreen())),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: RouteNames.userVehicle,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: UserVehicleScreen())),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: RouteNames.userProfile,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: UserProfileScreen())),
           ]),
         ],
       ),
@@ -306,8 +311,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: RouteNames.mechanicJobCompleted,
           builder: (_, state) =>
               MechanicJobCompletedScreen(jobId: state.extra as String? ?? '')),
-      GoRoute(path: RouteNames.userProfile,
-          builder: (_, __) => const UserProfileScreen()),
       GoRoute(path: RouteNames.userProfileEdit,
           builder: (_, __) => const UserProfileEditScreen()),
       GoRoute(path: RouteNames.mechanicProfileView,

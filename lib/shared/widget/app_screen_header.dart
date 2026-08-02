@@ -17,11 +17,14 @@ import '../../core/constants/app_radius.dart';
 import '../../core/constants/app_spacing.dart';
 import '../providers/user_provider.dart';
 import 'app_avatar.dart';
+import 'app_badge.dart';
 import 'app_skeleton.dart';
 
 class AppScreenHeader extends ConsumerWidget {
-  /// The screen's Scaffold key — tapping the avatar opens its drawer.
-  final GlobalKey<ScaffoldState> scaffoldKey;
+  /// The screen's Scaffold key — tapping the avatar opens its drawer. Null
+  /// on screens with no drawer (and no avatar shown at all): title/subtitle
+  /// then start flush at the leading edge instead.
+  final GlobalKey<ScaffoldState>? scaffoldKey;
 
   /// When true, the title becomes "Hi, {firstName} 👋" resolved from the
   /// signed-in profile. When false, [title] is shown verbatim.
@@ -29,8 +32,22 @@ class AppScreenHeader extends ConsumerWidget {
   final String? title;
   final String subtitle;
 
-  final IconData trailingIcon;
+  final IconData? trailingIcon;
   final VoidCallback? onTrailingTap;
+
+  /// Shows a small red dot on the trailing icon and lights the icon itself
+  /// up in the primary color instead of muted grey — used to mark the
+  /// trailing action as having something live to show (e.g. an active job)
+  /// rather than being an empty, inert state.
+  final bool trailingBadge;
+
+  /// Replaces the trailing icon button entirely with an arbitrary widget
+  /// (e.g. a credit-balance pill) that manages its own tap — used when the
+  /// trailing action isn't representable as a single icon. The rest of the
+  /// header (padding, avatar, title/subtitle) stays pixel-identical either
+  /// way, so screens that need this still look like the same header, not
+  /// a different one.
+  final Widget? trailingWidget;
 
   /// When true, the title/subtitle area becomes a live search field and the
   /// trailing button becomes a close (X) button. Requires
@@ -55,12 +72,14 @@ class AppScreenHeader extends ConsumerWidget {
 
   const AppScreenHeader({
     super.key,
-    required this.scaffoldKey,
+    this.scaffoldKey,
     required this.subtitle,
-    required this.trailingIcon,
+    this.trailingIcon,
     this.showGreeting = false,
     this.title,
     this.onTrailingTap,
+    this.trailingBadge = false,
+    this.trailingWidget,
     this.isSearching = false,
     this.searchController,
     this.searchHint = 'Search',
@@ -68,6 +87,8 @@ class AppScreenHeader extends ConsumerWidget {
     this.onSearchClose,
   })  : assert(showGreeting || title != null,
             'title is required when showGreeting is false'),
+        assert(trailingWidget != null || trailingIcon != null,
+            'either trailingIcon or trailingWidget is required'),
         assert(
             !isSearching ||
                 (searchController != null &&
@@ -89,20 +110,22 @@ class AppScreenHeader extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          GestureDetector(
-            onTap: () => scaffoldKey.currentState?.openDrawer(),
-            child: userAsync.when(
-              data: (user) => AppAvatar(
-                name: (user?.firstName.isNotEmpty ?? false)
-                    ? user!.firstName
-                    : '?',
-                size: avatarSize,
+          if (scaffoldKey != null) ...[
+            GestureDetector(
+              onTap: () => scaffoldKey!.currentState?.openDrawer(),
+              child: userAsync.when(
+                data: (user) => AppAvatar(
+                  name: (user?.firstName.isNotEmpty ?? false)
+                      ? user!.firstName
+                      : '?',
+                  size: avatarSize,
+                ),
+                loading: () => const AppSkeleton.circle(size: avatarSize),
+                error: (_, __) => const AppAvatar(name: '?', size: avatarSize),
               ),
-              loading: () => const AppSkeleton.circle(size: avatarSize),
-              error: (_, __) => const AppAvatar(name: '?', size: avatarSize),
             ),
-          ),
-          const SizedBox(width: 14),
+            const SizedBox(width: 14),
+          ],
           Expanded(
             child: isSearching
                 ? TextField(
@@ -154,20 +177,38 @@ class AppScreenHeader extends ConsumerWidget {
                   ),
           ),
           const SizedBox(width: 10),
-          GestureDetector(
-            onTap: isSearching ? onSearchClose : onTrailingTap,
-            child: Container(
-              width: iconButtonSize,
-              height: iconButtonSize,
-              decoration: BoxDecoration(
-                color: const Color(0x08FFFFFF),
-                borderRadius: BorderRadius.circular(AppRadius.full),
-                border: Border.all(color: AppColors.border),
+          if (trailingWidget != null && !isSearching)
+            trailingWidget!
+          else
+            GestureDetector(
+              onTap: isSearching ? onSearchClose : onTrailingTap,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: iconButtonSize,
+                    height: iconButtonSize,
+                    decoration: BoxDecoration(
+                      color: const Color(0x08FFFFFF),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                      border: Border.all(
+                        color: trailingBadge && !isSearching
+                            ? AppColors.primaryBorder
+                            : AppColors.border,
+                      ),
+                    ),
+                    child: Icon(
+                        isSearching ? Icons.close_rounded : trailingIcon,
+                        size: 20,
+                        color: trailingBadge && !isSearching
+                            ? AppColors.primary
+                            : AppColors.textMuted),
+                  ),
+                  if (trailingBadge && !isSearching)
+                    const Positioned(top: 2, right: 2, child: NotificationDot()),
+                ],
               ),
-              child: Icon(isSearching ? Icons.close_rounded : trailingIcon,
-                  size: 20, color: AppColors.textMuted),
             ),
-          ),
         ],
       ),
     );

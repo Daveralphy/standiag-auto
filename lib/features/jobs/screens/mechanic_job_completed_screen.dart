@@ -1,4 +1,4 @@
-// Mechanic Job Completed screen — job done, shows customer rating received.
+﻿// Mechanic Job Completed screen â€” job done, shows customer rating received.
 // Mechanic nav bar, Users active, search icon top right.
 
 import 'package:flutter/material.dart';
@@ -127,7 +127,7 @@ class _MechanicJobCompletedScreenState
                     children: [
                       Text('Job completed!', style: AppTypography.bodyLarge,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
-                      Text('Engine Problem · Toyota Corolla',
+                      Text('Engine Problem Â· Toyota Corolla',
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
                     ],
@@ -159,7 +159,7 @@ class _MechanicJobCompletedScreenState
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
                   if (job?.rating == null)
-                    const Text('Awaiting rating…',
+                    const Text('Awaiting ratingâ€¦',
                         style: AppTypography.bodySmall,
                         overflow: TextOverflow.ellipsis, maxLines: 1)
                   else ...[
@@ -192,11 +192,15 @@ class _MechanicJobCompletedScreenState
           ),
 
           AppNavBar(
-            activeItem: NavBarItem.third,
-            userType: NavBarUserType.mechanic,
-            onScanTap: () => context.go(RouteNames.mechanicScan),
-            onHomeTap: () => context.go(RouteNames.mechanicHome),
-            onThirdTap: () {},
+            activeIndex: 2,
+            items: [
+              AppNavItem(icon: Icons.qr_code_scanner_rounded, label: 'Scan',
+                  onTap: () => context.go(RouteNames.mechanicScan)),
+              AppNavItem(icon: Icons.home_rounded, label: 'Home',
+                  onTap: () => context.go(RouteNames.mechanicHome)),
+              AppNavItem(icon: Icons.groups_rounded, label: 'Users',
+                  onTap: () {}),
+            ],
           ),
         ],
       ),

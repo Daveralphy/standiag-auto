@@ -1,4 +1,4 @@
-// User Mechanic Arrived screen — mechanic has arrived at user location.
+﻿// User Mechanic Arrived screen â€” mechanic has arrived at user location.
 // Map background, arrival confirmation, confirm job started button.
 
 import 'package:flutter/material.dart';
@@ -14,6 +14,7 @@ import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/notched_nav_bar.dart';
 import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:latlong2/latlong.dart';
@@ -149,12 +150,19 @@ class _UserMechanicArrivedScreenState
             ]),
           ),
 
-          AppNavBar(
-            activeItem: NavBarItem.third,
-            userType: NavBarUserType.carOwner,
-            onScanTap: () => context.go(RouteNames.userScan),
-            onHomeTap: () => context.go(RouteNames.userHome),
-            onThirdTap: () {},
+          NotchedNavBar(
+            activeIndex: 1,
+            onScanTap: () => context.go(RouteNames.userVehicle),
+            items: [
+              AppNavItem(icon: Icons.home_rounded, label: 'Home',
+                  onTap: () => context.go(RouteNames.userHome)),
+              AppNavItem(icon: Icons.build_rounded, label: 'Mechanics',
+                  onTap: () {}),
+              AppNavItem(icon: Icons.directions_car_rounded, label: 'Vehicle',
+                  onTap: () => context.go(RouteNames.userVehicle)),
+              AppNavItem(icon: Icons.person_rounded, label: 'Profile',
+                  onTap: () => context.go(RouteNames.userProfile)),
+            ],
           ),
         ],
       ),

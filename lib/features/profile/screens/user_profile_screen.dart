@@ -1,6 +1,7 @@
-// User Profile screen — view mode showing user details and vehicles.
-// Matches design/profile_screens.html Screen 1: back + title + edit-pencil
-// header, centered avatar/name/username, then a divided field list.
+// User Profile tab — the car owner's account hub. Replaces the old drawer
+// entirely: everything that used to be a drawer entry is a section here
+// instead, since there's no longer anywhere else for it to live once
+// Profile has its own tab.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,10 +17,13 @@ import '../../../core/constants/app_typography.dart';
 import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../features/auth/models/user_model.dart';
-import '../../../features/profile/providers/profile_provider.dart';
+import '../../../features/credits/providers/credits_provider.dart';
+import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
+import '../../../shared/widget/app_error_toast.dart';
+import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/app_skeleton.dart';
-import '../../../shared/widget/profile_field_row.dart';
+import '../../../shared/widget/log_out_dialog.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
@@ -72,7 +76,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         _user = user;
         _isLoading = false;
       });
-      ref.read(profileProvider.notifier).fetchVehicles(authUser.uid);
+      ref.read(creditsProvider.notifier).fetchBalance(authUser.uid);
     } catch (e, stackTrace) {
       if (!mounted) return;
       setState(() {
@@ -84,147 +88,194 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     }
   }
 
+  Future<void> _signOut() async {
+    final confirmed = await LogOutDialog.show(context);
+    if (!confirmed || !mounted) return;
+    try {
+      await ref.read(authControllerProvider).signOut();
+      if (!mounted) return;
+      context.go(RouteNames.login);
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      AppErrorToast.showMessage(
+        context,
+        ErrorHandler.handle(error, stackTrace).message,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final vehicles = ref.watch(profileProvider).vehicles;
+    final balance = ref.watch(creditsProvider.select((s) => s.balance));
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageHorizontal,
-                AppSpacing.md,
-                AppSpacing.pageHorizontal,
-                0,
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.go(RouteNames.userHome);
-                      }
-                    },
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: const Color(0x12FFFFFF),
-                        borderRadius: BorderRadius.circular(AppRadius.full),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
+            AppScreenHeader(
+              title: 'Your Profile',
+              subtitle: 'Manage your account',
+              trailingIcon: Icons.monetization_on_outlined,
+              trailingWidget: GestureDetector(
+                onTap: () => context.push(RouteNames.userCredits),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySubtle,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                    border: Border.all(color: AppColors.primaryBorder),
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      AppStrings.profileTitle,
-                      style: AppTypography.heading3,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.monetization_on_rounded,
+                          size: 15, color: AppColors.primary),
+                      const SizedBox(width: 5),
+                      Text('$balance',
+                          style: AppTypography.bodyLarge
+                              .copyWith(color: AppColors.primary),
+                          overflow: TextOverflow.ellipsis, maxLines: 1),
+                    ],
                   ),
-                  GestureDetector(
-                    onTap: () => context.go(RouteNames.userProfileEdit),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: const Color(0x0FFFFFFF),
-                        borderRadius: BorderRadius.circular(AppRadius.full),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Icon(
-                        Icons.edit_outlined,
-                        size: 15,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             Expanded(
               child: Builder(builder: (context) {
                 if (_isLoading) return const _ProfileSkeletonView();
                 if (_errorMessage != null) {
-                  return _ProfileErrorView(
-                    message: _errorMessage!,
-                    onRetry: _load,
-                  );
+                  return _ProfileErrorView(message: _errorMessage!, onRetry: _load);
                 }
-
                 final user = _user!;
-                final vehicleSummary = vehicles.isNotEmpty
-                    ? '${vehicles.first.displayName}${vehicles.length > 1 ? ' +${vehicles.length - 1} more' : ''}'
-                    : 'No vehicles added';
+                final displayName = user.fullName.trim().isNotEmpty
+                    ? user.fullName
+                    : user.username;
 
                 return SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.pageHorizontal,
-                    ),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        AppAvatar(
-                          name: user.fullName.trim().isNotEmpty
-                              ? user.fullName
-                              : user.username,
-                          imageUrl: user.profilePhoto,
-                          size: 84,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          user.fullName.trim().isNotEmpty
-                              ? user.fullName
-                              : user.username,
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
+                      AppSpacing.xl, AppSpacing.pageHorizontal, AppSpacing.navBarClearance),
+                  child: Column(
+                    children: [
+                      AppAvatar(name: displayName, imageUrl: user.profilePhoto, size: 84),
+                      const SizedBox(height: 12),
+                      Text(displayName,
                           style: AppTypography.heading3,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '@${user.username}',
+                          overflow: TextOverflow.ellipsis, maxLines: 1),
+                      const SizedBox(height: 2),
+                      Text('@${user.username}',
                           style: AppTypography.bodySmall,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                        const SizedBox(height: 18),
-                        const Divider(height: 1, color: Color(0x0FFFFFFF)),
-                        ProfileFieldRow(
-                            label: AppStrings.fieldFullName,
-                            value: user.fullName),
-                        ProfileFieldRow(
-                            label: AppStrings.fieldUsername,
-                            value: '@${user.username}'),
-                        ProfileFieldRow(
-                            label: AppStrings.fieldEmail, value: user.email),
-                        ProfileFieldRow(
-                            label: AppStrings.fieldPhone, value: user.phone),
-                        ProfileFieldRow(
-                            label: AppStrings.fieldAddress, value: user.address),
-                        ProfileFieldRow(
-                          label: AppStrings.profileMyVehicles,
-                          value: vehicleSummary,
-                          dimmed: true,
-                          onTap: () => context.push(RouteNames.myVehicles),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                          overflow: TextOverflow.ellipsis, maxLines: 1),
+                      const SizedBox(height: 28),
+                      _ProfileSection(
+                        title: 'Account',
+                        children: [
+                          _ProfileMenuRow(
+                            icon: Icons.person_outline_rounded,
+                            label: 'Profile',
+                            onTap: () => context.push(RouteNames.userProfileEdit),
+                          ),
+                          _ProfileMenuRow(
+                            icon: Icons.lock_outline_rounded,
+                            label: 'Change Password',
+                            onTap: () => context.push(RouteNames.userChangePassword),
+                          ),
+                          _ProfileMenuRow(
+                            icon: Icons.delete_outline_rounded,
+                            label: 'Delete Account',
+                            onTap: () => context.push(RouteNames.userDeleteAccount),
+                            isLast: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _ProfileSection(
+                        title: 'Wallet',
+                        children: [
+                          _ProfileMenuRow(
+                            icon: Icons.monetization_on_outlined,
+                            label: 'Credits Balance',
+                            trailingText: '$balance',
+                            onTap: () => context.push(RouteNames.userCredits),
+                          ),
+                          _ProfileMenuRow(
+                            icon: Icons.add_card_outlined,
+                            label: 'Buy Credits',
+                            onTap: () => context.push(RouteNames.userBuyCredits),
+                          ),
+                          _ProfileMenuRow(
+                            icon: Icons.receipt_long_outlined,
+                            label: 'Credits History',
+                            onTap: () => context.push(RouteNames.userCreditsHistory),
+                            isLast: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _ProfileSection(
+                        title: 'Activity',
+                        children: [
+                          _ProfileMenuRow(
+                            icon: Icons.history_rounded,
+                            label: 'Service/Job History',
+                            onTap: () => context.push(RouteNames.serviceHistory),
+                            isLast: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _ProfileSection(
+                        title: 'Preferences',
+                        children: [
+                          _ProfileMenuRow(
+                            icon: Icons.notifications_outlined,
+                            label: 'Notification Settings',
+                            onTap: () => context.push(RouteNames.userNotificationSettings),
+                          ),
+                          _ProfileMenuRow(
+                            icon: Icons.language_outlined,
+                            label: 'Language',
+                            onTap: () => context.push(RouteNames.userLanguage),
+                          ),
+                          _ProfileMenuRow(
+                            icon: Icons.palette_outlined,
+                            label: 'Appearance',
+                            onTap: () => context.push(RouteNames.userAppearance),
+                          ),
+                          _ProfileMenuRow(
+                            icon: Icons.privacy_tip_outlined,
+                            label: 'Privacy',
+                            onTap: () => context.push(RouteNames.userPrivacy),
+                            isLast: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _ProfileSection(
+                        title: 'Support',
+                        children: [
+                          _ProfileMenuRow(
+                            icon: Icons.help_outline_rounded,
+                            label: AppStrings.drawerHelp,
+                            onTap: () => context.push(RouteNames.userHelpSupport),
+                            isLast: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _ProfileMenuRow(
+                        icon: Icons.logout_rounded,
+                        label: AppStrings.drawerLogOut,
+                        onTap: _signOut,
+                        isDestructive: true,
+                        isLast: true,
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ),
           ],
         ),
@@ -233,30 +284,119 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   }
 }
 
-/// Mirrors the real layout exactly (centered name/username, then divider,
-/// then six field rows each with a tiny label-shaped bar over a
-/// value-shaped bar) so the skeleton never jumps or resizes once the
-/// real data arrives — it's the same shapes, just shimmering placeholders.
+/// A titled group of menu rows in one pill-edged card, e.g. "Wallet" ->
+/// Credits Balance / Buy Credits / Credits History.
+class _ProfileSection extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+  const _ProfileSection({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(title,
+              style: AppTypography.captionLarge,
+              overflow: TextOverflow.ellipsis, maxLines: 1),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileMenuRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? trailingText;
+  final VoidCallback onTap;
+  final bool isDestructive;
+  final bool isLast;
+
+  const _ProfileMenuRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.trailingText,
+    this.isDestructive = false,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isDestructive ? AppColors.primary : AppColors.textPrimary;
+    final row = GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl2, vertical: 16),
+        decoration: isDestructive
+            ? BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+                border: Border.all(color: AppColors.primaryBorder),
+              )
+            : null,
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(label,
+                  style: AppTypography.bodyLarge.copyWith(color: color),
+                  overflow: TextOverflow.ellipsis, maxLines: 1),
+            ),
+            if (trailingText != null) ...[
+              Text(trailingText!,
+                  style: AppTypography.bodyLarge
+                      .copyWith(color: AppColors.primary),
+                  overflow: TextOverflow.ellipsis, maxLines: 1),
+              const SizedBox(width: 6),
+            ],
+            if (!isDestructive)
+              const Icon(Icons.chevron_right_rounded,
+                  color: AppColors.textDisabled, size: 18),
+          ],
+        ),
+      ),
+    );
+    if (isDestructive || isLast) return row;
+    return Column(
+      children: [
+        row,
+        const Divider(height: 1, color: AppColors.borderSubtle),
+      ],
+    );
+  }
+}
+
+/// Mirrors the real layout (centered avatar/name, then sections) so the
+/// skeleton never jumps once the real data arrives.
 class _ProfileSkeletonView extends StatelessWidget {
   const _ProfileSkeletonView();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal),
+    return const Padding(
+      padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.pageHorizontal, vertical: AppSpacing.xl),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(height: 20),
-          const AppSkeleton.circle(size: 84),
-          const SizedBox(height: 12),
-          const AppSkeleton(width: 120, height: 16, radius: AppRadius.xs),
-          const SizedBox(height: 8),
-          const AppSkeleton(width: 80, height: 11, radius: AppRadius.xs),
-          const SizedBox(height: 18),
-          const Divider(height: 1, color: Color(0x0FFFFFFF)),
-          for (int i = 0; i < 6; i++)
-            ProfileFieldRowSkeleton(valueWidth: i.isEven ? 160 : 120),
+          AppSkeleton.circle(size: 84),
+          SizedBox(height: 12),
+          AppSkeleton(width: 140, height: 16, radius: AppRadius.xs),
+          SizedBox(height: 8),
+          AppSkeleton(width: 90, height: 11, radius: AppRadius.xs),
         ],
       ),
     );

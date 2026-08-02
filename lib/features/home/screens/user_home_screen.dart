@@ -18,7 +18,6 @@ import '../../jobs/providers/job_provider.dart';
 import '../../mechanics/providers/mechanics_provider.dart';
 import '../../profile/models/vehicle_model.dart';
 import '../../profile/providers/profile_provider.dart';
-import '../../profile/screens/user_drawer_screen.dart';
 import '../../scan/providers/scan_provider.dart';
 
 class UserHomeScreen extends ConsumerStatefulWidget {
@@ -29,8 +28,6 @@ class UserHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   @override
   void initState() {
     super.initState();
@@ -44,6 +41,13 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
     });
   }
 
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
   @override
   Widget build(BuildContext context) {
     final mechanicsAsync = ref.watch(nearbyMechanicsProvider);
@@ -53,15 +57,9 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
 
     final serviceCount = ref.watch(
         jobProvider.select((s) => s.jobHistory.where((j) => j.status == JobStatus.completed).length));
-    final latestScan = ref.watch(scanProvider.select((s) => s.latestScan)) ??
-        (ref.watch(scanProvider.select((s) => s.history)).isNotEmpty
-            ? ref.watch(scanProvider.select((s) => s.history)).first
-            : null);
 
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: AppColors.background,
-      drawer: const UserDrawerScreen(),
       body: Stack(
         children: [
           SafeArea(
@@ -69,9 +67,8 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppScreenHeader(
-                  scaffoldKey: _scaffoldKey,
                   showGreeting: true,
-                  subtitle: 'Your Dashboard',
+                  subtitle: _greeting(),
                   trailingIcon: Icons.notifications_outlined,
                   onTrailingTap: () =>
                       context.push(RouteNames.userNotifications),
@@ -125,15 +122,6 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                                   sublabel: 'Schedule',
                                   onTap: () =>
                                       context.go(RouteNames.myJobs)),
-                              const SizedBox(width: 10),
-                              _QuickAction(
-                                  icon: Icons.qr_code_scanner_rounded,
-                                  label: 'Previous Scan',
-                                  sublabel: latestScan == null
-                                      ? 'No scans yet'
-                                      : _relativeDays(latestScan.createdAt),
-                                  onTap: () => context
-                                      .go(RouteNames.userScanHistory)),
                             ],
                           ),
                         ),
@@ -214,13 +202,6 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
       ),
     );
   }
-
-  String _relativeDays(DateTime date) {
-    final days = DateTime.now().difference(date).inDays;
-    if (days <= 0) return 'Today';
-    if (days == 1) return 'Yesterday';
-    return '$days days ago';
-  }
 }
 
 // ─── Widgets ───────────────────────────────────────────────────────────────
@@ -258,7 +239,7 @@ class _VehicleCard extends StatelessWidget {
           const SizedBox(height: 16),
           AppButton(
             label: 'Diagnose My Car',
-            onTap: () => context.go(RouteNames.userScan),
+            onTap: () => context.go(RouteNames.userVehicle),
           ),
         ],
       ),

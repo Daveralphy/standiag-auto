@@ -35,7 +35,7 @@ class RouteNames {
   // ─── User Screens ──────────────────────────────────────────────────────────
 
   static const String userHome = '/user/home';
-  static const String userScan = '/user/scan';
+  static const String userVehicle = '/user/vehicle';
   static const String userMechanics = '/user/mechanics';
 
   // Mechanic search flow
@@ -50,7 +50,7 @@ class RouteNames {
   static const String userJobCompleted = '/user/job-completed';
   static const String userRateMechanic = '/user/rate-mechanic';
 
-  // User profile and drawer screens
+  // User profile (a tab root — no drawer)
   static const String userProfile = '/user/profile';
   static const String userProfileEdit = '/user/profile/edit';
   static const String myVehicles = '/user/vehicles';
