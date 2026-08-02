@@ -35,8 +35,9 @@ class AppRadius {
   /// 24px. Used for modals (log out, delete account, sign out).
   static const double xl5 = 24;
 
-  /// 28px. Used for the floating navigation bar.
-  static const double navBar = 28;
+  /// 32px. Used for the floating navigation bar — half its height, so it
+  /// reads as a true capsule/pill rather than a rounded rectangle.
+  static const double navBar = 32;
 
   /// 54px. Used for the phone frame in design reference only.
   /// Never applied to actual app UI elements.

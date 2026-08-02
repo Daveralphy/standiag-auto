@@ -1,9 +1,11 @@
-// The car owner's nav bar — two items on each side of a real notch cut
-// into the bar's top edge, with a floating scan button docked in that
-// notch. This is a different shape from AppNavBar (a plain rounded pill),
-// built with a CustomClipper rather than approximated with two separate
-// bars, so the curve reads as one continuous shape the way it does in a
-// real notched-FAB design instead of two pills with a gap between them.
+// The car owner's nav bar — five evenly-sized slots (2 items, an empty
+// center slot, 2 items) inside a capsule-shaped bar with a real notch cut
+// into its top edge, and a floating scan button docked in that notch,
+// centered exactly on the bar's top edge so roughly half of it protrudes
+// above the bar and the rest overlaps down into it. Built with a
+// CustomClipper rather than approximated with two separate bars, so the
+// curve reads as one continuous shape the way it does in a real
+// notched-FAB design instead of two pills with a gap between them.
 
 import 'dart:ui';
 
@@ -24,6 +26,14 @@ class NotchedNavBar extends StatelessWidget {
 
   static const double barHeight = 64;
   static const double notchRadius = 32;
+
+  /// Half of [FloatingScanButton.visibleSize] — the button is centered
+  /// exactly on the bar's top edge, so this is how far above that edge its
+  /// box must sit. That puts ~45% of the circle's own diameter below the
+  /// edge (into the bar) and the rest above it — within the intended
+  /// 40-50% overlap.
+  static const double _scanButtonTopOffset =
+      -(FloatingScanButton.visibleSize / 2);
 
   const NotchedNavBar({
     super.key,
@@ -61,9 +71,11 @@ class NotchedNavBar extends StatelessWidget {
                   color: AppColors.navBarBackground,
                   child: Row(
                     children: [
-                      Expanded(child: _side(0, 1)),
-                      const SizedBox(width: notchRadius * 2),
-                      Expanded(child: _side(2, 3)),
+                      Expanded(child: _item(0)),
+                      Expanded(child: _item(1)),
+                      const Expanded(child: SizedBox()),
+                      Expanded(child: _item(2)),
+                      Expanded(child: _item(3)),
                     ],
                   ),
                 ),
@@ -71,7 +83,7 @@ class NotchedNavBar extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: -22,
+            top: _scanButtonTopOffset,
             left: 0,
             right: 0,
             child: Center(
@@ -83,15 +95,11 @@ class NotchedNavBar extends StatelessWidget {
     );
   }
 
-  /// Each half holds 2 items, laid out identically to [AppNavBar] — equal
-  /// width, icon above label, color-only active state.
-  Widget _side(int i, int j) {
-    return Row(
-      children: [
-        Expanded(child: NavColumnItem(item: items[i], isActive: i == activeIndex)),
-        Expanded(child: NavColumnItem(item: items[j], isActive: j == activeIndex)),
-      ],
-    );
+  /// Five equal-width slots — 2 items, an empty center slot for the scan
+  /// button to float over, then 2 more items — so the layout stays
+  /// proportional (and the center slot stays centered) at any bar width.
+  Widget _item(int i) {
+    return NavColumnItem(item: items[i], isActive: i == activeIndex);
   }
 }
 
