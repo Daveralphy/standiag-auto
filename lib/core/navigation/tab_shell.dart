@@ -4,81 +4,81 @@
 // of being torn down and rebuilt every time.
 //
 // Car owner: Home, Mechanics, Vehicle, Profile, laid out around a real
-// notch with the scan button permanently docked in it (NotchedNavBar) â€”
+// notch with the scan button permanently docked in it (NotchedNavBar) —
 // always visible, on every car-owner screen, not just the Vehicle tab.
-// Tapping it switches to the Vehicle branch first if needed, then talks
-// directly to scanProvider/profileProvider â€” the same global state the
-// Vehicle screen itself reads â€” rather than reaching into that screen's
-// own widget state, since the button and the screen are siblings here,
-// not parent and child.
+// Tapping it opens ScanSheet — a modal that floats on top of whatever tab
+// is currently showing, not a route change, so the tab underneath (and
+// its highlighted nav item) never changes.
 //
-// Mechanic: Scan, Home, Users â€” unchanged, plain AppNavBar.
+// The scan button's own active color is deliberately independent of
+// which tab is selected — it's an action trigger, not a destination, so
+// it only lights up while its own sheet is actually open, never because
+// the Vehicle tab happens to be selected. Tying it to the tab used to
+// mean tapping Vehicle lit up both icons at once, which read as two
+// different screens being "current" simultaneously.
+//
+// Mechanic: Scan, Home, Users — unchanged, plain AppNavBar.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/profile/providers/profile_provider.dart';
 import '../../features/scan/providers/scan_provider.dart';
 import '../../shared/widget/app_nav_bar.dart';
 import '../../shared/widget/notched_nav_bar.dart';
-import 'route_names.dart';
+import '../../shared/widget/scan_sheet.dart';
 
-class UserTabShell extends ConsumerWidget {
+class UserTabShell extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
   const UserTabShell({super.key, required this.navigationShell});
 
-  static const int _vehicleBranchIndex = 2;
+  @override
+  ConsumerState<UserTabShell> createState() => _UserTabShellState();
+}
 
-  /// Pushes the dedicated Scan screen — the scan flow itself (connect/start)
-  /// lives entirely on that screen, not here. The one thing worth handling
-  /// before pushing is having no vehicle yet, since that screen assumes one
-  /// exists; send them to the Vehicle tab's own "Add a Vehicle" prompt
-  /// instead of a diagnostics screen with nothing to diagnose.
-  void _onScanTap(BuildContext context, WidgetRef ref) {
-    final vehicles = ref.read(profileProvider).vehicles;
-    if (vehicles.isEmpty) {
-      if (navigationShell.currentIndex != _vehicleBranchIndex) {
-        navigationShell.goBranch(_vehicleBranchIndex);
-      }
-      return;
-    }
-    context.push(RouteNames.userScan);
+class _UserTabShellState extends ConsumerState<UserTabShell> {
+  static const int _vehicleBranchIndex = 2;
+  bool _isScanSheetOpen = false;
+
+  Future<void> _onScanTap(BuildContext context) async {
+    setState(() => _isScanSheetOpen = true);
+    await ScanSheet.show(context);
+    if (mounted) setState(() => _isScanSheetOpen = false);
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = navigationShell.currentIndex;
+  Widget build(BuildContext context) {
+    final currentIndex = widget.navigationShell.currentIndex;
     final scanState = ref.watch(scanProvider);
 
     return Stack(
       children: [
-        navigationShell,
+        widget.navigationShell,
         NotchedNavBar(
           activeIndex: currentIndex,
           isScanBusy: scanState.isScanning || scanState.isConnectingDevice,
-          isScanActive: currentIndex == _vehicleBranchIndex,
-          onScanTap: () => _onScanTap(context, ref),
+          isScanActive: _isScanSheetOpen,
+          onScanTap: () => _onScanTap(context),
           items: [
             AppNavItem(
               icon: Icons.home_rounded,
               label: 'Home',
-              onTap: () => navigationShell.goBranch(0),
+              onTap: () => widget.navigationShell.goBranch(0),
             ),
             AppNavItem(
               icon: Icons.build_rounded,
               label: 'Mechanics',
-              onTap: () => navigationShell.goBranch(1),
+              onTap: () => widget.navigationShell.goBranch(1),
             ),
             AppNavItem(
               icon: Icons.directions_car_rounded,
               label: 'Vehicle',
-              onTap: () => navigationShell.goBranch(_vehicleBranchIndex),
+              onTap: () => widget.navigationShell.goBranch(_vehicleBranchIndex),
             ),
             AppNavItem(
               icon: Icons.person_rounded,
               label: 'Profile',
-              onTap: () => navigationShell.goBranch(3),
+              onTap: () => widget.navigationShell.goBranch(3),
             ),
           ],
         ),
