@@ -101,8 +101,10 @@ class _HealthGaugePainter extends CustomPainter {
         text: TextSpan(
           text: tick.label,
           style: const TextStyle(
-            fontFamily: 'Inter', fontSize: 9,
-            color: Color(0x33FFFFFF), fontWeight: FontWeight.w500,
+            fontFamily: 'Inter',
+            fontSize: 9,
+            color: Color(0x33FFFFFF),
+            fontWeight: FontWeight.w500,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -122,8 +124,7 @@ class _HealthGaugePainter extends CustomPainter {
       ..shader = const LinearGradient(
         colors: [AppColors.success, AppColors.warning, AppColors.primary],
       ).createShader(rect);
-    canvas.drawArc(
-        rect, startAngle, totalSweep * fraction!, false, progress);
+    canvas.drawArc(rect, startAngle, totalSweep * fraction!, false, progress);
 
     final needleAngle = startAngle + totalSweep * fraction!;
     final needleEnd = Offset(
@@ -137,15 +138,15 @@ class _HealthGaugePainter extends CustomPainter {
       ..color = AppColors.primary;
     canvas.drawLine(center, needleEnd, needlePaint);
 
+    canvas.drawCircle(center, 8, Paint()..color = const Color(0xFF141414));
     canvas.drawCircle(
-        center, 8, Paint()..color = const Color(0xFF141414));
-    canvas.drawCircle(
-        center,
-        8,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = AppColors.primary);
+      center,
+      8,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = AppColors.primary,
+    );
     canvas.drawCircle(center, 3.5, Paint()..color = AppColors.primary);
   }
 
@@ -171,9 +172,9 @@ class ObdStatusPill extends StatelessWidget {
     final color = connected ? AppColors.success : AppColors.textMuted;
     final label = connected
         ? (connectedName != null && connectedName!.isNotEmpty
-            ? 'Connected · $connectedName'
-            : 'OBD Adapter Connected')
-        : 'OBD Adapter Not Connected — Tap to Connect';
+              ? 'Connected · $connectedName'
+              : 'OBD Adapter Connected')
+        : 'OBD Adapter Not Connected';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(

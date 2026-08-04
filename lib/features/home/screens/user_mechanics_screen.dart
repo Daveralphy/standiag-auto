@@ -18,6 +18,7 @@ import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_screen_backdrop.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/find_mechanic_sheet.dart';
+import '../../../shared/widget/image_ad_carousel.dart';
 import '../../../shared/widget/mechanic_id_lookup_sheet.dart';
 import '../../../shared/widget/mini_mechanic_card.dart';
 import '../../../shared/widget/system_ui_style.dart';
@@ -96,71 +97,6 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
                       bottom: AppSpacing.navBarClearance,
                     ),
                     children: [
-                      // ─── Top Rated ───────────────────────────────────
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppSpacing.pageHorizontal,
-                        ),
-                        child: Text(
-                          'Top Rated Mechanics',
-                          style: AppTypography.heading3,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        height: 152,
-                        child: mechanicsAsync.when(
-                          data: (mechanics) {
-                            if (mechanics.isEmpty) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.pageHorizontal,
-                                ),
-                                child: Text(
-                                  'No mechanics available nearby.',
-                                  style: AppTypography.body,
-                                ),
-                              );
-                            }
-                            final topRated = List.of(mechanics)
-                              ..sort(
-                                (a, b) => b.mechanic.rating.compareTo(
-                                  a.mechanic.rating,
-                                ),
-                              );
-                            final preview = topRated.take(6).toList();
-                            return ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.pageHorizontal,
-                              ),
-                              itemCount: preview.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 10),
-                              itemBuilder: (_, i) => MiniMechanicCard(
-                                entry: preview[i],
-                                compact: true,
-                              ),
-                            );
-                          },
-                          loading: () => ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal,
-                            ),
-                            itemCount: 3,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(width: 10),
-                            itemBuilder: (_, __) =>
-                                const MiniMechanicCardSkeleton(compact: true),
-                          ),
-                          error: (_, __) => const SizedBox.shrink(),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.pageHorizontal,
@@ -185,6 +121,14 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal,
+                        ),
+                        child: ImageAdCarousel(),
                       ),
                       const SizedBox(height: 24),
 

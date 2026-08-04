@@ -57,41 +57,56 @@ class _UserTabShellState extends ConsumerState<UserTabShell> {
     });
   }
 
+  /// Switching tabs always fully dismisses the scan overlay first — it
+  /// used to be possible to switch tabs while the blur/prompt/modal was
+  /// still up, leaving it stuck on top of whatever tab you switched to.
+  void _goToBranch(int index) {
+    if (_scanStage != ScanOverlayStage.idle) {
+      setState(() => _scanStage = ScanOverlayStage.idle);
+    }
+    widget.navigationShell.goBranch(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentIndex = widget.navigationShell.currentIndex;
     final scanState = ref.watch(scanProvider);
     final iconTop = scanIconTopFromBottom();
+    final scanIdle = _scanStage == ScanOverlayStage.idle;
 
     return Stack(
       children: [
         widget.navigationShell,
         ScanBackdrop(stage: _scanStage, onTapOutside: _demoteScanStage),
         NotchedNavBar(
-          activeIndex: currentIndex,
+          // Hidden (no item shown selected) while the scan overlay is up,
+          // so the active tab's red highlight doesn't compete with the
+          // scan icon/prompt/modal for attention — it comes back the
+          // moment the overlay is fully dismissed.
+          activeIndex: scanIdle ? currentIndex : -1,
           isScanBusy: scanState.isScanning || scanState.isConnectingDevice,
-          isScanActive: _scanStage != ScanOverlayStage.idle,
+          isScanActive: !scanIdle,
           onScanTap: _onScanIconTap,
           items: [
             AppNavItem(
               icon: Icons.home_rounded,
               label: 'Home',
-              onTap: () => widget.navigationShell.goBranch(0),
+              onTap: () => _goToBranch(0),
             ),
             AppNavItem(
               icon: Icons.build_rounded,
               label: 'Mechanics',
-              onTap: () => widget.navigationShell.goBranch(1),
+              onTap: () => _goToBranch(1),
             ),
             AppNavItem(
               icon: Icons.directions_car_rounded,
               label: 'Vehicle',
-              onTap: () => widget.navigationShell.goBranch(_vehicleBranchIndex),
+              onTap: () => _goToBranch(_vehicleBranchIndex),
             ),
             AppNavItem(
               icon: Icons.person_rounded,
               label: 'Profile',
-              onTap: () => widget.navigationShell.goBranch(3),
+              onTap: () => _goToBranch(3),
             ),
           ],
         ),

@@ -118,7 +118,7 @@ class ScanPromptButton extends StatelessWidget {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.navBarBackground,
+                    color: AppColors.primarySubtle,
                     borderRadius: BorderRadius.circular(AppRadius.full),
                     border: Border.all(
                       color: AppColors.primaryBorder,
