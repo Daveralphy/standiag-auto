@@ -11,6 +11,7 @@ import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_skeleton.dart';
+import '../../../shared/widget/app_screen_backdrop.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../jobs/models/job_model.dart';
@@ -52,16 +53,22 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
   Widget build(BuildContext context) {
     final mechanicsAsync = ref.watch(nearbyMechanicsProvider);
     final vehiclesState = ref.watch(profileProvider);
-    final vehicle =
-        vehiclesState.vehicles.isNotEmpty ? vehiclesState.vehicles.first : null;
+    final vehicle = vehiclesState.vehicles.isNotEmpty
+        ? vehiclesState.vehicles.first
+        : null;
 
     final serviceCount = ref.watch(
-        jobProvider.select((s) => s.jobHistory.where((j) => j.status == JobStatus.completed).length));
+      jobProvider.select(
+        (s) =>
+            s.jobHistory.where((j) => j.status == JobStatus.completed).length,
+      ),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
+          const AppScreenBackdrop(),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,120 +85,137 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.only(
-                        bottom: AppSpacing.navBarClearance),
+                      bottom: AppSpacing.navBarClearance,
+                    ),
                     children: [
-                        // ─── Vehicle card ────────────────────────────────
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal),
-                          child: vehicle == null
-                              ? _NoVehicleCard(
-                                  onAddVehicle: () =>
-                                      context.push(RouteNames.addVehicle))
-                              : _VehicleCard(vehicle: vehicle),
+                      // ─── Vehicle card ────────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal,
                         ),
-                        const SizedBox(height: 24),
+                        child: vehicle == null
+                            ? _NoVehicleCard(
+                                onAddVehicle: () =>
+                                    context.push(RouteNames.addVehicle),
+                              )
+                            : _VehicleCard(vehicle: vehicle),
+                      ),
+                      const SizedBox(height: 24),
 
-                        // ─── Quick Actions ───────────────────────────────
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal),
-                          child: Text('Quick Actions',
-                              style: AppTypography.heading3,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1),
+                      // ─── Quick Actions ───────────────────────────────
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal,
                         ),
-                        const SizedBox(height: 14),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal),
-                          child: Row(
-                            children: [
-                              _QuickAction(
-                                  icon: Icons.history_rounded,
-                                  label: 'Service History',
-                                  sublabel: serviceCount == 0
-                                      ? 'No records'
-                                      : '$serviceCount record${serviceCount == 1 ? '' : 's'}',
-                                  onTap: () => context
-                                      .go(RouteNames.serviceHistory)),
-                              const SizedBox(width: 10),
-                              _QuickAction(
-                                  icon: Icons.calendar_today_outlined,
-                                  label: 'Book Service',
-                                  sublabel: 'Schedule',
-                                  onTap: () =>
-                                      context.go(RouteNames.myJobs)),
-                            ],
-                          ),
+                        child: Text(
+                          'Quick Actions',
+                          style: AppTypography.heading3,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                        const SizedBox(height: 24),
-
-                        // ─── Nearby Mechanics ────────────────────────────
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal),
-                          child: Row(
-                            children: [
-                              const Expanded(
-                                child: Text('Nearby Mechanics',
-                                    style: AppTypography.heading3,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1),
-                              ),
-                              GestureDetector(
-                                onTap: () =>
-                                    context.go(RouteNames.userMechanics),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('See all',
-                                        style: AppTypography.bodySmall
-                                            .copyWith(
-                                                color: AppColors.primary)),
-                                    const SizedBox(width: 2),
-                                    const Icon(Icons.arrow_forward_rounded,
-                                        size: 14, color: AppColors.primary),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(height: 14),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal,
                         ),
-                        const SizedBox(height: 14),
-
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.pageHorizontal),
-                          child: mechanicsAsync.when(
-                            data: (mechanics) {
-                              if (mechanics.isEmpty) {
-                                return const Text(
-                                    'No mechanics available nearby.',
-                                    style: AppTypography.body);
-                              }
-                              final preview = mechanics.take(3).toList();
-                              return Column(
-                                children: [
-                                  for (int i = 0; i < preview.length; i++) ...[
-                                    if (i > 0) const SizedBox(height: 10),
-                                    _MiniMechanicCard(entry: preview[i]),
-                                  ],
-                                ],
-                              );
-                            },
-                            loading: () => const Column(
-                              children: [
-                                _MiniMechanicCardSkeleton(),
-                                SizedBox(height: 10),
-                                _MiniMechanicCardSkeleton(),
-                                SizedBox(height: 10),
-                                _MiniMechanicCardSkeleton(),
-                              ],
+                        child: Row(
+                          children: [
+                            _QuickAction(
+                              icon: Icons.history_rounded,
+                              label: 'Service History',
+                              sublabel: serviceCount == 0
+                                  ? 'No records'
+                                  : '$serviceCount record${serviceCount == 1 ? '' : 's'}',
+                              onTap: () =>
+                                  context.go(RouteNames.serviceHistory),
                             ),
-                            error: (_, __) => const SizedBox.shrink(),
-                          ),
+                            const SizedBox(width: 10),
+                            _QuickAction(
+                              icon: Icons.calendar_today_outlined,
+                              label: 'Book Service',
+                              sublabel: 'Schedule',
+                              onTap: () => context.go(RouteNames.myJobs),
+                            ),
+                          ],
                         ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // ─── Nearby Mechanics ────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal,
+                        ),
+                        child: Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Nearby Mechanics',
+                                style: AppTypography.heading3,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => context.go(RouteNames.userMechanics),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'See all',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  const Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 14,
+                                    color: AppColors.primary,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal,
+                        ),
+                        child: mechanicsAsync.when(
+                          data: (mechanics) {
+                            if (mechanics.isEmpty) {
+                              return const Text(
+                                'No mechanics available nearby.',
+                                style: AppTypography.body,
+                              );
+                            }
+                            final preview = mechanics.take(3).toList();
+                            return Column(
+                              children: [
+                                for (int i = 0; i < preview.length; i++) ...[
+                                  if (i > 0) const SizedBox(height: 10),
+                                  _MiniMechanicCard(entry: preview[i]),
+                                ],
+                              ],
+                            );
+                          },
+                          loading: () => const Column(
+                            children: [
+                              _MiniMechanicCardSkeleton(),
+                              SizedBox(height: 10),
+                              _MiniMechanicCardSkeleton(),
+                              SizedBox(height: 10),
+                              _MiniMechanicCardSkeleton(),
+                            ],
+                          ),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -223,15 +247,19 @@ class _VehicleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(vehicle.displayName,
-              style: AppTypography.heading2,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1),
+          Text(
+            vehicle.displayName,
+            style: AppTypography.heading2,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
           const SizedBox(height: 4),
           Text(
-            [vehicle.type, vehicle.fuelType, vehicle.colour]
-                .where((s) => s.isNotEmpty)
-                .join(' · '),
+            [
+              vehicle.type,
+              vehicle.fuelType,
+              vehicle.colour,
+            ].where((s) => s.isNotEmpty).join(' · '),
             style: AppTypography.body,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
@@ -264,13 +292,17 @@ class _NoVehicleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('No vehicle added yet',
-              style: AppTypography.heading3,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1),
+          const Text(
+            'No vehicle added yet',
+            style: AppTypography.heading3,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
           const SizedBox(height: 4),
-          const Text('Add your car to start diagnosing it with OBD.',
-              style: AppTypography.body),
+          const Text(
+            'Add your car to start diagnosing it with OBD.',
+            style: AppTypography.body,
+          ),
           const SizedBox(height: 16),
           AppButton(label: 'Add a Vehicle', onTap: onAddVehicle),
         ],
@@ -288,7 +320,8 @@ class _MiniMechanicCard extends ConsumerWidget {
     final mechanic = entry.mechanic;
     final userAsync = ref.watch(mechanicUserProvider(mechanic.uid));
     return GestureDetector(
-      onTap: () => context.push(RouteNames.mechanicProfile, extra: mechanic.uid),
+      onTap: () =>
+          context.push(RouteNames.mechanicProfile, extra: mechanic.uid),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(12),
@@ -325,21 +358,29 @@ class _MiniMechanicCard extends ConsumerWidget {
                       maxLines: 1,
                     ),
                     loading: () => Container(
-                        width: 100, height: 13,
-                        decoration: BoxDecoration(
-                            color: const Color(0x14FFFFFF),
-                            borderRadius: BorderRadius.circular(4))),
+                      width: 100,
+                      height: 13,
+                      decoration: BoxDecoration(
+                        color: const Color(0x14FFFFFF),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
                     error: (_, __) =>
                         const Text('Mechanic', style: AppTypography.bodyLarge),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.star_rounded,
-                          color: AppColors.primary, size: 12),
+                      const Icon(
+                        Icons.star_rounded,
+                        color: AppColors.primary,
+                        size: 12,
+                      ),
                       const SizedBox(width: 2),
-                      Text(mechanic.rating.toStringAsFixed(1),
-                          style: AppTypography.caption),
+                      Text(
+                        mechanic.rating.toStringAsFixed(1),
+                        style: AppTypography.caption,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -356,8 +397,11 @@ class _MiniMechanicCard extends ConsumerWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                color: AppColors.textDisabled, size: 18),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textDisabled,
+              size: 18,
+            ),
           ],
         ),
       ),
@@ -385,13 +429,23 @@ class _MiniMechanicCardSkeleton extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(width: 100, height: 13,
-                    decoration: BoxDecoration(color: const Color(0x14FFFFFF),
-                        borderRadius: BorderRadius.circular(4))),
+                Container(
+                  width: 100,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: const Color(0x14FFFFFF),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Container(width: 70, height: 10,
-                    decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
-                        borderRadius: BorderRadius.circular(4))),
+                Container(
+                  width: 70,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: const Color(0x0AFFFFFF),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
               ],
             ),
           ),
@@ -429,7 +483,8 @@ class _QuickAction extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 32, height: 32,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: const Color(0x14E8281E),
                   borderRadius: BorderRadius.circular(8),
@@ -437,15 +492,19 @@ class _QuickAction extends StatelessWidget {
                 child: Icon(icon, color: AppColors.primary, size: 16),
               ),
               const SizedBox(height: 10),
-              Text(label,
-                  style: AppTypography.bodyLarge,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2),
+              Text(
+                label,
+                style: AppTypography.bodyLarge,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
               const SizedBox(height: 2),
-              Text(sublabel,
-                  style: AppTypography.caption,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1),
+              Text(
+                sublabel,
+                style: AppTypography.caption,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ],
           ),
         ),

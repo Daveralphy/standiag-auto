@@ -1,6 +1,8 @@
-// Floating scan trigger for the Vehicle screen — a plain static circular
-// button using the hotspot/broadcast icon. No animation or ripple rings;
-// fixed position, sits just above the nav bar.
+// Floating scan trigger for the Vehicle screen — an outlined circular
+// button: a light-red stroke and a light-red icon, no filled red
+// background. Fill matches the nav bar's own surface so it reads as the
+// same material as the bar rather than a separate colored object. No
+// animation or ripple rings; fixed position, sits above the nav bar.
 
 import 'package:flutter/material.dart';
 
@@ -25,12 +27,13 @@ class FloatingScanButton extends StatelessWidget {
       child: Container(
         width: visibleSize,
         height: visibleSize,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: AppColors.primaryButtonGradient,
-          boxShadow: [
+          color: AppColors.navBarBackground,
+          border: Border.all(color: AppColors.primaryBorder, width: 1.5),
+          boxShadow: const [
             BoxShadow(
-              color: Color(0x80E8281E),
+              color: Color(0x99000000),
               blurRadius: 16,
               offset: Offset(0, 4),
             ),
@@ -43,11 +46,11 @@ class FloatingScanButton extends StatelessWidget {
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
                 )
               : const Icon(Icons.wifi_tethering_rounded,
-                  color: Colors.white, size: 26),
+                  color: AppColors.primary, size: 26),
         ),
       ),
     );
