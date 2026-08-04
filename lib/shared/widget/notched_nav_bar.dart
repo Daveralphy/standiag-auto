@@ -24,7 +24,11 @@ class NotchedNavBar extends StatelessWidget {
   final VoidCallback onScanTap;
   final bool isScanBusy;
 
-  static const double barHeight = 64;
+  // Must match AppSpacing.navBarHeight — NavColumnItem (shared with
+  // AppNavBar) sizes itself to that constant via a fixed SizedBox, so a
+  // different height here would leave that box mismatched against this
+  // bar's own height.
+  static const double barHeight = AppSpacing.navBarHeight;
   static const double notchRadius = 32;
 
   /// Half of [FloatingScanButton.visibleSize] — the button is centered

@@ -99,29 +99,44 @@ class NavColumnItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isActive ? AppColors.primary : AppColors.textMuted;
-    return GestureDetector(
-      onTap: item.onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        height: AppSpacing.navBarHeight,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(item.icon, size: 22, color: color),
-            const SizedBox(height: 4),
-            Text(
-              item.label,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 10.5,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                color: color,
+    // Both nav bars render as siblings of their tab shell's navigationShell
+    // inside a plain Stack, outside of any screen's own Scaffold — so
+    // there's no Material ancestor here unless this widget provides its
+    // own. `transparency` keeps it fully invisible (no color/elevation of
+    // its own) while still giving the Text/Icon below a real Material
+    // and DefaultTextStyle to resolve against.
+    return Material(
+      type: MaterialType.transparency,
+      child: GestureDetector(
+        onTap: item.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          height: AppSpacing.navBarHeight,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(item.icon, size: 22, color: color),
+              const SizedBox(height: 4),
+              Text(
+                item.label,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 10.5,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                  color: color,
+                  // The pre-redesign labels used AppTypography.labelActive/
+                  // labelInactive, both pinned to height: 1.0. Dropping that
+                  // when this became an inline style left the label's line
+                  // box sized by Inter's own (taller) built-in line-height
+                  // instead — pin it back to exactly 1x the font size.
+                  height: 1.0,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

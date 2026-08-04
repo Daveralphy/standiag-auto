@@ -58,6 +58,18 @@ service cloud.firestore {
           request.resource.data.ownerId == request.auth.uid;
     }
 
+    // ─── Credits History ────────────────────────────────────────────────
+    // An append-only ledger: the client creates entries (in the same
+    // transaction as the balance update on users/{userId}.credits) and
+    // reads its own, but never edits one after the fact. Delete is only
+    // used by account self-deletion, wiping a user's own entries.
+    match /credits_history/{entryId} {
+      allow read, delete: if isSignedIn() &&
+          resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() &&
+          request.resource.data.userId == request.auth.uid;
+    }
+
     // ─── Notifications ──────────────────────────────────────────────────
     // Read/dismiss your own; created only by trusted backend code, never
     // directly by a client.
