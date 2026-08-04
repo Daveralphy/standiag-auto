@@ -8,9 +8,8 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
-import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
-import '../../../shared/widget/app_skeleton.dart';
+import '../../../shared/widget/mini_mechanic_card.dart';
 import '../../../shared/widget/app_screen_backdrop.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
@@ -199,18 +198,18 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                               children: [
                                 for (int i = 0; i < preview.length; i++) ...[
                                   if (i > 0) const SizedBox(height: 10),
-                                  _MiniMechanicCard(entry: preview[i]),
+                                  MiniMechanicCard(entry: preview[i]),
                                 ],
                               ],
                             );
                           },
                           loading: () => const Column(
                             children: [
-                              _MiniMechanicCardSkeleton(),
+                              MiniMechanicCardSkeleton(),
                               SizedBox(height: 10),
-                              _MiniMechanicCardSkeleton(),
+                              MiniMechanicCardSkeleton(),
                               SizedBox(height: 10),
-                              _MiniMechanicCardSkeleton(),
+                              MiniMechanicCardSkeleton(),
                             ],
                           ),
                           error: (_, __) => const SizedBox.shrink(),
@@ -305,150 +304,6 @@ class _NoVehicleCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           AppButton(label: 'Add a Vehicle', onTap: onAddVehicle),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniMechanicCard extends ConsumerWidget {
-  final NearbyMechanic entry;
-  const _MiniMechanicCard({required this.entry});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mechanic = entry.mechanic;
-    final userAsync = ref.watch(mechanicUserProvider(mechanic.uid));
-    return GestureDetector(
-      onTap: () =>
-          context.push(RouteNames.mechanicProfile, extra: mechanic.uid),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            userAsync.when(
-              data: (user) => AppAvatar(
-                name: user != null
-                    ? '${user.firstName} ${user.lastName}'.trim()
-                    : 'Mechanic',
-                imageUrl: user?.profilePhoto,
-                size: 44,
-              ),
-              loading: () => const AppSkeleton.circle(size: 44),
-              error: (_, __) => const AppAvatar(name: 'Mechanic', size: 44),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  userAsync.when(
-                    data: (user) => Text(
-                      user != null
-                          ? '${user.firstName} ${user.lastName}'.trim()
-                          : 'Mechanic',
-                      style: AppTypography.bodyLarge,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    loading: () => Container(
-                      width: 100,
-                      height: 13,
-                      decoration: BoxDecoration(
-                        color: const Color(0x14FFFFFF),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    error: (_, __) =>
-                        const Text('Mechanic', style: AppTypography.bodyLarge),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        color: AppColors.primary,
-                        size: 12,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        mechanic.rating.toStringAsFixed(1),
-                        style: AppTypography.caption,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          entry.distanceKm != null
-                              ? '${entry.distanceKm!.toStringAsFixed(1)} km away'
-                              : 'Distance unknown',
-                          style: AppTypography.caption,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textDisabled,
-              size: 18,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniMechanicCardSkeleton extends StatelessWidget {
-  const _MiniMechanicCardSkeleton();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const AppSkeleton.circle(size: 44),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 100,
-                  height: 13,
-                  decoration: BoxDecoration(
-                    color: const Color(0x14FFFFFF),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  width: 70,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: const Color(0x0AFFFFFF),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

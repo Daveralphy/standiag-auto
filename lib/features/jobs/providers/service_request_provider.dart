@@ -28,8 +28,9 @@ class ServiceRequestState {
     bool clearActiveRequest = false,
   }) {
     return ServiceRequestState(
-      activeRequest:
-          clearActiveRequest ? null : (activeRequest ?? this.activeRequest),
+      activeRequest: clearActiveRequest
+          ? null
+          : (activeRequest ?? this.activeRequest),
       error: error,
     );
   }
@@ -48,19 +49,23 @@ class ServiceRequestNotifier extends StateNotifier<ServiceRequestState> {
     required String issue,
     required String vehicleId,
     required double radiusKm,
+    String? targetMechanicId,
   }) async {
-    final doc = await FirebaseFirestore.instance.collection('serviceRequests').add(
-      ServiceRequestModel(
-        id: '',
-        carOwnerId: carOwnerId,
-        carOwnerLocation: carOwnerLocation,
-        issue: issue,
-        vehicleId: vehicleId,
-        radiusKm: radiusKm,
-        status: ServiceRequestStatus.open,
-        createdAt: DateTime.now(),
-      ).toFirestore(),
-    );
+    final doc = await FirebaseFirestore.instance
+        .collection('serviceRequests')
+        .add(
+          ServiceRequestModel(
+            id: '',
+            carOwnerId: carOwnerId,
+            carOwnerLocation: carOwnerLocation,
+            issue: issue,
+            vehicleId: vehicleId,
+            radiusKm: radiusKm,
+            targetMechanicId: targetMechanicId,
+            status: ServiceRequestStatus.open,
+            createdAt: DateTime.now(),
+          ).toFirestore(),
+        );
     _watch(doc.id);
     return doc.id;
   }
@@ -71,15 +76,19 @@ class ServiceRequestNotifier extends StateNotifier<ServiceRequestState> {
         .collection('serviceRequests')
         .doc(requestId)
         .snapshots()
-        .listen((snapshot) {
-      if (!snapshot.exists) return;
-      state =
-          state.copyWith(activeRequest: ServiceRequestModel.fromFirestore(snapshot));
-    }, onError: (Object error, StackTrace stackTrace) {
-      state = state.copyWith(
-        error: ErrorHandler.handle(error, stackTrace).message,
-      );
-    });
+        .listen(
+          (snapshot) {
+            if (!snapshot.exists) return;
+            state = state.copyWith(
+              activeRequest: ServiceRequestModel.fromFirestore(snapshot),
+            );
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            state = state.copyWith(
+              error: ErrorHandler.handle(error, stackTrace).message,
+            );
+          },
+        );
   }
 
   /// Mechanic-side: sends (or updates) this mechanic's quote on a request.
@@ -95,13 +104,15 @@ class ServiceRequestNotifier extends StateNotifier<ServiceRequestState> {
           .doc(requestId)
           .collection('quotes')
           .doc(mechanicId)
-          .set(QuoteModel(
-            mechanicId: mechanicId,
-            price: price,
-            note: note,
-            status: QuoteStatus.pending,
-            createdAt: DateTime.now(),
-          ).toFirestore());
+          .set(
+            QuoteModel(
+              mechanicId: mechanicId,
+              price: price,
+              note: note,
+              status: QuoteStatus.pending,
+              createdAt: DateTime.now(),
+            ).toFirestore(),
+          );
     } catch (e) {
       state = state.copyWith(
         error: ErrorHandler.handle(e, StackTrace.current).message,
@@ -170,6 +181,25 @@ class ServiceRequestNotifier extends StateNotifier<ServiceRequestState> {
     }
   }
 
+  /// Car-owner-side: a quote's 30-second response window lapsed without an
+  /// accept or decline — distinct from [declineQuote], since this is "didn't
+  /// decide in time" rather than "said no". The mechanic can still rebid;
+  /// resubmitting (see [submitQuote]) always resets status back to pending.
+  Future<void> expireQuote(String requestId, String mechanicId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('serviceRequests')
+          .doc(requestId)
+          .collection('quotes')
+          .doc(mechanicId)
+          .update({'status': QuoteStatus.expired.value});
+    } catch (e) {
+      state = state.copyWith(
+        error: ErrorHandler.handle(e, StackTrace.current).message,
+      );
+    }
+  }
+
   Future<void> cancelRequest(String requestId) async {
     try {
       await FirebaseFirestore.instance
@@ -197,7 +227,8 @@ class ServiceRequestNotifier extends StateNotifier<ServiceRequestState> {
 
 final serviceRequestProvider =
     StateNotifierProvider<ServiceRequestNotifier, ServiceRequestState>(
-        (ref) => ServiceRequestNotifier());
+      (ref) => ServiceRequestNotifier(),
+    );
 
 /// Real-time stream of quotes on a request, oldest first — used by the car
 /// owner's searching screen to show incoming offers as they arrive. Only
@@ -205,36 +236,41 @@ final serviceRequestProvider =
 /// their own once their status changes.
 final quotesForRequestProvider =
     StreamProvider.family<List<QuoteModel>, String>((ref, requestId) {
-  return FirebaseFirestore.instance
-      .collection('serviceRequests')
-      .doc(requestId)
-      .collection('quotes')
-      .orderBy('createdAt')
-      .snapshots()
-      .map((snap) => snap.docs
-          .map(QuoteModel.fromFirestore)
-          .where((q) => q.status == QuoteStatus.pending)
-          .toList());
-});
+      return FirebaseFirestore.instance
+          .collection('serviceRequests')
+          .doc(requestId)
+          .collection('quotes')
+          .orderBy('createdAt')
+          .snapshots()
+          .map(
+            (snap) => snap.docs
+                .map(QuoteModel.fromFirestore)
+                .where((q) => q.status == QuoteStatus.pending)
+                .toList(),
+          );
+    });
 
 /// Real-time watch of a single service request by id — used by the
 /// mechanic's send-quote screen so it can react if the request gets
 /// matched or cancelled by someone else while they're filling in a price.
 final serviceRequestByIdProvider =
     StreamProvider.family<ServiceRequestModel?, String>((ref, requestId) {
-  return FirebaseFirestore.instance
-      .collection('serviceRequests')
-      .doc(requestId)
-      .snapshots()
-      .map((doc) => doc.exists ? ServiceRequestModel.fromFirestore(doc) : null);
-});
+      return FirebaseFirestore.instance
+          .collection('serviceRequests')
+          .doc(requestId)
+          .snapshots()
+          .map(
+            (doc) => doc.exists ? ServiceRequestModel.fromFirestore(doc) : null,
+          );
+    });
 
 /// Real-time stream of every currently open service request — the
 /// unfiltered base for [nearbyServiceRequestsProvider] below. Foreground
 /// only, matching the app's other live-query cases (Rule 13): mechanics see
 /// new requests pop in while the app is open.
-final openServiceRequestsProvider =
-    StreamProvider<List<ServiceRequestModel>>((ref) {
+final openServiceRequestsProvider = StreamProvider<List<ServiceRequestModel>>((
+  ref,
+) {
   return FirebaseFirestore.instance
       .collection('serviceRequests')
       .where('status', isEqualTo: ServiceRequestStatus.open.value)
@@ -256,38 +292,60 @@ class NearbyServiceRequest {
 /// open) set and filter by real distance client-side. A derived [Provider],
 /// not a [StreamProvider] — it recomputes whenever either of the two async
 /// sources it watches emits, without touching the raw stream directly.
-final nearbyServiceRequestsProvider = Provider.family<
-    AsyncValue<List<NearbyServiceRequest>>, String>((ref, mechanicId) {
-  final requestsAsync = ref.watch(openServiceRequestsProvider);
-  final MechanicModel? mechanic =
-      ref.watch(mechanicByIdProvider(mechanicId)).valueOrNull;
-  final mechanicLocation = mechanic?.location;
+final nearbyServiceRequestsProvider =
+    Provider.family<AsyncValue<List<NearbyServiceRequest>>, String>((
+      ref,
+      mechanicId,
+    ) {
+      final requestsAsync = ref.watch(openServiceRequestsProvider);
+      final MechanicModel? mechanic = ref
+          .watch(mechanicByIdProvider(mechanicId))
+          .valueOrNull;
+      final mechanicLocation = mechanic?.location;
 
-  return requestsAsync.whenData((requests) {
-    return requests.map((request) {
-      double? distanceKm;
-      if (mechanicLocation != null && request.carOwnerLocation != null) {
-        distanceKm = Geolocator.distanceBetween(
-              mechanicLocation.latitude,
-              mechanicLocation.longitude,
-              request.carOwnerLocation!.latitude,
-              request.carOwnerLocation!.longitude,
-            ) /
-            1000;
-      }
-      return NearbyServiceRequest(request: request, distanceKm: distanceKm);
-    }).where((entry) {
-      // Only hide a request once we can prove it's out of range — an
-      // unknown distance (no location yet) still gets shown rather than
-      // silently dropped.
-      return entry.distanceKm == null ||
-          entry.distanceKm! <= entry.request.radiusKm;
-    }).toList()
-      ..sort((a, b) {
-        if (a.distanceKm == null && b.distanceKm == null) return 0;
-        if (a.distanceKm == null) return 1;
-        if (b.distanceKm == null) return -1;
-        return a.distanceKm!.compareTo(b.distanceKm!);
+      return requestsAsync.whenData((requests) {
+        return requests
+            // A request targeted at a specific mechanic is invisible to everyone
+            // else — untargeted (broadcast) requests are visible to all, as before.
+            .where(
+              (r) =>
+                  r.targetMechanicId == null ||
+                  r.targetMechanicId == mechanicId,
+            )
+            .map((request) {
+              double? distanceKm;
+              if (mechanicLocation != null &&
+                  request.carOwnerLocation != null) {
+                distanceKm =
+                    Geolocator.distanceBetween(
+                      mechanicLocation.latitude,
+                      mechanicLocation.longitude,
+                      request.carOwnerLocation!.latitude,
+                      request.carOwnerLocation!.longitude,
+                    ) /
+                    1000;
+              }
+              return NearbyServiceRequest(
+                request: request,
+                distanceKm: distanceKm,
+              );
+            })
+            .where((entry) {
+              // A request targeted at this mechanic always reaches them, regardless
+              // of distance — that's the whole point of requesting by ID.
+              if (entry.request.targetMechanicId == mechanicId) return true;
+              // Otherwise, only hide a request once we can prove it's out of range —
+              // an unknown distance (no location yet) still gets shown rather than
+              // silently dropped.
+              return entry.distanceKm == null ||
+                  entry.distanceKm! <= entry.request.radiusKm;
+            })
+            .toList()
+          ..sort((a, b) {
+            if (a.distanceKm == null && b.distanceKm == null) return 0;
+            if (a.distanceKm == null) return 1;
+            if (b.distanceKm == null) return -1;
+            return a.distanceKm!.compareTo(b.distanceKm!);
+          });
       });
-  });
-});
+    });

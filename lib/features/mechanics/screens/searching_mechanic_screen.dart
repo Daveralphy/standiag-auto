@@ -1,0 +1,247 @@
+// Searching for Mechanic screen — the live-matching experience that used to
+// live inline on the Mechanics tab. Shows the car owner's location with an
+// outward-growing radar ripple, alerts them to how many mechanics are in
+// range (or, for a direct-by-ID request, who specifically they're waiting
+// on), and stacks incoming quotes as they arrive.
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
+
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_radius.dart';
+import '../../../core/constants/app_spacing.dart';
+import '../../../core/constants/app_typography.dart';
+import '../../../shared/widget/app_map.dart';
+import '../../../shared/widget/system_ui_style.dart';
+import '../../jobs/models/service_request_model.dart';
+import '../../jobs/providers/service_request_provider.dart';
+import '../../jobs/widgets/quote_card_stack.dart';
+import '../providers/mechanics_provider.dart';
+
+class SearchingMechanicScreen extends ConsumerStatefulWidget {
+  final String requestId;
+  const SearchingMechanicScreen({super.key, required this.requestId});
+
+  @override
+  ConsumerState<SearchingMechanicScreen> createState() =>
+      _SearchingMechanicScreenState();
+}
+
+class _SearchingMechanicScreenState
+    extends ConsumerState<SearchingMechanicScreen> {
+  @override
+  void initState() {
+    super.initState();
+    SystemUiStyle.applyDark();
+  }
+
+  @override
+  void dispose() {
+    ref.read(serviceRequestProvider.notifier).cancelRequest(widget.requestId);
+    ref.read(serviceRequestProvider.notifier).stopWatching();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final requestAsync = ref.watch(
+      serviceRequestByIdProvider(widget.requestId),
+    );
+
+    return Scaffold(
+      backgroundColor: AppColors.mapBackground,
+      body: requestAsync.when(
+        data: (request) {
+          if (request == null) return _buildUnavailable();
+          return _buildSearching(request);
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (_, __) => _buildUnavailable(),
+      ),
+    );
+  }
+
+  Widget _buildUnavailable() {
+    return SafeArea(
+      child: Column(
+        children: [
+          _buildBackButton(),
+          const Expanded(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageHorizontal,
+                ),
+                child: Text(
+                  'This request is no longer available.',
+                  style: AppTypography.body,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageHorizontal,
+        AppSpacing.md,
+        AppSpacing.pageHorizontal,
+        0,
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => context.pop(),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0x12FFFFFF),
+                borderRadius: BorderRadius.circular(AppRadius.full),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 14,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearching(ServiceRequestModel request) {
+    final targetId = request.targetMechanicId;
+    final userLocation = request.carOwnerLocation;
+    final center = userLocation != null
+        ? LatLng(userLocation.latitude, userLocation.longitude)
+        : const LatLng(6.5244, 3.3792);
+
+    return Stack(
+      children: [
+        AppMap(
+          initialCenter: center,
+          initialZoom: 13.5,
+          enableCurrentLocation: true,
+          showMapControls: false,
+          animateCurrentLocationRipple: true,
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 140,
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xF0060606), Colors.transparent],
+              ),
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildBackButton(),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageHorizontal,
+                ),
+                child: targetId == null
+                    ? _BroadcastStatus(radiusKm: request.radiusKm)
+                    : _TargetedStatus(mechanicId: targetId),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          left: AppSpacing.pageHorizontal,
+          right: AppSpacing.pageHorizontal,
+          bottom: 24,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.5,
+            ),
+            child: SingleChildScrollView(
+              reverse: true,
+              child: QuoteCardStack(request: request),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// "Alerting N nearby mechanics" — the honest proxy: the real count of
+/// visible mechanics within this request's own broadcast radius, using the
+/// same distance data the Mechanics tab's own lists already compute (an
+/// unknown distance still counts as "in range" rather than being silently
+/// dropped, matching notifyNearbyMechanics' own inclusion rule).
+class _BroadcastStatus extends ConsumerWidget {
+  final double radiusKm;
+  const _BroadcastStatus({required this.radiusKm});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mechanicsAsync = ref.watch(nearbyMechanicsProvider);
+    final count =
+        mechanicsAsync.valueOrNull
+            ?.where((m) => m.distanceKm == null || m.distanceKm! <= radiusKm)
+            .length ??
+        0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Searching', style: AppTypography.heading3),
+        const SizedBox(height: 4),
+        Text(
+          count == 0
+              ? 'Alerting nearby mechanics…'
+              : 'Alerting $count nearby mechanic${count == 1 ? '' : 's'}',
+          style: AppTypography.body,
+        ),
+      ],
+    );
+  }
+}
+
+/// "Waiting for {name} to respond" — the direct-by-ID request status.
+class _TargetedStatus extends ConsumerWidget {
+  final String mechanicId;
+  const _TargetedStatus({required this.mechanicId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsync = ref.watch(mechanicUserProvider(mechanicId));
+    final name = userAsync.valueOrNull != null
+        ? '${userAsync.valueOrNull!.firstName} ${userAsync.valueOrNull!.lastName}'
+              .trim()
+        : 'the mechanic';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Searching', style: AppTypography.heading3),
+        const SizedBox(height: 4),
+        Text('Waiting for $name to respond…', style: AppTypography.body),
+      ],
+    );
+  }
+}

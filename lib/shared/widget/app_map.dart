@@ -20,7 +20,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
-import 'package:vector_tile_renderer/vector_tile_renderer.dart' show ThemeReader;
+import 'package:vector_tile_renderer/vector_tile_renderer.dart'
+    show ThemeReader;
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_radius.dart';
@@ -82,6 +83,11 @@ class AppMap extends StatefulWidget {
   /// Whether to show the floating zoom/compass/recenter control column.
   final bool showMapControls;
 
+  /// Opt-in "radar ping" — expanding, fading rings looping outward from the
+  /// user's own location marker, in place of its usual static look. Off by
+  /// default so every other screen using [AppMap] is unaffected.
+  final bool animateCurrentLocationRipple;
+
   const AppMap({
     super.key,
     required this.initialCenter,
@@ -91,6 +97,7 @@ class AppMap extends StatefulWidget {
     this.circles = const [],
     this.enableCurrentLocation = true,
     this.showMapControls = true,
+    this.animateCurrentLocationRipple = false,
   });
 
   @override
@@ -267,25 +274,30 @@ class _AppMapState extends State<AppMap> {
                       ),
                   ],
                 ),
-              MarkerLayer(markers: [
-                if (_currentLocation != null)
-                  Marker(
-                    point: _currentLocation!,
-                    width: 64,
-                    height: 64,
-                    child: const _UserLocationPin(),
-                  ),
-                for (final marker in widget.markers)
-                  Marker(
-                    point: marker.position,
-                    width: 40,
-                    height: 40,
-                    child: GestureDetector(
-                      onTap: marker.onTap,
-                      child: marker.child,
+              MarkerLayer(
+                markers: [
+                  if (_currentLocation != null)
+                    Marker(
+                      key: const ValueKey('userLocationMarker'),
+                      point: _currentLocation!,
+                      width: widget.animateCurrentLocationRipple ? 160 : 64,
+                      height: widget.animateCurrentLocationRipple ? 160 : 64,
+                      child: widget.animateCurrentLocationRipple
+                          ? const _AnimatedUserLocationMarker()
+                          : const _UserLocationPin(),
                     ),
-                  ),
-              ]),
+                  for (final marker in widget.markers)
+                    Marker(
+                      point: marker.position,
+                      width: 40,
+                      height: 40,
+                      child: GestureDetector(
+                        onTap: marker.onTap,
+                        child: marker.child,
+                      ),
+                    ),
+                ],
+              ),
               const RichAttributionWidget(
                 alignment: AttributionAlignment.bottomLeft,
                 attributions: [
@@ -314,7 +326,10 @@ class _AppMapState extends State<AppMap> {
               right: 20,
               bottom: 24,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceElevated.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -352,22 +367,31 @@ class _AppMapState extends State<AppMap> {
                         onTap: _resetNorth,
                         child: Transform.rotate(
                           angle: -_rotation * 3.1415926535 / 180,
-                          child: const Icon(Icons.explore_rounded,
-                              color: AppColors.primary, size: 20),
+                          child: const Icon(
+                            Icons.explore_rounded,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
                     ],
                     _MapControlButton(
                       onTap: () => _zoomBy(1),
-                      child: const Icon(Icons.add_rounded,
-                          color: AppColors.textPrimary, size: 20),
+                      child: const Icon(
+                        Icons.add_rounded,
+                        color: AppColors.textPrimary,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     _MapControlButton(
                       onTap: () => _zoomBy(-1),
-                      child: const Icon(Icons.remove_rounded,
-                          color: AppColors.textPrimary, size: 20),
+                      child: const Icon(
+                        Icons.remove_rounded,
+                        color: AppColors.textPrimary,
+                        size: 20,
+                      ),
                     ),
                     if (widget.enableCurrentLocation) ...[
                       const SizedBox(height: 8),
@@ -375,12 +399,18 @@ class _AppMapState extends State<AppMap> {
                         onTap: _isRecentering ? null : _recenterOnMe,
                         child: _isRecentering
                             ? const SizedBox(
-                                width: 16, height: 16,
+                                width: 16,
+                                height: 16,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: AppColors.primary),
+                                  strokeWidth: 2,
+                                  color: AppColors.primary,
+                                ),
                               )
-                            : const Icon(Icons.my_location_rounded,
-                                color: AppColors.primary, size: 18),
+                            : const Icon(
+                                Icons.my_location_rounded,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
                       ),
                     ],
                   ],
@@ -510,10 +540,7 @@ class _MapControlButton extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget child;
 
-  const _MapControlButton({
-    required this.onTap,
-    required this.child,
-  });
+  const _MapControlButton({required this.onTap, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -527,9 +554,7 @@ class _MapControlButton extends StatelessWidget {
           color: const Color(0xE1141414),
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.border),
-          boxShadow: const [
-            BoxShadow(color: Color(0x40000000), blurRadius: 6),
-          ],
+          boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 6)],
         ),
         child: child,
       ),
@@ -634,6 +659,82 @@ class _UserLocationPin extends StatelessWidget {
   }
 }
 
+/// The "searching" version of the user's own location marker — the same
+/// [_UserLocationPin] untouched on top, with 1-3 expanding, fading rings
+/// looping outward behind it. Used only when [AppMap.animateCurrentLocationRipple]
+/// is true, so the pin's look everywhere else never changes.
+class _AnimatedUserLocationMarker extends StatefulWidget {
+  const _AnimatedUserLocationMarker();
+
+  @override
+  State<_AnimatedUserLocationMarker> createState() =>
+      _AnimatedUserLocationMarkerState();
+}
+
+class _AnimatedUserLocationMarkerState
+    extends State<_AnimatedUserLocationMarker>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            for (final delay in const [0.0, 0.33, 0.66])
+              CustomPaint(
+                size: const Size(160, 160),
+                painter: _RipplePainter(
+                  progress: (_controller.value + delay) % 1.0,
+                ),
+              ),
+            const _UserLocationPin(),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _RipplePainter extends CustomPainter {
+  final double progress;
+  const _RipplePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final maxRadius = size.width / 2;
+    final radius = 16 + (maxRadius - 16) * progress;
+    final opacity = (1 - progress).clamp(0.0, 1.0) * 0.5;
+    final paint = Paint()
+      ..color = AppColors.primary.withValues(alpha: opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(size.center(Offset.zero), radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(_RipplePainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
 /// A ready-made marker pin matching the app's iconography — used as
 /// [AppMapMarker.child] so screens don't hand-roll marker art. [color]
 /// distinguishes marker types (e.g. mechanic vs destination) at a glance.
@@ -655,10 +756,7 @@ class AppMapPin extends StatelessWidget {
         color: const Color(0xFF1A1A2A),
         border: Border.all(color: color, width: 1.5),
         boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.35),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 8),
         ],
       ),
       child: Icon(icon, color: color, size: 18),

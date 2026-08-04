@@ -41,6 +41,11 @@ class ServiceRequestModel {
   /// request is created, not user-adjustable afterward.
   final double radiusKm;
 
+  /// When set, this request is aimed at one specific mechanic (the "Schedule
+  /// Repair by ID" path) rather than broadcast to everyone nearby — that
+  /// mechanic sees it regardless of distance, and no one else does.
+  final String? targetMechanicId;
+
   final ServiceRequestStatus status;
 
   /// Set once a quote is accepted and the real job is created.
@@ -55,6 +60,7 @@ class ServiceRequestModel {
     required this.issue,
     required this.vehicleId,
     required this.radiusKm,
+    this.targetMechanicId,
     required this.status,
     this.jobId,
     required this.createdAt,
@@ -65,13 +71,16 @@ class ServiceRequestModel {
     return ServiceRequestModel(
       id: doc.id,
       carOwnerId: data['carOwnerId'] ?? '',
-      carOwnerLocation:
-          data['carOwnerLocation'] is GeoPoint ? data['carOwnerLocation'] : null,
+      carOwnerLocation: data['carOwnerLocation'] is GeoPoint
+          ? data['carOwnerLocation']
+          : null,
       issue: data['issue'] ?? '',
       vehicleId: data['vehicleId'] ?? '',
       radiusKm: (data['radiusKm'] as num?)?.toDouble() ?? 15.0,
-      status:
-          ServiceRequestStatusExtension.fromString(data['status'] ?? 'open'),
+      targetMechanicId: data['targetMechanicId'] as String?,
+      status: ServiceRequestStatusExtension.fromString(
+        data['status'] ?? 'open',
+      ),
       jobId: data['jobId'] as String?,
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
@@ -86,6 +95,7 @@ class ServiceRequestModel {
       'issue': issue,
       'vehicleId': vehicleId,
       'radiusKm': radiusKm,
+      if (targetMechanicId != null) 'targetMechanicId': targetMechanicId,
       'status': status.value,
       if (jobId != null) 'jobId': jobId,
       'createdAt': Timestamp.fromDate(createdAt),

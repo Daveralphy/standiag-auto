@@ -5,7 +5,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum QuoteStatus { pending, accepted, declined }
+enum QuoteStatus { pending, accepted, declined, expired }
 
 extension QuoteStatusExtension on QuoteStatus {
   String get value {
@@ -16,6 +16,8 @@ extension QuoteStatusExtension on QuoteStatus {
         return 'accepted';
       case QuoteStatus.declined:
         return 'declined';
+      case QuoteStatus.expired:
+        return 'expired';
     }
   }
 
@@ -25,6 +27,8 @@ extension QuoteStatusExtension on QuoteStatus {
         return QuoteStatus.accepted;
       case 'declined':
         return QuoteStatus.declined;
+      case 'expired':
+        return QuoteStatus.expired;
       default:
         return QuoteStatus.pending;
     }

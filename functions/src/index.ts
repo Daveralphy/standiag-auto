@@ -179,6 +179,7 @@ interface ServiceRequestData {
   issue?: string;
   radiusKm?: number;
   carOwnerLocation?: GeoPoint;
+  targetMechanicId?: string;
 }
 
 interface MechanicData {
@@ -190,13 +191,39 @@ interface MechanicData {
 /**
  * Fires when a car owner broadcasts a new open service request. Alerts
  * every visible mechanic with a registered device token whose stored
- * location falls within the request's radius.
+ * location falls within the request's radius — or, if the request names a
+ * specific `targetMechanicId` (the "Schedule Repair by ID" path), alerts
+ * only that one mechanic, regardless of distance or visibility.
  */
 export const notifyNearbyMechanics = onDocumentCreated(
   "serviceRequests/{requestId}",
   async (event) => {
     const request = event.data?.data() as ServiceRequestData | undefined;
     if (!request || request.status !== "open") return;
+
+    if (request.targetMechanicId) {
+      const targetDoc = await db
+        .collection("mechanics")
+        .doc(request.targetMechanicId)
+        .get();
+      const target = targetDoc.data() as MechanicData | undefined;
+      if (!target?.fcmToken) return;
+
+      await getMessaging().send({
+        token: target.fcmToken,
+        notification: {
+          title: "You've been requested directly",
+          body: request.issue
+            ? `A car owner needs help: ${request.issue}`
+            : "A car owner has requested you directly.",
+        },
+        data: {
+          requestId: event.params.requestId,
+          type: "service_request",
+        },
+      });
+      return;
+    }
 
     const carOwnerLocation = request.carOwnerLocation;
     const radiusKm = request.radiusKm ?? 15;

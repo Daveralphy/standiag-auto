@@ -40,6 +40,7 @@ class RouteNames {
 
   // Mechanic search flow
   static const String mechanicProfile = '/user/mechanic-profile';
+  static const String userSearchingMechanic = '/user/searching-mechanic';
   static const String inAppCall = '/user/in-app-call';
 
   // Job flow — user side
@@ -141,7 +142,8 @@ class RouteNames {
   static String settingsFor(UserType type) =>
       type == UserType.mechanic ? mechanicSettings : userSettings;
 
-  static String notificationSettingsFor(UserType type) => type == UserType.mechanic
+  static String notificationSettingsFor(UserType type) =>
+      type == UserType.mechanic
       ? mechanicNotificationSettings
       : userNotificationSettings;
 
@@ -157,7 +159,8 @@ class RouteNames {
   static String changePasswordFor(UserType type) =>
       type == UserType.mechanic ? mechanicChangePassword : userChangePassword;
 
-  static String verifyPasswordChangeFor(UserType type) => type == UserType.mechanic
+  static String verifyPasswordChangeFor(UserType type) =>
+      type == UserType.mechanic
       ? mechanicVerifyPasswordChange
       : userVerifyPasswordChange;
 
