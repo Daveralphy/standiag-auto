@@ -6,16 +6,17 @@
 // Car owner: Home, Mechanics, Vehicle, Profile, laid out around a real
 // notch with the scan button permanently docked in it (NotchedNavBar) —
 // always visible, on every car-owner screen, not just the Vehicle tab.
-// Tapping it opens ScanSheet — a modal that floats on top of whatever tab
-// is currently showing, not a route change, so the tab underneath (and
-// its highlighted nav item) never changes.
+// Tapping it starts a two-stage overlay (see scan_overlay.dart) — a
+// blurred backdrop with a "Scan" prompt, then the diagnostic panel as a
+// centered layer — never a route change and never a slide-up sheet, so
+// the tab underneath (and its highlighted nav item) never changes.
 //
 // The scan button's own active color is deliberately independent of
 // which tab is selected — it's an action trigger, not a destination, so
-// it only lights up while its own sheet is actually open, never because
-// the Vehicle tab happens to be selected. Tying it to the tab used to
-// mean tapping Vehicle lit up both icons at once, which read as two
-// different screens being "current" simultaneously.
+// it only lights up while its own overlay is actually showing, never
+// because the Vehicle tab happens to be selected. Tying it to the tab
+// used to mean tapping Vehicle lit up both icons at once, which read as
+// two different screens being "current" simultaneously.
 //
 // Mechanic: Scan, Home, Users — unchanged, plain AppNavBar.
 
@@ -26,7 +27,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/scan/providers/scan_provider.dart';
 import '../../shared/widget/app_nav_bar.dart';
 import '../../shared/widget/notched_nav_bar.dart';
-import '../../shared/widget/scan_sheet.dart';
+import '../../shared/widget/scan_overlay.dart';
 
 class UserTabShell extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -38,27 +39,39 @@ class UserTabShell extends ConsumerStatefulWidget {
 
 class _UserTabShellState extends ConsumerState<UserTabShell> {
   static const int _vehicleBranchIndex = 2;
-  bool _isScanSheetOpen = false;
+  ScanOverlayStage _scanStage = ScanOverlayStage.idle;
 
-  Future<void> _onScanTap(BuildContext context) async {
-    setState(() => _isScanSheetOpen = true);
-    await ScanSheet.show(context);
-    if (mounted) setState(() => _isScanSheetOpen = false);
+  void _onScanIconTap() {
+    if (_scanStage == ScanOverlayStage.idle) {
+      setState(() => _scanStage = ScanOverlayStage.prompt);
+    }
+  }
+
+  void _openScanModal() => setState(() => _scanStage = ScanOverlayStage.open);
+
+  void _demoteScanStage() {
+    setState(() {
+      _scanStage = _scanStage == ScanOverlayStage.open
+          ? ScanOverlayStage.prompt
+          : ScanOverlayStage.idle;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final currentIndex = widget.navigationShell.currentIndex;
     final scanState = ref.watch(scanProvider);
+    final iconTop = scanIconTopFromBottom();
 
     return Stack(
       children: [
         widget.navigationShell,
+        ScanBackdrop(stage: _scanStage, onTapOutside: _demoteScanStage),
         NotchedNavBar(
           activeIndex: currentIndex,
           isScanBusy: scanState.isScanning || scanState.isConnectingDevice,
-          isScanActive: _isScanSheetOpen,
-          onScanTap: () => _onScanTap(context),
+          isScanActive: _scanStage != ScanOverlayStage.idle,
+          onScanTap: _onScanIconTap,
           items: [
             AppNavItem(
               icon: Icons.home_rounded,
@@ -82,6 +95,12 @@ class _UserTabShellState extends ConsumerState<UserTabShell> {
             ),
           ],
         ),
+        ScanPromptButton(
+          stage: _scanStage,
+          iconTopFromBottom: iconTop,
+          onTap: _openScanModal,
+        ),
+        ScanModalCard(stage: _scanStage),
       ],
     );
   }
