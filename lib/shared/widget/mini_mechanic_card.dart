@@ -17,12 +17,92 @@ import 'app_skeleton.dart';
 
 class MiniMechanicCard extends ConsumerWidget {
   final NearbyMechanic entry;
-  const MiniMechanicCard({super.key, required this.entry});
+
+  /// A narrow, centered vertical layout for horizontal-scrolling rows
+  /// (e.g. the Mechanics tab's "Top Rated" carousel) instead of the default
+  /// full-width row.
+  final bool compact;
+
+  const MiniMechanicCard({
+    super.key,
+    required this.entry,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mechanic = entry.mechanic;
     final userAsync = ref.watch(mechanicUserProvider(mechanic.uid));
+
+    if (compact) {
+      return GestureDetector(
+        onTap: () =>
+            context.push(RouteNames.mechanicProfile, extra: mechanic.uid),
+        child: Container(
+          width: 128,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: [
+              userAsync.when(
+                data: (user) => AppAvatar(
+                  name: user != null
+                      ? '${user.firstName} ${user.lastName}'.trim()
+                      : 'Mechanic',
+                  imageUrl: user?.profilePhoto,
+                  size: 52,
+                ),
+                loading: () => const AppSkeleton.circle(size: 52),
+                error: (_, __) => const AppAvatar(name: 'Mechanic', size: 52),
+              ),
+              const SizedBox(height: 8),
+              userAsync.when(
+                data: (user) => Text(
+                  user != null
+                      ? '${user.firstName} ${user.lastName}'.trim()
+                      : 'Mechanic',
+                  style: AppTypography.bodyLarge,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                loading: () => Container(
+                  width: 80,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: const Color(0x14FFFFFF),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                error: (_, __) =>
+                    const Text('Mechanic', style: AppTypography.bodyLarge),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.star_rounded,
+                    color: AppColors.primary,
+                    size: 12,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    mechanic.rating.toStringAsFixed(1),
+                    style: AppTypography.caption,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: () =>
           context.push(RouteNames.mechanicProfile, extra: mechanic.uid),
@@ -114,10 +194,37 @@ class MiniMechanicCard extends ConsumerWidget {
 }
 
 class MiniMechanicCardSkeleton extends StatelessWidget {
-  const MiniMechanicCardSkeleton({super.key});
+  final bool compact;
+  const MiniMechanicCardSkeleton({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
+    if (compact) {
+      return Container(
+        width: 128,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            const AppSkeleton.circle(size: 52),
+            const SizedBox(height: 8),
+            Container(
+              width: 80,
+              height: 13,
+              decoration: BoxDecoration(
+                color: const Color(0x14FFFFFF),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),

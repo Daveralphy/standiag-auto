@@ -22,7 +22,7 @@ import '../../features/profile/providers/profile_provider.dart';
 import '../../features/scan/providers/scan_provider.dart';
 import '../../shared/widget/app_nav_bar.dart';
 import '../../shared/widget/notched_nav_bar.dart';
-import '../../shared/widget/obd_device_picker_sheet.dart';
+import 'route_names.dart';
 
 class UserTabShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
@@ -30,20 +30,20 @@ class UserTabShell extends ConsumerWidget {
 
   static const int _vehicleBranchIndex = 2;
 
-  Future<void> _onScanTap(BuildContext context, WidgetRef ref) async {
-    if (navigationShell.currentIndex != _vehicleBranchIndex) {
-      navigationShell.goBranch(_vehicleBranchIndex);
-    }
+  /// Pushes the dedicated Scan screen — the scan flow itself (connect/start)
+  /// lives entirely on that screen, not here. The one thing worth handling
+  /// before pushing is having no vehicle yet, since that screen assumes one
+  /// exists; send them to the Vehicle tab's own "Add a Vehicle" prompt
+  /// instead of a diagnostics screen with nothing to diagnose.
+  void _onScanTap(BuildContext context, WidgetRef ref) {
     final vehicles = ref.read(profileProvider).vehicles;
-    if (vehicles.isEmpty) return; // The Vehicle tab itself prompts to add one.
-    final vehicle = vehicles.first;
-
-    final scanState = ref.read(scanProvider);
-    if (!scanState.isConnected) {
-      await ObdDevicePickerSheet.show(context);
+    if (vehicles.isEmpty) {
+      if (navigationShell.currentIndex != _vehicleBranchIndex) {
+        navigationShell.goBranch(_vehicleBranchIndex);
+      }
       return;
     }
-    await ref.read(scanProvider.notifier).startScan(vehicle.id, vehicle.ownerId);
+    context.push(RouteNames.userScan);
   }
 
   @override
@@ -57,6 +57,7 @@ class UserTabShell extends ConsumerWidget {
         NotchedNavBar(
           activeIndex: currentIndex,
           isScanBusy: scanState.isScanning || scanState.isConnectingDevice,
+          isScanActive: currentIndex == _vehicleBranchIndex,
           onScanTap: () => _onScanTap(context, ref),
           items: [
             AppNavItem(

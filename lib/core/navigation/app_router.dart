@@ -25,6 +25,7 @@ import '../../features/home/screens/mechanic_users_screen.dart';
 import '../../features/home/screens/user_home_screen.dart';
 import '../../features/home/screens/user_mechanics_screen.dart';
 import '../../features/home/screens/user_vehicle_screen.dart';
+import '../../features/scan/screens/user_scan_screen.dart';
 import '../../features/jobs/screens/mechanic_active_call_screen.dart';
 import '../../features/jobs/screens/mechanic_en_route_screen.dart';
 import '../../features/jobs/screens/mechanic_incoming_call_screen.dart';
@@ -401,6 +402,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: RouteNames.editVehicle,
         builder: (_, state) =>
             EditVehicleScreen(vehicleId: state.extra as String? ?? ''),
+      ),
+      GoRoute(
+        path: RouteNames.userScan,
+        builder: (_, __) => const UserScanScreen(),
       ),
       GoRoute(
         path: RouteNames.myJobs,

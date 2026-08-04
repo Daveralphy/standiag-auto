@@ -36,6 +36,7 @@ class RouteNames {
 
   static const String userHome = '/user/home';
   static const String userVehicle = '/user/vehicle';
+  static const String userScan = '/user/scan';
   static const String userMechanics = '/user/mechanics';
 
   // Mechanic search flow

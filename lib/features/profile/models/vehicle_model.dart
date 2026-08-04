@@ -13,6 +13,11 @@ class VehicleModel {
   final String plateNumber;
   final String fuelType;
 
+  /// A photo of this specific vehicle, uploaded by its owner. Null means
+  /// none was ever added — screens fall back to a generic vehicle icon,
+  /// never a fabricated stock photo.
+  final String? photoUrl;
+
   const VehicleModel({
     required this.id,
     required this.ownerId,
@@ -23,6 +28,7 @@ class VehicleModel {
     required this.colour,
     required this.plateNumber,
     required this.fuelType,
+    this.photoUrl,
   });
 
   String get displayName => '$year $make $model';
@@ -39,6 +45,7 @@ class VehicleModel {
       colour: data['colour'] ?? '',
       plateNumber: data['plateNumber'] ?? '',
       fuelType: data['fuelType'] ?? '',
+      photoUrl: data['photoUrl'] as String?,
     );
   }
 
@@ -52,6 +59,7 @@ class VehicleModel {
       'colour': colour,
       'plateNumber': plateNumber,
       'fuelType': fuelType,
+      if (photoUrl != null) 'photoUrl': photoUrl,
     };
   }
 
@@ -70,6 +78,7 @@ class VehicleModel {
       colour: json['colour'] ?? '',
       plateNumber: json['plateNumber'] ?? '',
       fuelType: json['fuelType'] ?? '',
+      photoUrl: json['photoUrl'] as String?,
     );
   }
 }

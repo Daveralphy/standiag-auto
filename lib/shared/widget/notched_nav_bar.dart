@@ -24,6 +24,11 @@ class NotchedNavBar extends StatelessWidget {
   final VoidCallback onScanTap;
   final bool isScanBusy;
 
+  /// Whether the Vehicle tab (the one the scan flow belongs to) is the
+  /// currently selected tab — drives the scan button's light-red-vs-grey
+  /// color, same as every other item's active/inactive state.
+  final bool isScanActive;
+
   // Must match AppSpacing.navBarHeight — NavColumnItem (shared with
   // AppNavBar) sizes itself to that constant via a fixed SizedBox, so a
   // different height here would leave that box mismatched against this
@@ -45,6 +50,7 @@ class NotchedNavBar extends StatelessWidget {
     required this.activeIndex,
     required this.onScanTap,
     this.isScanBusy = false,
+    this.isScanActive = false,
   }) : assert(items.length == 4, 'NotchedNavBar expects exactly 4 items');
 
   @override
@@ -91,7 +97,11 @@ class NotchedNavBar extends StatelessWidget {
             left: 0,
             right: 0,
             child: Center(
-              child: FloatingScanButton(onTap: onScanTap, isBusy: isScanBusy),
+              child: FloatingScanButton(
+                onTap: onScanTap,
+                isBusy: isScanBusy,
+                isActive: isScanActive,
+              ),
             ),
           ),
         ],
@@ -118,15 +128,16 @@ class _NotchClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final bar = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        const Radius.circular(AppRadius.floatingNav),
-      ));
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          const Radius.circular(AppRadius.floatingNav),
+        ),
+      );
     final notch = Path()
-      ..addOval(Rect.fromCircle(
-        center: Offset(size.width / 2, 0),
-        radius: notchRadius,
-      ));
+      ..addOval(
+        Rect.fromCircle(center: Offset(size.width / 2, 0), radius: notchRadius),
+      );
     return Path.combine(PathOperation.difference, bar, notch);
   }
 
