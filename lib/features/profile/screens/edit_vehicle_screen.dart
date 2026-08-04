@@ -84,8 +84,11 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
     setState(() => _pickedPhoto = picked);
   }
 
-  /// Uploaded lazily on save, not on pick — mirrors AddVehicleScreen.
-  Future<String?> _uploadPhotoIfNeeded(String vehicleId) async {
+  /// Uploaded lazily on save, not on pick — mirrors AddVehicleScreen. Keyed
+  /// by the vehicle's *owner*, matching AddVehicleScreen's path exactly —
+  /// storage.rules scopes write access to that folder by owner uid, so the
+  /// two upload sites need to agree on the convention.
+  Future<String?> _uploadPhotoIfNeeded(String ownerId) async {
     final photo = _pickedPhoto;
     if (photo == null) return null;
     setState(() => _isUploadingPhoto = true);
@@ -93,7 +96,8 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
       final ref = FirebaseStorage.instance
           .ref()
           .child('vehicle_photos')
-          .child('${vehicleId}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+          .child(ownerId)
+          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
       await ref.putFile(File(photo.path));
       return await ref.getDownloadURL();
     } finally {
@@ -113,7 +117,7 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
     setState(() => _isSaving = true);
     String? photoUrl;
     try {
-      photoUrl = await _uploadPhotoIfNeeded(original.id);
+      photoUrl = await _uploadPhotoIfNeeded(original.ownerId);
     } catch (e, stackTrace) {
       if (!mounted) return;
       setState(() => _isSaving = false);

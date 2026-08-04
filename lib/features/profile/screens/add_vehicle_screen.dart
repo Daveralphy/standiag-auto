@@ -73,6 +73,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
   /// Uploaded lazily on save, not on pick — no point spending a Storage
   /// write on a photo for a vehicle the user might still abandon adding.
+  /// Nested under the owner's own folder (not a combined filename) so
+  /// storage.rules can scope write access by owner uid with a plain path
+  /// match — EditVehicleScreen's upload uses this same convention.
   Future<String?> _uploadPhotoIfNeeded(String userId) async {
     final photo = _pickedPhoto;
     if (photo == null) return null;
@@ -81,7 +84,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       final ref = FirebaseStorage.instance
           .ref()
           .child('vehicle_photos')
-          .child('${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+          .child(userId)
+          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
       await ref.putFile(File(photo.path));
       return await ref.getDownloadURL();
     } finally {
