@@ -56,24 +56,58 @@ class AuthController {
   /// Resolves a login identifier that may be a username or an email to the
   /// account's email, then signs in. Throws a [StateError] if no account
   /// matches the given username so the caller can show a field-level error.
+  ///
+  /// The username lookup reads usernames/{username} — a doc deliberately
+  /// separate from users/{uid} and readable pre-auth — rather than querying
+  /// the users/ collection directly, since that collection requires being
+  /// signed in already (a chicken-and-egg problem for username login).
   Future<void> signInWithIdentifier(String identifier, String password) async {
     final trimmed = identifier.trim();
     String email = trimmed;
     if (!trimmed.contains('@')) {
-      final snap = await FirebaseFirestore.instance
-          .collection('users')
-          .where('username', isEqualTo: trimmed)
-          .limit(1)
+      final doc = await FirebaseFirestore.instance
+          .collection('usernames')
+          .doc(trimmed)
           .get()
           .timeout(const Duration(seconds: 5));
-      if (snap.docs.isEmpty) {
+      if (!doc.exists) {
         throw StateError('username-not-found');
       }
-      email = snap.docs.first.data()['email'] as String? ?? trimmed;
+      email = doc.data()?['email'] as String? ?? trimmed;
     }
     await FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password)
         .timeout(const Duration(seconds: 15));
+    await _backfillUsernameLookup();
+  }
+
+  /// Self-healing backfill for accounts created before usernames/{username}
+  /// existed: on every successful sign-in, make sure this account's lookup
+  /// doc exists, creating it from their own users/{uid} doc if not. Cheap,
+  /// idempotent, and needs no admin/migration access — every existing user
+  /// fixes their own entry the next time they sign in with their email.
+  Future<void> _backfillUsernameLookup() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      final username = userDoc.data()?['username'] as String?;
+      final email = userDoc.data()?['email'] as String?;
+      if (username == null || username.isEmpty || email == null) return;
+
+      final lookupRef = FirebaseFirestore.instance
+          .collection('usernames')
+          .doc(username);
+      final lookupDoc = await lookupRef.get();
+      if (lookupDoc.exists) return;
+      await lookupRef.set({'uid': user.uid, 'email': email});
+    } catch (_) {
+      // Best-effort — a failed backfill just means this account tries again
+      // on its next sign-in, not a reason to fail the sign-in itself.
+    }
   }
 
   /// Resolves [uid]'s real profile type with a single one-time fetch.
@@ -102,7 +136,9 @@ class AuthController {
   Future<void> signUp(SignupDraft draft) async {
     final credential = await FirebaseAuth.instance
         .createUserWithEmailAndPassword(
-            email: draft.email, password: draft.password);
+          email: draft.email,
+          password: draft.password,
+        );
     final user = credential.user!;
     final fullName = '${draft.firstName} ${draft.lastName}'.trim();
     if (fullName.isNotEmpty) {
@@ -117,8 +153,9 @@ class AuthController {
       username: draft.username,
       email: draft.email,
       phone: draft.phone,
-      address:
-          draft.type == UserType.mechanic ? draft.workshopAddress : draft.address,
+      address: draft.type == UserType.mechanic
+          ? draft.workshopAddress
+          : draft.address,
       credits: 0,
       createdAt: DateTime.now(),
       isFirstTime: true,
@@ -127,6 +164,13 @@ class AuthController {
         .collection('users')
         .doc(user.uid)
         .set(userModel.toFirestore());
+
+    if (draft.username.isNotEmpty) {
+      await FirebaseFirestore.instance
+          .collection('usernames')
+          .doc(draft.username)
+          .set({'uid': user.uid, 'email': draft.email});
+    }
 
     if (draft.type == UserType.mechanic) {
       final mechanicModel = MechanicModel(
@@ -187,7 +231,9 @@ class AuthController {
     required String smsCode,
   }) {
     final credential = PhoneAuthProvider.credential(
-        verificationId: verificationId, smsCode: smsCode);
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
     return _linkOrSignIn(credential);
   }
 
@@ -204,7 +250,9 @@ class AuthController {
       throw StateError('Not signed in');
     }
     final credential = EmailAuthProvider.credential(
-        email: email, password: currentPassword);
+      email: email,
+      password: currentPassword,
+    );
     await user.reauthenticateWithCredential(credential);
     await user.updatePassword(newPassword);
   }

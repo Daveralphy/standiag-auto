@@ -1,11 +1,6 @@
-// Firestore security rules for StanDiag Auto.
-//
-// DRAFT — NOT YET DEPLOYED. No rules file existed in this repo before this
-// one, so there is no local record of whatever rules are currently live on
-// the Firebase project. Before running `firebase deploy --only firestore:rules`,
-// pull the current live rules (Firebase console → Firestore → Rules, or
-// `firebase firestore:rules get`) and diff them against this draft —
-// deploying blind will REPLACE whatever's live right now.
+// Firestore security rules for StanDiag Auto. Deployed — this file is the
+// source of truth for what's actually live; keep it that way rather than
+// editing rules directly in the console.
 //
 // The one deliberately loose spot: serviceRequests/{id}/quotes/{mechanicId}
 // allows the request's own car owner to update a quote document that isn't
@@ -32,6 +27,20 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
       allow write: if isSelf(userId);
+    }
+
+    // ─── Username lookup ────────────────────────────────────────────────
+    // A username → {uid, email} pairing, deliberately kept separate from
+    // the full users/ profile and readable by anyone, signed in or not —
+    // this is the one thing that has to be readable *before* sign-in, to
+    // resolve a username-based login attempt to the email Firebase Auth
+    // actually needs. Exposes only the pairing itself, never phone/address/
+    // other profile fields the way opening up users/ for pre-auth reads
+    // would. Writable only by the account it belongs to.
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
     // ─── Mechanics ──────────────────────────────────────────────────────
