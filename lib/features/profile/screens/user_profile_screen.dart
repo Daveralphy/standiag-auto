@@ -182,7 +182,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         AppAvatar(
                           name: displayName,
                           imageUrl: user.profilePhoto,
-                          size: 84 * 3,
+                          size: 84 * 2,
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -459,7 +459,7 @@ class _ProfileSkeletonView extends StatelessWidget {
       ),
       child: Column(
         children: [
-          AppSkeleton.circle(size: 84 * 3),
+          AppSkeleton.circle(size: 84 * 2),
           SizedBox(height: 12),
           AppSkeleton(width: 140, height: 16, radius: AppRadius.xs),
           SizedBox(height: 8),
