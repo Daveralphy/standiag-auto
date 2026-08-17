@@ -31,7 +31,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = ref.read(currentUserIdProvider);
       if (userId == null) return;
@@ -70,14 +70,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.notificationsTitle,
+                Expanded(child: Text(AppStrings.notificationsTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -93,21 +93,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       itemBuilder: (_, __) => const _NotificationSkeleton(),
                     )
                   : state.notifications.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Padding(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: AppSpacing.xxl),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
                                     Icons.notifications_none_rounded,
-                                    color: Color(0x33FFFFFF), size: 48),
-                                SizedBox(height: 16),
+                                    color: AppColors.textDisabled, size: 48),
+                                const SizedBox(height: 16),
                                 Text(
                                     AppStrings.notificationsEmptyTitle,
                                     style: AppTypography.heading3),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
                                     AppStrings.notificationsEmptyBody,
                                     style: AppTypography.body,
@@ -191,7 +191,7 @@ class _NotificationCard extends StatelessWidget {
             const SizedBox(width: 8),
             Container(
               width: 8, height: 8,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.primary,
               ),
@@ -225,11 +225,11 @@ class _NotificationSkeleton extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(width: 120, height: 13,
-                    decoration: BoxDecoration(color: const Color(0x14FFFFFF),
+                    decoration: BoxDecoration(color: AppColors.border,
                         borderRadius: BorderRadius.circular(4))),
                 const SizedBox(height: 6),
                 Container(width: 180, height: 12,
-                    decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
+                    decoration: BoxDecoration(color: AppColors.borderSubtle,
                         borderRadius: BorderRadius.circular(4))),
               ],
             ),

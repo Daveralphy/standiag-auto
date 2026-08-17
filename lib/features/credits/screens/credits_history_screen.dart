@@ -32,7 +32,7 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) return;
@@ -76,14 +76,14 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.creditsHistoryTitle,
+                Expanded(child: Text(AppStrings.creditsHistoryTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -95,7 +95,7 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.pageHorizontal),
                       itemCount: 8,
-                      separatorBuilder: (_, __) => const Divider(
+                      separatorBuilder: (_, __) => Divider(
                           color: AppColors.borderSubtle, height: 1),
                       itemBuilder: (_, __) => const Padding(
                         padding: EdgeInsets.symmetric(vertical: 14),
@@ -103,7 +103,7 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
                       ),
                     )
                   : state.history.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text('No credit activity yet.',
                               style: AppTypography.body),
                         )
@@ -129,7 +129,7 @@ class _CreditsHistoryScreenState extends ConsumerState<CreditsHistoryScreen> {
                                         color: AppColors.textMuted,
                                         letterSpacing: 0.8)),
                               ),
-                            const Divider(color: AppColors.borderSubtle, height: 1),
+                            Divider(color: AppColors.borderSubtle, height: 1),
                             Padding(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           child: Row(children: [

@@ -67,17 +67,17 @@ class MiniMechanicCard extends ConsumerWidget {
                       width: 100,
                       height: 13,
                       decoration: BoxDecoration(
-                        color: const Color(0x14FFFFFF),
+                        color: AppColors.border,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                     error: (_, __) =>
-                        const Text('Mechanic', style: AppTypography.bodyLarge),
+                        Text('Mechanic', style: AppTypography.bodyLarge),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.star_rounded,
                         color: AppColors.primary,
                         size: 12,
@@ -103,7 +103,7 @@ class MiniMechanicCard extends ConsumerWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppColors.textDisabled,
               size: 18,
@@ -140,7 +140,7 @@ class MiniMechanicCardSkeleton extends StatelessWidget {
                   width: 100,
                   height: 13,
                   decoration: BoxDecoration(
-                    color: const Color(0x14FFFFFF),
+                    color: AppColors.border,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -149,7 +149,7 @@ class MiniMechanicCardSkeleton extends StatelessWidget {
                   width: 70,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: const Color(0x0AFFFFFF),
+                    color: AppColors.borderSubtle,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),

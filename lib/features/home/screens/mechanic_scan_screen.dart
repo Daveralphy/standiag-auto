@@ -35,7 +35,7 @@ class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   Future<void> _startScan(String vehicleId, String ownerId) async {
@@ -89,7 +89,7 @@ class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
                         const SizedBox(height: 20),
                         HealthGauge(score: scanState.latestScan?.healthScore),
                         const SizedBox(height: 20),
-                        const Text(
+                        Text(
                           'Vehicle Diagnostics',
                           style: AppTypography.heading2,
                           overflow: TextOverflow.ellipsis,

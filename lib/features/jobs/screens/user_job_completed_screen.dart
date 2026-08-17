@@ -35,7 +35,7 @@ class _UserJobCompletedScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
@@ -81,10 +81,10 @@ class _UserJobCompletedScreenState
           ),
 
           Positioned(top: 0, left: 0, right: 0, height: 140,
-            child: Container(decoration: const BoxDecoration(
+            child: Container(decoration: BoxDecoration(
               gradient: LinearGradient(begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xF0060606), Colors.transparent])))),
+                  colors: [AppColors.background.withValues(alpha: 0.9), Colors.transparent])))),
 
           SafeArea(
             child: Padding(
@@ -96,7 +96,7 @@ class _UserJobCompletedScreenState
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Job Completed', style: AppTypography.heading3,
+                    Text('Job Completed', style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     Text('Great work!', style: AppTypography.body.copyWith(
                         color: AppColors.success),
@@ -104,11 +104,11 @@ class _UserJobCompletedScreenState
                   ],
                 )),
                 Container(width: 32, height: 32,
-                  decoration: BoxDecoration(color: const Color(0xB3080808),
+                  decoration: BoxDecoration(color: AppColors.surfaceElevated.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(color: const Color(0x1FFFFFFF))),
-                  child: const Icon(Icons.search_rounded,
-                      size: 16, color: Colors.white)),
+                    border: Border.all(color: AppColors.borderActive)),
+                  child: Icon(Icons.search_rounded,
+                      size: 16, color: AppColors.textPrimary)),
               ]),
             ),
           ),
@@ -127,13 +127,13 @@ class _UserJobCompletedScreenState
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: const Color(0x334CAF50))),
                 child: Row(children: [
-                  const Icon(Icons.check_circle_outline_rounded,
+                  Icon(Icons.check_circle_outline_rounded,
                       color: AppColors.success, size: 18),
                   const SizedBox(width: 8),
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Job marked as done!',
+                      Text('Job marked as done!',
                           style: AppTypography.bodyLarge,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
                       Text(job?.issue ?? '',

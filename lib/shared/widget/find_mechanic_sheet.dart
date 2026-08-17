@@ -188,9 +188,9 @@ class _FindMechanicSheetContentState
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(
+            borderRadius: const BorderRadius.vertical(
               top: Radius.circular(AppRadius.xl5),
             ),
             border: Border.fromBorderSide(BorderSide(color: AppColors.border)),
@@ -233,7 +233,7 @@ class _FindMechanicSheetContentState
                     AppSpacing.xl2,
                   ),
                   children: [
-                    const Text('Your Vehicle', style: AppTypography.heading4),
+                    Text('Your Vehicle', style: AppTypography.heading4),
                     const SizedBox(height: 10),
                     for (final vehicle in vehicles) ...[
                       _SelectableVehicleCard(
@@ -269,7 +269,7 @@ class _FindMechanicSheetContentState
                               size: 18,
                             ),
                             const SizedBox(width: 6),
-                            const Text(
+                            Text(
                               'Add a new vehicle',
                               style: TextStyle(
                                 fontFamily: 'Inter',
@@ -284,43 +284,73 @@ class _FindMechanicSheetContentState
                     ),
                     if (_showAddVehicleForm) ...[
                       const SizedBox(height: 14),
-                      AppAutocompleteField(
-                        label: 'Make',
-                        controller: _makeController,
-                        suggestionsBuilder: VehicleReferenceData.makes,
-                      ),
-                      const SizedBox(height: 12),
-                      AppAutocompleteField(
-                        label: 'Model',
-                        controller: _modelController,
-                        suggestionsBuilder: (query) =>
-                            VehicleReferenceData.modelsFor(
-                              _makeController.text,
-                              query,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: AppAutocompleteField(
+                              label: 'Make',
+                              controller: _makeController,
+                              suggestionsBuilder: VehicleReferenceData.makes,
                             ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: AppAutocompleteField(
+                              label: 'Model',
+                              controller: _modelController,
+                              suggestionsBuilder: (query) =>
+                                  VehicleReferenceData.modelsFor(
+                                    _makeController.text,
+                                    query,
+                                  ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
-                      AppTextField(
-                        label: 'Year',
-                        controller: _yearController,
-                        keyboardType: TextInputType.number,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: AppTextField(
+                              label: 'Year',
+                              controller: _yearController,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: AppTextField(
+                              label: 'Type',
+                              controller: _typeController,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
-                      AppTextField(label: 'Type', controller: _typeController),
-                      const SizedBox(height: 12),
-                      AppTextField(
-                        label: 'Colour',
-                        controller: _colourController,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: AppTextField(
+                              label: 'Colour',
+                              controller: _colourController,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: AppTextField(
+                              label: 'Fuel Type',
+                              controller: _fuelController,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       AppTextField(
                         label: 'Plate Number',
                         controller: _plateController,
-                      ),
-                      const SizedBox(height: 12),
-                      AppTextField(
-                        label: 'Fuel Type',
-                        controller: _fuelController,
                       ),
                       const SizedBox(height: 14),
                       AppButton(
@@ -330,7 +360,7 @@ class _FindMechanicSheetContentState
                       ),
                     ],
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       "What's the problem?",
                       style: AppTypography.heading4,
                     ),

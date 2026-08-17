@@ -114,7 +114,7 @@ class _AdBanner extends StatelessWidget {
         errorBuilder: (_, __, ___) => Container(
           color: AppColors.surface,
           alignment: Alignment.center,
-          child: const Icon(
+          child: Icon(
             Icons.image_outlined,
             color: AppColors.textDisabled,
             size: 32,

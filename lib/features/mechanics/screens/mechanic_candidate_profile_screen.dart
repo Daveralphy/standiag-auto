@@ -51,7 +51,7 @@ class _MechanicCandidateProfileScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   Future<void> _callMechanic() async {
@@ -65,7 +65,8 @@ class _MechanicCandidateProfileScreenState
           issue: 'General car issue',
         );
     if (!mounted) return;
-    context.go(RouteNames.inAppCall,
+    setState(() => _isBusy = false);
+    context.push(RouteNames.outgoingCall,
         extra: {'jobId': jobId, 'mechanicId': widget.mechanicId});
   }
 
@@ -124,14 +125,14 @@ class _MechanicCandidateProfileScreenState
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text('Mechanic Profile',
+                Expanded(child: Text('Mechanic Profile',
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -172,10 +173,10 @@ class _MechanicCandidateProfileScreenState
                               .toList(),
                         ),
                         const SizedBox(height: 12),
-                        const Divider(color: AppColors.borderSubtle),
+                        Divider(color: AppColors.borderSubtle),
                         const SizedBox(height: 12),
                         Row(children: [
-                          const Icon(Icons.location_on_outlined,
+                          Icon(Icons.location_on_outlined,
                               size: 14, color: AppColors.textMuted),
                           const SizedBox(width: 4),
                           Expanded(child: Text(
@@ -184,9 +185,9 @@ class _MechanicCandidateProfileScreenState
                               overflow: TextOverflow.ellipsis, maxLines: 1)),
                         ]),
                         const SizedBox(height: 6),
-                        const Row(children: [
-                          StatusDot(isOnline: true, size: 8),
-                          SizedBox(width: 6),
+                        Row(children: [
+                          const StatusDot(isOnline: true, size: 8),
+                          const SizedBox(width: 6),
                           Text('Online',
                               style: AppTypography.bodySmall,
                               overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -207,7 +208,7 @@ class _MechanicCandidateProfileScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(children: [
-                              const Expanded(
+                              Expanded(
                                 child: Text('Their Quote',
                                     style: AppTypography.heading4,
                                     overflow: TextOverflow.ellipsis, maxLines: 1),

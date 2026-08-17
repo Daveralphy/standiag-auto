@@ -39,7 +39,7 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     _loadExistingQuote();
   }
 
@@ -104,7 +104,7 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
             }
             return _buildForm(context, request, mechanicLocation);
           },
-          loading: () => const Center(
+          loading: () => Center(
               child: CircularProgressIndicator(color: AppColors.primary)),
           error: (_, __) => _buildUnavailable(context),
         ),
@@ -116,10 +116,10 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
     return Column(
       children: [
         _buildHeader(context, 'Request Unavailable'),
-        const Expanded(
+        Expanded(
           child: Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal),
               child: Text(
                 'This request has already been matched with another mechanic or was cancelled.',
@@ -144,11 +144,11 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
             child: Container(
               width: 32, height: 32,
               decoration: BoxDecoration(
-                color: const Color(0x12FFFFFF),
+                color: AppColors.border,
                 borderRadius: BorderRadius.circular(AppRadius.full),
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded,
+              child: Icon(Icons.arrow_back_ios_new_rounded,
                   size: 14, color: AppColors.textPrimary),
             ),
           ),
@@ -230,7 +230,7 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text('Your Quote',
+                Text('Your Quote',
                     style: AppTypography.heading4,
                     overflow: TextOverflow.ellipsis, maxLines: 1),
                 const SizedBox(height: 10),
@@ -248,7 +248,7 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
                     fillColor: AppColors.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      borderSide: const BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                   ),
                 ),
@@ -265,7 +265,7 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
                     fillColor: AppColors.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      borderSide: const BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                   ),
                 ),

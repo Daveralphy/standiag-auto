@@ -42,7 +42,7 @@ class VehicleCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.directions_car_outlined,
+                Icon(Icons.directions_car_outlined,
                     color: AppColors.primary, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
@@ -79,7 +79,7 @@ class _Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: AppColors.borderSubtle,
         borderRadius: BorderRadius.circular(AppRadius.full),
         border: Border.all(color: AppColors.border),
       ),

@@ -27,7 +27,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   @override
@@ -55,14 +55,14 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.appearanceTitle,
+                Expanded(child: Text(AppStrings.appearanceTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -75,7 +75,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(AppStrings.appearanceTheme,
+                    Text(AppStrings.appearanceTheme,
                         style: AppTypography.bodyLarge,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 12),
@@ -110,7 +110,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                       );
                     }).toList()),
                     const SizedBox(height: 28),
-                    const Text(AppStrings.appearanceTextSize,
+                    Text(AppStrings.appearanceTextSize,
                         style: AppTypography.bodyLarge,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 12),
@@ -129,7 +129,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                         onChanged: (v) => ref.read(settingsProvider.notifier).setTextSize(v),
                       ),
                     ),
-                    const Center(child: Text(AppStrings.appearanceDefault,
+                    Center(child: Text(AppStrings.appearanceDefault,
                         style: AppTypography.caption,
                         overflow: TextOverflow.ellipsis, maxLines: 1)),
                   ],

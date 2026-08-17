@@ -30,7 +30,7 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) {
@@ -75,11 +75,11 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
                     width: 30,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back_ios_new_rounded,
                       size: 14,
                       color: AppColors.textPrimary,
@@ -87,7 +87,7 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     AppStrings.scanHistoryTitle,
                     style: AppTypography.heading3,
@@ -109,19 +109,19 @@ class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen> {
                       itemBuilder: (_, __) => const _ScanCardSkeleton(),
                     )
                   : state.history.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Padding(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: AppSpacing.xxl),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.speed_rounded,
-                                    color: Color(0x33FFFFFF), size: 48),
-                                SizedBox(height: 16),
+                                    color: AppColors.textDisabled, size: 48),
+                                const SizedBox(height: 16),
                                 Text('No scans yet',
                                     style: AppTypography.heading3),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
                                     'Connect your OBD-II adapter and run a scan to see your vehicle\'s diagnostic history here.',
                                     style: AppTypography.body,
@@ -186,7 +186,7 @@ class _ScanCard extends ConsumerWidget {
                     .copyWith(fontSize: 22, letterSpacing: -1),
               ),
               const SizedBox(width: 5),
-              const Text('/ 10',
+              Text('/ 10',
                   style: AppTypography.caption,
                   overflow: TextOverflow.ellipsis, maxLines: 1),
             ],
@@ -203,7 +203,7 @@ class _ScanCard extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Health Score',
+              Text('Health Score',
                   style: AppTypography.caption,
                   overflow: TextOverflow.ellipsis, maxLines: 1),
               Text(scan.healthLabel,
@@ -220,7 +220,7 @@ class _ScanCard extends ConsumerWidget {
               height: 3,
               child: LinearProgressIndicator(
                 value: (scan.healthScore.clamp(0, 10)) / 10,
-                backgroundColor: const Color(0x14FFFFFF),
+                backgroundColor: AppColors.border,
                 valueColor: AlwaysStoppedAnimation(_scoreColor),
               ),
             ),

@@ -44,7 +44,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   Future<void> _openSupportEmail() async {
@@ -83,14 +83,14 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.helpTitle,
+                Expanded(child: Text(AppStrings.helpTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -103,13 +103,13 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('FAQs', style: AppTypography.heading4,
+                    Text('FAQs', style: AppTypography.heading4,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 12),
                     ..._faqs.map((faq) =>
                         _FaqItem(question: faq.question, answer: faq.answer)),
                     const SizedBox(height: 24),
-                    const Text(AppStrings.helpStillNeed,
+                    Text(AppStrings.helpStillNeed,
                         style: AppTypography.heading4,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 12),
@@ -220,7 +220,7 @@ class _ContactItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis, maxLines: 1),
             ],
           )),
-          const Icon(Icons.chevron_right_rounded,
+          Icon(Icons.chevron_right_rounded,
               color: AppColors.textDisabled, size: 18),
         ]),
       ),

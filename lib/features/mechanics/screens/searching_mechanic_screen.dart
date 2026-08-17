@@ -34,7 +34,7 @@ class _SearchingMechanicScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   @override
@@ -57,7 +57,7 @@ class _SearchingMechanicScreenState
           if (request == null) return _buildUnavailable();
           return _buildSearching(request);
         },
-        loading: () => const Center(
+        loading: () => Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
         error: (_, __) => _buildUnavailable(),
@@ -70,10 +70,10 @@ class _SearchingMechanicScreenState
       child: Column(
         children: [
           _buildBackButton(),
-          const Expanded(
+          Expanded(
             child: Center(
               child: Padding(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal,
                 ),
                 child: Text(
@@ -105,11 +105,11 @@ class _SearchingMechanicScreenState
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: const Color(0x12FFFFFF),
+                color: AppColors.border,
                 borderRadius: BorderRadius.circular(AppRadius.full),
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 14,
                 color: AppColors.textPrimary,
@@ -143,11 +143,11 @@ class _SearchingMechanicScreenState
           right: 0,
           height: 140,
           child: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xF0060606), Colors.transparent],
+                colors: [AppColors.background.withValues(alpha: 0.9), Colors.transparent],
               ),
             ),
           ),
@@ -209,7 +209,7 @@ class _BroadcastStatus extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Searching', style: AppTypography.heading3),
+        Text('Searching', style: AppTypography.heading3),
         const SizedBox(height: 4),
         Text(
           count == 0
@@ -238,7 +238,7 @@ class _TargetedStatus extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Searching', style: AppTypography.heading3),
+        Text('Searching', style: AppTypography.heading3),
         const SizedBox(height: 4),
         Text('Waiting for $name to respond…', style: AppTypography.body),
       ],

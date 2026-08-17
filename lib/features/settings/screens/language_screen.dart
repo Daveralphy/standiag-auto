@@ -29,7 +29,7 @@ class _LanguageScreenState extends ConsumerState<LanguageScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   @override
@@ -57,14 +57,14 @@ class _LanguageScreenState extends ConsumerState<LanguageScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.languageTitle,
+                Expanded(child: Text(AppStrings.languageTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -75,7 +75,7 @@ class _LanguageScreenState extends ConsumerState<LanguageScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.pageHorizontal),
                 itemCount: _languages.length,
-                separatorBuilder: (_, __) => const Divider(
+                separatorBuilder: (_, __) => Divider(
                     color: AppColors.borderSubtle, height: 1),
                 itemBuilder: (_, i) {
                   final lang = _languages[i];
@@ -92,7 +92,7 @@ class _LanguageScreenState extends ConsumerState<LanguageScreen> {
                                     : AppColors.textSecondary),
                             overflow: TextOverflow.ellipsis, maxLines: 1)),
                         if (isSelected)
-                          const Icon(Icons.check_rounded,
+                          Icon(Icons.check_rounded,
                               color: AppColors.primary, size: 18),
                       ]),
                     ),

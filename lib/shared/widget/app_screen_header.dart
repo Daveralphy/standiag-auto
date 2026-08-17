@@ -61,7 +61,7 @@ class AppScreenHeader extends ConsumerWidget {
   static const double avatarSize = 48;
   static const double iconButtonSize = 44;
 
-  static const TextStyle _titleStyle = TextStyle(
+  static TextStyle get _titleStyle => TextStyle(
     fontFamily: 'Inter',
     fontSize: 23,
     fontWeight: FontWeight.w800,
@@ -163,7 +163,7 @@ class AppScreenHeader extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
@@ -189,7 +189,7 @@ class AppScreenHeader extends ConsumerWidget {
                     width: iconButtonSize,
                     height: iconButtonSize,
                     decoration: BoxDecoration(
-                      color: const Color(0x08FFFFFF),
+                      color: AppColors.borderSubtle,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(
                         color: trailingBadge && !isSearching

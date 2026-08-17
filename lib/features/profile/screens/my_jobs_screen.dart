@@ -30,7 +30,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) return;
@@ -75,14 +75,14 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.myJobsTitle,
+                Expanded(child: Text(AppStrings.myJobsTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -98,7 +98,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                       itemBuilder: (_, __) => const _JobCardSkeleton(),
                     )
                   : jobs.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text('No active jobs right now.',
                               style: AppTypography.body))
                       : ListView.separated(

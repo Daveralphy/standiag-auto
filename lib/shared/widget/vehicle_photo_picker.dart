@@ -39,12 +39,12 @@ class VehiclePhotoPicker extends StatelessWidget {
         height: 140,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: const Color(0x0AFFFFFF),
+          color: AppColors.borderSubtle,
           borderRadius: BorderRadius.circular(AppRadius.card),
           border: Border.all(color: AppColors.borderActive),
         ),
         child: isUploading
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(color: AppColors.primary),
               )
             : _content(),
@@ -80,21 +80,21 @@ class VehiclePhotoPicker extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xE1141414),
+              color: AppColors.surfaceElevated.withValues(alpha: 0.88),
               borderRadius: BorderRadius.circular(AppRadius.full),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.edit_outlined, size: 12, color: Colors.white),
-                SizedBox(width: 4),
+                Icon(Icons.edit_outlined, size: 12, color: AppColors.textPrimary),
+                const SizedBox(width: 4),
                 Text(
                   'Change',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -115,7 +115,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.add_a_photo_outlined,
             color: AppColors.textMuted,
             size: 26,

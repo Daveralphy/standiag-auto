@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
@@ -15,6 +16,15 @@ import 'shared/widget/system_ui_style.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ─── Environment ──────────────────────────────────────────────────────────
+  // .env is gitignored and won't exist on a fresh clone or CI runner until
+  // someone copies .env.example and fills it in — features that need a key
+  // from it (calls, OTP email) surface a clear "not configured" error at
+  // the point of use instead of crashing startup here.
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {}
 
   // ─── Firebase ─────────────────────────────────────────────────────────────
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);

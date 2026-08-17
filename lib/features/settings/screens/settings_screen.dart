@@ -24,7 +24,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   @override
@@ -50,14 +50,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.settingsTitle,
+                Expanded(child: Text(AppStrings.settingsTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -97,6 +97,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         context.push(RouteNames.changePasswordFor(type)),
                   ),
                   const SizedBox(height: 8),
+                  const _SectionLabel('Support'),
+                  _SettingsItem(
+                    icon: Icons.help_outline_rounded,
+                    label: AppStrings.helpTitle,
+                    onTap: () =>
+                        context.push(RouteNames.helpSupportFor(type)),
+                  ),
+                  const SizedBox(height: 8),
                   const _SectionLabel('Account'),
                   _SettingsItem(
                     icon: Icons.delete_outline_rounded,
@@ -125,9 +133,9 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(top: 16, bottom: 4),
       child: Text(
         label.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: 'Inter', fontSize: 10, fontWeight: FontWeight.w700,
-          color: Color(0x40FFFFFF), letterSpacing: 0.8,
+          color: AppColors.textDim, letterSpacing: 0.8,
         ),
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
@@ -153,7 +161,7 @@ class _SettingsItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(bottom: BorderSide(
               color: AppColors.borderSubtle, width: 1))),
         child: Row(children: [
@@ -162,7 +170,7 @@ class _SettingsItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: isDestructive
                   ? AppColors.primarySubtle
-                  : const Color(0x0DFFFFFF),
+                  : AppColors.borderSubtle,
               borderRadius: BorderRadius.circular(AppRadius.sm)),
             child: Icon(icon,
                 color: isDestructive ? AppColors.primary : AppColors.textMuted,
@@ -174,7 +182,7 @@ class _SettingsItem extends StatelessWidget {
                       ? AppColors.primary
                       : AppColors.textSecondary),
               overflow: TextOverflow.ellipsis, maxLines: 1)),
-          const Icon(Icons.chevron_right_rounded,
+          Icon(Icons.chevron_right_rounded,
               color: AppColors.textDisabled, size: 18),
         ]),
       ),

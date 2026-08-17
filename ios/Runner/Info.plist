@@ -51,5 +51,7 @@
 		<string>StanDiag Auto uses Bluetooth to connect to your OBD-II adapter for vehicle diagnostics.</string>
 		<key>NSBluetoothPeripheralUsageDescription</key>
 		<string>StanDiag Auto uses Bluetooth to connect to your OBD-II adapter for vehicle diagnostics.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>StanDiag Auto uses your microphone for in-app voice calls with mechanics and car owners.</string>
 	</dict>
 </plist>

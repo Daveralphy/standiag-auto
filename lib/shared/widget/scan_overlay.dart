@@ -61,9 +61,14 @@ class ScanBackdrop extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
             child: Container(
+              // Deliberately fixed black regardless of theme (same as any
+              // modal dimmer) rather than AppColors.background-derived — but
+              // strong enough that it reliably darkens a *light*-mode tab
+              // too, not just a dark one, so the red prompt button/text
+              // sitting on top always has real contrast to work with.
               color: stage == ScanOverlayStage.open
-                  ? const Color(0x99000000)
-                  : const Color(0x66000000),
+                  ? const Color(0xCC000000)
+                  : const Color(0x99000000),
             ),
           ),
         ),
@@ -125,7 +130,7 @@ class ScanPromptButton extends StatelessWidget {
                       width: 1.2,
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Scan',
                     style: TextStyle(
                       fontFamily: 'Inter',
@@ -177,7 +182,7 @@ class ScanModalCard extends ConsumerWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           'Vehicle Diagnostics',
           style: AppTypography.heading3,
           textAlign: TextAlign.center,

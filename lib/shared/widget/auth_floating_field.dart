@@ -42,9 +42,9 @@ class AuthFloatingField extends StatelessWidget {
           obscureText: obscureText,
           enabled: enabled,
           onChanged: onChanged,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Inter', fontSize: 16,
-            color: Colors.white, fontWeight: FontWeight.w400,
+            color: AppColors.textPrimary, fontWeight: FontWeight.w400,
           ),
           decoration: InputDecoration(
             labelText: label,
@@ -53,23 +53,23 @@ class AuthFloatingField extends StatelessWidget {
               fontFamily: 'Inter', fontSize: 15,
               color: hasError
                   ? AppColors.primary.withValues(alpha: 0.8)
-                  : const Color(0x99FFFFFF),
+                  : AppColors.textSecondary,
               fontWeight: FontWeight.w400,
             ),
-            floatingLabelStyle: const TextStyle(
+            floatingLabelStyle: TextStyle(
               fontFamily: 'Inter', fontSize: 13,
               color: AppColors.primary,
               fontWeight: FontWeight.w600,
             ),
-            hintStyle: const TextStyle(
+            hintStyle: TextStyle(
               fontFamily: 'Inter', fontSize: 14,
-              color: Color(0x66FFFFFF),
+              color: AppColors.textMuted,
               fontWeight: FontWeight.w400,
             ),
             filled: true,
             fillColor: hasError
                 ? const Color(0x0DE8281E)
-                : const Color(0x0AFFFFFF),
+                : AppColors.borderSubtle,
             contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16, vertical: 18),
             suffixIcon: suffix != null
@@ -84,7 +84,7 @@ class AuthFloatingField extends StatelessWidget {
               borderSide: BorderSide(
                 color: hasError
                     ? AppColors.primary
-                    : const Color(0x1AFFFFFF),
+                    : AppColors.borderActive,
                 width: hasError ? 1.5 : 1,
               ),
             ),
@@ -93,22 +93,22 @@ class AuthFloatingField extends StatelessWidget {
               borderSide: BorderSide(
                 color: hasError
                     ? AppColors.primary
-                    : const Color(0x1AFFFFFF),
+                    : AppColors.borderActive,
                 width: hasError ? 1.5 : 1,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
+              borderSide: BorderSide(
                   color: AppColors.primary, width: 1.5),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0x0AFFFFFF)),
+              borderSide: BorderSide(color: AppColors.borderSubtle),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
+              borderSide: BorderSide(
                   color: AppColors.primary, width: 1.5),
             ),
           ),
@@ -124,13 +124,13 @@ class AuthFloatingField extends StatelessWidget {
             child: hasError
                 ? Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded,
+                      Icon(Icons.error_outline_rounded,
                           size: 13, color: AppColors.primary),
                       const SizedBox(width: 5),
                       Expanded(
                         child: Text(
                           errorText!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

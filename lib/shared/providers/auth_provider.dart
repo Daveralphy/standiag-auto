@@ -257,22 +257,23 @@ class AuthController {
     await user.updatePassword(newPassword);
   }
 
-  /// Looks up [email] in Firestore first so the caller can show a clear
-  /// "no account with that email" error; only calls Firebase's real password
-  /// reset email send if an account actually exists. Throws a [StateError]
-  /// when no account matches, same pattern as [signInWithIdentifier].
+  /// Sends a password reset email. Deliberately doesn't pre-check whether an
+  /// account exists for [email] — an earlier version queried `users/` first
+  /// (the same pre-auth-query bug that broke username login, since that
+  /// collection's rules require being signed in already), and confirming or
+  /// denying an email's existence here is an account-enumeration leak
+  /// anyway. Firebase's own email-enumeration protection already no-ops
+  /// silently for unknown addresses; the catch below covers projects where
+  /// that protection is off and it throws `user-not-found` instead, so this
+  /// method behaves the same either way — always succeeds, never reveals
+  /// whether the address is registered.
   Future<void> sendPasswordReset(String email) async {
     final trimmed = email.trim();
-    final snap = await FirebaseFirestore.instance
-        .collection('users')
-        .where('email', isEqualTo: trimmed)
-        .limit(1)
-        .get()
-        .timeout(const Duration(seconds: 5));
-    if (snap.docs.isEmpty) {
-      throw StateError('email-not-found');
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: trimmed);
+    } on FirebaseAuthException catch (e) {
+      if (e.code != 'user-not-found') rethrow;
     }
-    await FirebaseAuth.instance.sendPasswordResetEmail(email: trimmed);
   }
 
   Future<void> _linkOrSignIn(PhoneAuthCredential credential) async {

@@ -320,7 +320,7 @@ class _QuoteTimerCardState extends ConsumerState<_QuoteTimerCard> {
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0x0DFFFFFF),
+                color: AppColors.borderSubtle,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Text(

@@ -33,7 +33,7 @@ class _UserMechanicAcceptedScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
@@ -82,10 +82,10 @@ class _UserMechanicAcceptedScreenState
           ),
 
           Positioned(top: 0, left: 0, right: 0, height: 140,
-            child: Container(decoration: const BoxDecoration(
+            child: Container(decoration: BoxDecoration(
               gradient: LinearGradient(begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xF0060606), Colors.transparent])))),
+                  colors: [AppColors.background.withValues(alpha: 0.9), Colors.transparent])))),
 
           SafeArea(
             child: Padding(
@@ -96,11 +96,11 @@ class _UserMechanicAcceptedScreenState
                 child: Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(
-                    color: const Color(0xB3080808),
+                    color: AppColors.surfaceElevated.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(color: const Color(0x1FFFFFFF))),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 14, color: Colors.white)),
+                    border: Border.all(color: AppColors.borderActive)),
+                  child: Icon(Icons.arrow_back_ios_new_rounded,
+                      size: 14, color: AppColors.textPrimary)),
               ),
             ),
           ),
@@ -122,10 +122,10 @@ class _UserMechanicAcceptedScreenState
                       color: const Color(0x144CAF50),
                       borderRadius: BorderRadius.circular(AppRadius.xl),
                       border: Border.all(color: const Color(0x334CAF50))),
-                    child: const Row(children: [
+                    child: Row(children: [
                       Icon(Icons.check_circle_outline_rounded,
                           color: AppColors.success, size: 18),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Expanded(child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

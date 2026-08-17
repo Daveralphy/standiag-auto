@@ -1,6 +1,8 @@
 // Verify Password Change screen — OTP sent to email to confirm password change.
 
 import 'dart:async';
+import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +15,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/errors/error_handler.dart';
+import '../../../core/services/otp_email_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/providers/user_provider.dart';
@@ -36,24 +39,24 @@ class VerifyPasswordChangeScreen extends ConsumerStatefulWidget {
 
 class _VerifyPasswordChangeScreenState
     extends ConsumerState<VerifyPasswordChangeScreen> {
+  static const _codeValidity = Duration(minutes: 5);
+
   final List<TextEditingController> _controllers =
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   int _countdown = 45;
   Timer? _timer;
   bool _isLoading = false;
+  bool _isSendingCode = false;
+  String? _sentCode;
+  DateTime? _codeSentAt;
 
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_countdown == 0) {
-        t.cancel();
-      } else {
-        setState(() => _countdown--);
-      }
-    });
+    SystemUiStyle.apply();
+    _startCooldown();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _sendNewCode());
   }
 
   @override
@@ -66,6 +69,86 @@ class _VerifyPasswordChangeScreenState
     }
     _timer?.cancel();
     super.dispose();
+  }
+
+  void _startCooldown() {
+    _countdown = 45;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (_countdown == 0) {
+        t.cancel();
+      } else {
+        setState(() => _countdown--);
+      }
+    });
+  }
+
+  String _generateCode() {
+    final random = Random.secure();
+    return List.generate(6, (_) => random.nextInt(10)).join();
+  }
+
+  Future<void> _sendNewCode() async {
+    final email = FirebaseAuth.instance.currentUser?.email;
+    if (email == null) return;
+    final code = _generateCode();
+    setState(() {
+      _sentCode = code;
+      _codeSentAt = DateTime.now();
+      _isSendingCode = true;
+    });
+    try {
+      await OtpEmailService.sendCode(toEmail: email, code: code);
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      final message = error is StateError && error.message == 'emailjs-not-configured'
+          ? "Email delivery isn't set up yet — add your EmailJS keys in emailjs_config.dart."
+          : ErrorHandler.handle(error, stackTrace).message;
+      AppErrorToast.showMessage(context, message);
+    } finally {
+      if (mounted) setState(() => _isSendingCode = false);
+    }
+  }
+
+  Future<void> _handleResend() async {
+    if (_countdown != 0 || _isSendingCode) return;
+    setState(() => _startCooldown());
+    await _sendNewCode();
+  }
+
+  Future<void> _handleVerify() async {
+    final entered = _controllers.map((c) => c.text).join();
+    if (entered.length != 6) {
+      AppErrorToast.showMessage(context, 'Enter the 6-digit code sent to your email.');
+      return;
+    }
+    if (_sentCode == null || _codeSentAt == null ||
+        DateTime.now().difference(_codeSentAt!) > _codeValidity) {
+      AppErrorToast.showMessage(
+          context, 'This code has expired. Tap Resend to get a new one.');
+      return;
+    }
+    if (entered != _sentCode) {
+      AppErrorToast.showMessage(context, 'Incorrect code. Please try again.');
+      return;
+    }
+
+    final type = ref.read(currentUserTypeProvider);
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authControllerProvider).changePassword(
+            currentPassword: widget.currentPassword,
+            newPassword: widget.newPassword,
+          );
+      if (!mounted) return;
+      context.go(RouteNames.settingsFor(type));
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      AppErrorToast.showMessage(
+          context, ErrorHandler.handle(error, stackTrace).message);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -91,14 +174,14 @@ class _VerifyPasswordChangeScreenState
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.verifyChangeTitle,
+                Expanded(child: Text(AppStrings.verifyChangeTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -115,15 +198,15 @@ class _VerifyPasswordChangeScreenState
                       color: AppColors.primarySubtle,
                       borderRadius: BorderRadius.circular(AppRadius.xl2),
                       border: Border.all(color: AppColors.primaryBorder)),
-                    child: const Icon(Icons.mail_outline_rounded,
+                    child: Icon(Icons.mail_outline_rounded,
                         color: AppColors.primary, size: 26)),
                   const SizedBox(height: 20),
-                  const Text(AppStrings.verifyChangeCheckEmail,
+                  Text(AppStrings.verifyChangeCheckEmail,
                       style: AppTypography.heading2,
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
-                  const Text(AppStrings.verifyChangeSubtitle,
+                  Text(AppStrings.verifyChangeSubtitle,
                       style: AppTypography.body,
                       textAlign: TextAlign.center,
                       maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -145,16 +228,19 @@ class _VerifyPasswordChangeScreenState
                   ),
                   const SizedBox(height: 24),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Text("Didn't receive it? ",
+                    Text("Didn't receive it? ",
                         style: AppTypography.bodySmall,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
-                    Text(AppStrings.otpResend,
-                        style: AppTypography.bodySmall.copyWith(
-                            color: _countdown == 0
-                                ? AppColors.primary
-                                : AppColors.primaryBorder,
-                            fontWeight: FontWeight.w700),
-                        overflow: TextOverflow.ellipsis, maxLines: 1),
+                    GestureDetector(
+                      onTap: _handleResend,
+                      child: Text(AppStrings.otpResend,
+                          style: AppTypography.bodySmall.copyWith(
+                              color: _countdown == 0
+                                  ? AppColors.primary
+                                  : AppColors.primaryBorder,
+                              fontWeight: FontWeight.w700),
+                          overflow: TextOverflow.ellipsis, maxLines: 1),
+                    ),
                     const SizedBox(width: 6),
                     Text(Formatters.countdown(_countdown),
                         style: AppTypography.bodySmall,
@@ -163,23 +249,7 @@ class _VerifyPasswordChangeScreenState
                   const SizedBox(height: 32),
                   AppButton(
                     label: AppStrings.verifyChangeVerify,
-                    onTap: () async {
-                      setState(() => _isLoading = true);
-                      try {
-                        await ref.read(authControllerProvider).changePassword(
-                              currentPassword: widget.currentPassword,
-                              newPassword: widget.newPassword,
-                            );
-                        if (!context.mounted) return;
-                        context.go(RouteNames.settingsFor(type));
-                      } catch (error, stackTrace) {
-                        if (!context.mounted) return;
-                        AppErrorToast.showMessage(context,
-                            ErrorHandler.handle(error, stackTrace).message);
-                      } finally {
-                        if (mounted) setState(() => _isLoading = false);
-                      }
-                    },
+                    onTap: _handleVerify,
                     isLoading: _isLoading,
                   ),
                 ]),
@@ -209,7 +279,7 @@ class _OtpBox extends StatelessWidget {
       width: 38, height: 48,
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
-        color: const Color(0x0AFFFFFF),
+        color: AppColors.borderSubtle,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.borderActive)),
       child: TextField(

@@ -47,13 +47,15 @@ class AppMapMarker {
 class AppMapPolyline {
   final String id;
   final List<LatLng> points;
-  final Color color;
+  final Color? color;
 
   const AppMapPolyline({
     required this.id,
     required this.points,
-    this.color = AppColors.blue,
+    this.color,
   });
+
+  Color get resolvedColor => color ?? AppColors.blue;
 }
 
 /// A radius circle, e.g. a mechanic's service-area preview on the map.
@@ -268,7 +270,7 @@ class _AppMapState extends State<AppMap> {
                     for (final line in widget.polylines)
                       Polyline(
                         points: line.points,
-                        color: line.color.withValues(alpha: 0.85),
+                        color: line.resolvedColor.withValues(alpha: 0.85),
                         strokeWidth: 4,
                         pattern: StrokePattern.dashed(segments: const [16, 8]),
                       ),
@@ -335,7 +337,7 @@ class _AppMapState extends State<AppMap> {
                   borderRadius: BorderRadius.circular(AppRadius.lg),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: const Text(
+                child: Text(
                   'Current location unavailable. Showing the last known map area.',
                   style: TextStyle(
                     fontFamily: 'Inter',
@@ -367,7 +369,7 @@ class _AppMapState extends State<AppMap> {
                         onTap: _resetNorth,
                         child: Transform.rotate(
                           angle: -_rotation * 3.1415926535 / 180,
-                          child: const Icon(
+                          child: Icon(
                             Icons.explore_rounded,
                             color: AppColors.primary,
                             size: 20,
@@ -378,7 +380,7 @@ class _AppMapState extends State<AppMap> {
                     ],
                     _MapControlButton(
                       onTap: () => _zoomBy(1),
-                      child: const Icon(
+                      child: Icon(
                         Icons.add_rounded,
                         color: AppColors.textPrimary,
                         size: 20,
@@ -387,7 +389,7 @@ class _AppMapState extends State<AppMap> {
                     const SizedBox(height: 8),
                     _MapControlButton(
                       onTap: () => _zoomBy(-1),
-                      child: const Icon(
+                      child: Icon(
                         Icons.remove_rounded,
                         color: AppColors.textPrimary,
                         size: 20,
@@ -398,7 +400,7 @@ class _AppMapState extends State<AppMap> {
                       _MapControlButton(
                         onTap: _isRecentering ? null : _recenterOnMe,
                         child: _isRecentering
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 16,
                                 height: 16,
                                 child: CircularProgressIndicator(
@@ -406,7 +408,7 @@ class _AppMapState extends State<AppMap> {
                                   color: AppColors.primary,
                                 ),
                               )
-                            : const Icon(
+                            : Icon(
                                 Icons.my_location_rounded,
                                 color: AppColors.primary,
                                 size: 18,
@@ -551,7 +553,7 @@ class _MapControlButton extends StatelessWidget {
         height: 36,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: const Color(0xE1141414),
+          color: AppColors.surface.withValues(alpha: 0.88),
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.border),
           boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 6)],
@@ -575,7 +577,7 @@ class _MapLoadingPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.full),
         border: Border.all(color: AppColors.border),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
@@ -586,7 +588,7 @@ class _MapLoadingPill extends StatelessWidget {
               color: AppColors.primary,
             ),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Loading map…',
@@ -641,7 +643,7 @@ class _UserLocationPin extends StatelessWidget {
         Container(
           width: 16,
           height: 16,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: AppColors.primary,
           ),
@@ -740,26 +742,27 @@ class _RipplePainter extends CustomPainter {
 /// distinguishes marker types (e.g. mechanic vs destination) at a glance.
 class AppMapPin extends StatelessWidget {
   final IconData icon;
-  final Color color;
+  final Color? color;
 
   const AppMapPin({
     super.key,
     required this.icon,
-    this.color = AppColors.primary,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final Color resolvedColor = color ?? AppColors.primary;
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFF1A1A2A),
-        border: Border.all(color: color, width: 1.5),
+        color: AppColors.surface,
+        border: Border.all(color: resolvedColor, width: 1.5),
         boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 8),
+          BoxShadow(color: resolvedColor.withValues(alpha: 0.35), blurRadius: 8),
         ],
       ),
-      child: Icon(icon, color: color, size: 18),
+      child: Icon(icon, color: resolvedColor, size: 18),
     );
   }
 }
@@ -783,13 +786,13 @@ LatLng latLngFromGeoPoint(dynamic geoPoint) {
 /// Marker icon for a car owner's own location — matches the discovery
 /// screens' person iconography.
 Widget buildUserMarkerIcon() =>
-    const AppMapPin(icon: Icons.person_rounded, color: AppColors.primary);
+    AppMapPin(icon: Icons.person_rounded, color: AppColors.primary);
 
 /// Marker icon for a mechanic's location — matches the discovery screens'
 /// wrench iconography.
 Widget buildMechanicMarkerIcon() =>
-    const AppMapPin(icon: Icons.build_rounded, color: AppColors.blue);
+    AppMapPin(icon: Icons.build_rounded, color: AppColors.blue);
 
 /// Marker icon for a fixed destination/search-center point.
 Widget buildDestinationMarkerIcon() =>
-    const AppMapPin(icon: Icons.place_rounded, color: AppColors.success);
+    AppMapPin(icon: Icons.place_rounded, color: AppColors.success);

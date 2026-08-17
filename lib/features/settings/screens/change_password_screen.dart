@@ -34,7 +34,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     _newController.addListener(() {
       setState(() =>
           _strength = Validators.passwordStrength(_newController.text));
@@ -99,14 +99,14 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.changePasswordTitle,
+                Expanded(child: Text(AppStrings.changePasswordTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -119,7 +119,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(AppStrings.changePasswordSubtitle,
+                    Text(AppStrings.changePasswordSubtitle,
                         style: AppTypography.body,
                         maxLines: 3, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 24),

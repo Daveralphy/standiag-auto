@@ -28,8 +28,8 @@ class ProfileFieldRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final row = Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0x0DFFFFFF))),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
       ),
       child: Opacity(
         opacity: dimmed ? 0.5 : 1,
@@ -60,7 +60,7 @@ class ProfileFieldRow extends StatelessWidget {
               ),
             ),
             if (onTap != null)
-              const Icon(Icons.chevron_right_rounded,
+              Icon(Icons.chevron_right_rounded,
                   color: AppColors.textMuted, size: 18),
           ],
         ),
@@ -80,8 +80,8 @@ class ProfileFieldRowSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0x0DFFFFFF))),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +90,7 @@ class ProfileFieldRowSkeleton extends StatelessWidget {
             width: 60,
             height: 9,
             decoration: BoxDecoration(
-              color: const Color(0x14FFFFFF),
+              color: AppColors.border,
               borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
           ),
@@ -99,7 +99,7 @@ class ProfileFieldRowSkeleton extends StatelessWidget {
             width: valueWidth,
             height: 13,
             decoration: BoxDecoration(
-              color: const Color(0x0AFFFFFF),
+              color: AppColors.borderSubtle,
               borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
           ),

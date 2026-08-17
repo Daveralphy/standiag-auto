@@ -33,7 +33,7 @@ class _ScanDetailScreenState extends ConsumerState<ScanDetailScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   Color _scoreColor(int score) {
@@ -67,14 +67,14 @@ class _ScanDetailScreenState extends ConsumerState<ScanDetailScreen> {
                   child: Container(
                     width: 30, height: 30,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text('Scan Details',
+                Expanded(child: Text('Scan Details',
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -85,14 +85,14 @@ class _ScanDetailScreenState extends ConsumerState<ScanDetailScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('Scan not found',
+                          Text('Scan not found',
                               style: AppTypography.heading3),
                           const SizedBox(height: 12),
                           GestureDetector(
                             onTap: () => context.canPop()
                                 ? context.pop()
                                 : context.go(RouteNames.userScanHistory),
-                            child: const Text('Go back',
+                            child: Text('Go back',
                                 style: TextStyle(color: AppColors.primary)),
                           ),
                         ],
@@ -141,7 +141,7 @@ class _ScanDetailBody extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Health Score',
+              Text('Health Score',
                   style: AppTypography.caption,
                   overflow: TextOverflow.ellipsis, maxLines: 1),
               Text(scan.healthLabel,
@@ -159,7 +159,7 @@ class _ScanDetailBody extends ConsumerWidget {
               height: 3,
               child: LinearProgressIndicator(
                 value: scan.healthScore.clamp(0, 10) / 10,
-                backgroundColor: const Color(0x14FFFFFF),
+                backgroundColor: AppColors.border,
                 valueColor: AlwaysStoppedAnimation(scoreColor(scan.healthScore)),
               ),
             ),
@@ -167,7 +167,7 @@ class _ScanDetailBody extends ConsumerWidget {
 
           if (rpm != null || coolant != null || speed != null) ...[
             const SizedBox(height: 24),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text('Diagnostic Readings',
                   style: AppTypography.heading4,
@@ -183,7 +183,7 @@ class _ScanDetailBody extends ConsumerWidget {
           ],
 
           const SizedBox(height: 24),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text('Trouble Codes',
                 style: AppTypography.heading4,
@@ -199,11 +199,11 @@ class _ScanDetailBody extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppRadius.card),
                 border: Border.all(color: const Color(0x334CAF50)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
                   Icon(Icons.check_circle_rounded,
                       color: AppColors.success, size: 18),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text('No trouble codes found — this scan came back clean.',
                         style: AppTypography.body),

@@ -15,6 +15,10 @@ import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/system_ui_style.dart';
 
+// Deliberately pinned to AppColors.dark rather than the current theme —
+// the brand mark (assets/images/logo_full.png) was only ever designed
+// against a dark background, so this screen always renders dark regardless
+// of the user's Appearance setting.
 class SplashTwoScreen extends StatefulWidget {
   const SplashTwoScreen({super.key});
 
@@ -127,7 +131,7 @@ class _SplashTwoScreenState extends State<SplashTwoScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.dark.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -199,15 +203,15 @@ class _SplashTwoScreenState extends State<SplashTwoScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.wifi_off_rounded,
-              color: AppColors.textMuted, size: 22),
+          Icon(Icons.wifi_off_rounded,
+              color: AppColors.dark.textMuted, size: 22),
           const SizedBox(height: 8),
-          const Text('No internet connection',
-              style: AppTypography.body,
+          Text('No internet connection',
+              style: AppTypography.body.copyWith(color: AppColors.dark.textSecondary),
               overflow: TextOverflow.ellipsis, maxLines: 1),
           const SizedBox(height: 2),
           Text('Waiting to reconnect…',
-              style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+              style: AppTypography.caption.copyWith(color: AppColors.dark.textMuted),
               overflow: TextOverflow.ellipsis, maxLines: 1),
         ],
       ),

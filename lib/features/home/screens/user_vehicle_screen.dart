@@ -16,7 +16,6 @@ import '../../../core/navigation/route_names.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_button.dart';
-import '../../../shared/widget/app_screen_backdrop.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../../shared/widget/vehicle_ads_carousel.dart';
@@ -36,7 +35,7 @@ class _UserVehicleScreenState extends ConsumerState<UserVehicleScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ownerId = ref.read(currentUserIdProvider);
       if (ownerId == null) return;
@@ -67,71 +66,66 @@ class _UserVehicleScreenState extends ConsumerState<UserVehicleScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          const AppScreenBackdrop(),
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppScreenHeader(
-                  title: 'Your Vehicle',
-                  subtitle: vehicle?.displayName ?? 'No vehicle added',
-                  trailingIcon: Icons.settings_outlined,
-                  onTrailingTap: () => context.push(RouteNames.myVehicles),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.pageHorizontal,
-                      0,
-                      AppSpacing.pageHorizontal,
-                      AppSpacing.navBarClearance + 24,
-                    ),
-                    child: Column(
-                      children: [
-                        if (vehicle == null)
-                          _EmptyVehicleCard(
-                            onAdd: () => context.push(RouteNames.addVehicle),
-                          )
-                        else
-                          _ActiveVehicleCard(
-                            vehicle: vehicle,
-                            latestScan: latestScanForVehicle,
-                            totalScans: scansForVehicle.length,
-                          ),
-                        if (otherVehicles.isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Other Vehicles',
-                              style: AppTypography.heading4,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          for (int i = 0; i < otherVehicles.length; i++) ...[
-                            if (i > 0) const SizedBox(height: 10),
-                            _OtherVehicleCard(
-                              vehicle: otherVehicles[i],
-                              onTap: () => context.push(
-                                RouteNames.editVehicle,
-                                extra: otherVehicles[i].id,
-                              ),
-                            ),
-                          ],
-                        ],
-                        const SizedBox(height: 20),
-                        const VehicleAdsCarousel(),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppScreenHeader(
+              title: 'Your Vehicle',
+              subtitle: vehicle?.displayName ?? 'No vehicle added',
+              trailingIcon: Icons.settings_outlined,
+              onTrailingTap: () => context.push(RouteNames.myVehicles),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageHorizontal,
+                  0,
+                  AppSpacing.pageHorizontal,
+                  AppSpacing.navBarClearance + 24,
+                ),
+                child: Column(
+                  children: [
+                    if (vehicle == null)
+                      _EmptyVehicleCard(
+                        onAdd: () => context.push(RouteNames.addVehicle),
+                      )
+                    else
+                      _ActiveVehicleCard(
+                        vehicle: vehicle,
+                        latestScan: latestScanForVehicle,
+                        totalScans: scansForVehicle.length,
+                      ),
+                    if (otherVehicles.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Other Vehicles',
+                          style: AppTypography.heading4,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      for (int i = 0; i < otherVehicles.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 10),
+                        _OtherVehicleCard(
+                          vehicle: otherVehicles[i],
+                          onTap: () => context.push(
+                            RouteNames.editVehicle,
+                            extra: otherVehicles[i].id,
+                          ),
+                        ),
+                      ],
+                    ],
+                    const SizedBox(height: 20),
+                    const VehicleAdsCarousel(),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -199,7 +193,7 @@ class _ActiveVehicleCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 16),
-                const Divider(height: 1, color: AppColors.borderSubtle),
+                Divider(height: 1, color: AppColors.borderSubtle),
                 const SizedBox(height: 14),
                 Row(
                   children: [
@@ -309,7 +303,7 @@ class _OtherVehicleCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppColors.textDisabled,
               size: 18,
@@ -387,20 +381,20 @@ class _EmptyVehicleCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.directions_car_outlined,
             color: AppColors.textMuted,
             size: 48,
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'No vehicle added yet',
             style: AppTypography.heading3,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Add your car to see its stats and run diagnostics with OBD.',
             style: AppTypography.body,
             textAlign: TextAlign.center,

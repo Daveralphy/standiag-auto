@@ -111,7 +111,7 @@ class _AppTextFieldState extends State<AppTextField> {
         Container(
           height: widget.maxLines > 1 ? null : 50,
           decoration: BoxDecoration(
-            color: const Color(0x0AFFFFFF), // 4% white — matches HTML design
+            color: AppColors.borderSubtle, // 4% white — matches HTML design
             borderRadius: BorderRadius.circular(AppRadius.input),
             border: Border.all(
               // Border turns red on focus — matches HTML design

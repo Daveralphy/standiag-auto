@@ -1,6 +1,17 @@
 // Defines every color used in StanDiag Auto.
 // Never use a raw hex color anywhere in the app — always reference this class.
-// All values are derived directly from the HTML design files in /design/.
+// Dark values are derived directly from the HTML design files in /design/.
+// Light values were derived from the dark palette (no light mockups exist):
+// backgrounds/text/borders inverted, brand red and semantic colors kept
+// identical since they already read fine on both backgrounds.
+//
+// Every field below is a getter, not a constant, so it can reflect whichever
+// theme is currently active — set once per frame by StanDiagApp via
+// [setBrightness], read by every screen through the same AppColors.xxx call
+// sites as before. [dark] and [light] expose the two raw, independent
+// palettes directly — that's what AppTheme uses to build two stable
+// ThemeData objects, deliberately bypassing the current-theme flag so
+// MaterialApp always has both to switch between.
 
 import 'package:flutter/material.dart';
 
@@ -8,127 +19,204 @@ class AppColors {
   // Private constructor — this class is never instantiated.
   AppColors._();
 
+  static Brightness _brightness = Brightness.dark;
+  static bool get _isDark => _brightness == Brightness.dark;
+
+  /// Called once per frame from StanDiagApp's build(), before any
+  /// descendant widget builds, so every getter below is consistent for the
+  /// whole frame.
+  static void setBrightness(Brightness brightness) {
+    _brightness = brightness;
+  }
+
+  static const AppColorPalette dark = AppColorPalette.dark();
+  static const AppColorPalette light = AppColorPalette.light();
+
   // ─── Backgrounds ───────────────────────────────────────────────────────────
 
-  /// Main app background. Used on every screen.
-  static const Color background = Color(0xFF0A0A0A);
-
-  /// Outer page background. Used as the scaffold background.
-  static const Color backgroundPage = Color(0xFF0D0D0D);
-
-  /// Card and surface background. Used on cards, drawers, modals.
-  static const Color surface = Color(0xFF141414);
-
-  /// Slightly elevated surface. Used on error toasts and raised elements.
-  static const Color surfaceElevated = Color(0xFF1A1A1A);
-
-  /// Map background color.
-  static const Color mapBackground = Color(0xFF0F1218);
-
-  /// Map road color (main roads).
-  static const Color mapRoad = Color(0xFF182028);
-
-  /// Map road color (secondary roads).
-  static const Color mapRoadSecondary = Color(0xFF141B22);
-
-  /// Map building color.
-  static const Color mapBuilding = Color(0xFF111820);
-
-  /// Map park / green area color.
-  static const Color mapPark = Color(0xFF0D1A10);
+  static Color get background => _isDark ? dark.background : light.background;
+  static Color get backgroundPage => _isDark ? dark.backgroundPage : light.backgroundPage;
+  static Color get surface => _isDark ? dark.surface : light.surface;
+  static Color get surfaceElevated => _isDark ? dark.surfaceElevated : light.surfaceElevated;
+  static Color get mapBackground => _isDark ? dark.mapBackground : light.mapBackground;
+  static Color get mapRoad => _isDark ? dark.mapRoad : light.mapRoad;
+  static Color get mapRoadSecondary => _isDark ? dark.mapRoadSecondary : light.mapRoadSecondary;
+  static Color get mapBuilding => _isDark ? dark.mapBuilding : light.mapBuilding;
+  static Color get mapPark => _isDark ? dark.mapPark : light.mapPark;
 
   // ─── Primary (Brand Red) ───────────────────────────────────────────────────
 
-  /// Main brand color. Used on active buttons, selected states, accents.
-  static const Color primary = Color(0xFFE8281E);
-
-  /// Button gradient start (top).
-  static const Color primaryLight = Color(0xFFF03328);
-
-  /// Button gradient end (bottom).
-  static const Color primaryDark = Color(0xFFC41F16);
-
-  /// Subtle primary tint. Used as card background on selected state.
-  static const Color primarySubtle = Color(0x14E8281E); // 8% opacity
-
-  /// Primary border tint. Used as card border on selected state.
-  static const Color primaryBorder = Color(0x33E8281E); // 20% opacity
+  static Color get primary => _isDark ? dark.primary : light.primary;
+  static Color get primaryLight => _isDark ? dark.primaryLight : light.primaryLight;
+  static Color get primaryDark => _isDark ? dark.primaryDark : light.primaryDark;
+  static Color get primarySubtle => _isDark ? dark.primarySubtle : light.primarySubtle;
+  static Color get primaryBorder => _isDark ? dark.primaryBorder : light.primaryBorder;
 
   // ─── Text ──────────────────────────────────────────────────────────────────
 
-  /// Full white. Used for primary headings and important labels.
-  static const Color textPrimary = Color(0xFFFFFFFF);
-
-  /// 70% white. Used for secondary text and body content.
-  static const Color textSecondary = Color(0xB3FFFFFF);
-
-  /// 40% white. Used for subtitles, hints, and muted labels.
-  static const Color textMuted = Color(0x66FFFFFF);
-
-  /// 25% white. Used for placeholder text and very muted labels.
-  static const Color textDim = Color(0x40FFFFFF);
-
-  /// 20% white. Used for disabled and inactive text.
-  static const Color textDisabled = Color(0x33FFFFFF);
-
-  /// 35% white. Used for tag labels and expertise pills.
-  static const Color textTag = Color(0x59FFFFFF);
+  static Color get textPrimary => _isDark ? dark.textPrimary : light.textPrimary;
+  static Color get textSecondary => _isDark ? dark.textSecondary : light.textSecondary;
+  static Color get textMuted => _isDark ? dark.textMuted : light.textMuted;
+  static Color get textDim => _isDark ? dark.textDim : light.textDim;
+  static Color get textDisabled => _isDark ? dark.textDisabled : light.textDisabled;
+  static Color get textTag => _isDark ? dark.textTag : light.textTag;
 
   // ─── Semantic ──────────────────────────────────────────────────────────────
 
-  /// Green. Used for completed jobs, online status, good health scores.
-  static const Color success = Color(0xFF4CAF50);
-
-  /// Subtle green tint. Used as background on success banners.
-  static const Color successSubtle = Color(0x14E8281E); // matches design
-
-  /// Amber. Used for pending states and star rating fill color.
-  static const Color amber = Color(0xFFF59E0B);
-
-  /// Yellow. Used for warning indicators.
-  static const Color warning = Color(0xFFFFC107);
-
-  /// Blue. Used for mechanic map pin and OBD connected indicator.
-  static const Color blue = Color(0xFF3B82F6);
-
-  /// Subtle blue tint. Used as mechanic pin background on map.
-  static const Color blueSubtle = Color(0xFF1A2535);
+  static Color get success => _isDark ? dark.success : light.success;
+  static Color get successSubtle => _isDark ? dark.successSubtle : light.successSubtle;
+  static Color get amber => _isDark ? dark.amber : light.amber;
+  static Color get warning => _isDark ? dark.warning : light.warning;
+  static Color get blue => _isDark ? dark.blue : light.blue;
+  static Color get blueSubtle => _isDark ? dark.blueSubtle : light.blueSubtle;
 
   // ─── Borders ───────────────────────────────────────────────────────────────
 
-  /// Standard card border.
-  static const Color border = Color(0x12FFFFFF); // 7% opacity
-
-  /// Subtle divider border.
-  static const Color borderSubtle = Color(0x0DFFFFFF); // 5% opacity
-
-  /// Active element border (inputs, focused cards).
-  static const Color borderActive = Color(0x1AFFFFFF); // 10% opacity
+  static Color get border => _isDark ? dark.border : light.border;
+  static Color get borderSubtle => _isDark ? dark.borderSubtle : light.borderSubtle;
+  static Color get borderActive => _isDark ? dark.borderActive : light.borderActive;
 
   // ─── Navigation Bar ────────────────────────────────────────────────────────
 
-  /// Nav bar background with blur. Applied as a Color only — blur handled in widget.
-  static const Color navBarBackground = Color(0xE10E0E0E); // 88% opacity
-
-  /// Nav bar border.
-  static const Color navBarBorder = Color(0x14FFFFFF); // 8% opacity
-
-  /// Nav bar outer ring for active item glow.
-  static const Color navBarActiveGlow = Color(0x40E8281E); // 25% opacity
+  static Color get navBarBackground => _isDark ? dark.navBarBackground : light.navBarBackground;
+  static Color get navBarBorder => _isDark ? dark.navBarBorder : light.navBarBorder;
+  static Color get navBarActiveGlow => _isDark ? dark.navBarActiveGlow : light.navBarActiveGlow;
 
   // ─── Gradients ─────────────────────────────────────────────────────────────
 
-  /// Primary button gradient. Use with LinearGradient, top to bottom.
-  static const LinearGradient primaryButtonGradient = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [primaryLight, primaryDark],
-  );
+  static LinearGradient get primaryButtonGradient =>
+      _isDark ? dark.primaryButtonGradient : light.primaryButtonGradient;
+  static LinearGradient get creditsCardGradient =>
+      _isDark ? dark.creditsCardGradient : light.creditsCardGradient;
+}
 
-  /// Dark red card gradient. Used on the credits balance card.
-  static const LinearGradient creditsCardGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFF1A0A0A), Color(0xFF1F0D0D)],
-  );
+/// Raw, theme-independent color values. Two const instances (dark/light)
+/// exist below — this class itself is never used for anything but holding
+/// one palette's worth of values.
+class AppColorPalette {
+  final Color background;
+  final Color backgroundPage;
+  final Color surface;
+  final Color surfaceElevated;
+  final Color mapBackground;
+  final Color mapRoad;
+  final Color mapRoadSecondary;
+  final Color mapBuilding;
+  final Color mapPark;
+  final Color primary;
+  final Color primaryLight;
+  final Color primaryDark;
+  final Color primarySubtle;
+  final Color primaryBorder;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color textDim;
+  final Color textDisabled;
+  final Color textTag;
+  final Color success;
+  final Color successSubtle;
+  final Color amber;
+  final Color warning;
+  final Color blue;
+  final Color blueSubtle;
+  final Color border;
+  final Color borderSubtle;
+  final Color borderActive;
+  final Color navBarBackground;
+  final Color navBarBorder;
+  final Color navBarActiveGlow;
+  final LinearGradient primaryButtonGradient;
+  final LinearGradient creditsCardGradient;
+
+  const AppColorPalette.dark()
+      : background = const Color(0xFF0A0A0A),
+        backgroundPage = const Color(0xFF0D0D0D),
+        surface = const Color(0xFF141414),
+        surfaceElevated = const Color(0xFF1A1A1A),
+        mapBackground = const Color(0xFF0F1218),
+        mapRoad = const Color(0xFF182028),
+        mapRoadSecondary = const Color(0xFF141B22),
+        mapBuilding = const Color(0xFF111820),
+        mapPark = const Color(0xFF0D1A10),
+        primary = const Color(0xFFE8281E),
+        primaryLight = const Color(0xFFF03328),
+        primaryDark = const Color(0xFFC41F16),
+        primarySubtle = const Color(0x14E8281E), // 8% opacity
+        primaryBorder = const Color(0x33E8281E), // 20% opacity
+        textPrimary = const Color(0xFFFFFFFF),
+        textSecondary = const Color(0xB3FFFFFF), // 70% white
+        textMuted = const Color(0x66FFFFFF), // 40% white
+        textDim = const Color(0x40FFFFFF), // 25% white
+        textDisabled = const Color(0x33FFFFFF), // 20% white
+        textTag = const Color(0x59FFFFFF), // 35% white
+        success = const Color(0xFF4CAF50),
+        successSubtle = const Color(0x14E8281E), // matches design
+        amber = const Color(0xFFF59E0B),
+        warning = const Color(0xFFFFC107),
+        blue = const Color(0xFF3B82F6),
+        blueSubtle = const Color(0xFF1A2535),
+        border = const Color(0x12FFFFFF), // 7% opacity
+        borderSubtle = const Color(0x0DFFFFFF), // 5% opacity
+        borderActive = const Color(0x1AFFFFFF), // 10% opacity
+        navBarBackground = const Color(0xE10E0E0E), // 88% opacity
+        navBarBorder = const Color(0x14FFFFFF), // 8% opacity
+        navBarActiveGlow = const Color(0x40E8281E), // 25% opacity
+        primaryButtonGradient = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFF03328), Color(0xFFC41F16)],
+        ),
+        creditsCardGradient = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A0A0A), Color(0xFF1F0D0D)],
+        );
+
+  const AppColorPalette.light()
+      : background = const Color(0xFFF2F2F3),
+        backgroundPage = const Color(0xFFF5F5F6),
+        surface = const Color(0xFFFDFDFD),
+        surfaceElevated = const Color(0xFFFFFFFF),
+        mapBackground = const Color(0xFFF5F6F8),
+        mapRoad = const Color(0xFFFFFFFF),
+        mapRoadSecondary = const Color(0xFFF0F1F3),
+        mapBuilding = const Color(0xFFE8EAED),
+        mapPark = const Color(0xFFDCEEDC),
+        primary = const Color(0xFFE8281E),
+        primaryLight = const Color(0xFFF03328),
+        primaryDark = const Color(0xFFC41F16),
+        primarySubtle = const Color(0x14E8281E), // 8% opacity — reads on either bg
+        primaryBorder = const Color(0x33E8281E), // 20% opacity
+        textPrimary = const Color(0xFF121212),
+        textSecondary = const Color(0xB3121212), // 70%
+        textMuted = const Color(0x66121212), // 40%
+        textDim = const Color(0x40121212), // 25%
+        textDisabled = const Color(0x33121212), // 20%
+        textTag = const Color(0x59121212), // 35%
+        success = const Color(0xFF4CAF50),
+        successSubtle = const Color(0x14E8281E), // matches design
+        amber = const Color(0xFFF59E0B),
+        warning = const Color(0xFFFFC107),
+        blue = const Color(0xFF3B82F6),
+        blueSubtle = const Color(0xFFE3EDFC),
+        border = const Color(0x12121212), // 7% opacity
+        borderSubtle = const Color(0x0D121212), // 5% opacity
+        borderActive = const Color(0x1A121212), // 10% opacity
+        navBarBackground = const Color(0xE1FAFAFA), // 88% opacity
+        navBarBorder = const Color(0x14121212), // 8% opacity
+        navBarActiveGlow = const Color(0x40E8281E), // 25% opacity
+        primaryButtonGradient = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFF03328), Color(0xFFC41F16)],
+        ),
+        // Deliberately kept dark even in light mode — a "hero" balance card
+        // that pops against a light background, same idea many finance apps
+        // use regardless of overall theme.
+        creditsCardGradient = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A0A0A), Color(0xFF1F0D0D)],
+        );
 }

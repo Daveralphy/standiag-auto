@@ -60,7 +60,7 @@ class OfflineBanner extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.wifi_off_rounded,
+                      Icon(Icons.wifi_off_rounded,
                           color: AppColors.primary, size: 16),
                       const SizedBox(width: AppSpacing.lg),
                       Expanded(

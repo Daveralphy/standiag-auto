@@ -80,9 +80,9 @@ class _ObdDevicePickerContentState
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl5)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl5)),
             border: Border.fromBorderSide(BorderSide(color: AppColors.border)),
           ),
           child: Column(
@@ -103,12 +103,12 @@ class _ObdDevicePickerContentState
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      const Text('Connect OBD-II Adapter',
+                      Text('Connect OBD-II Adapter',
                           style: AppTypography.heading3,
                           textAlign: TextAlign.center,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
                       if (state.isDiscovering)
-                        const Positioned(
+                        Positioned(
                           right: 0,
                           child: SizedBox(
                             width: 16, height: 16,
@@ -155,7 +155,7 @@ class _ObdDevicePickerContentState
                                 state.isDiscovering
                                     ? Icons.bluetooth_searching_rounded
                                     : Icons.bluetooth_disabled_rounded,
-                                color: const Color(0x33FFFFFF), size: 40),
+                                color: AppColors.textDisabled, size: 40),
                             const SizedBox(height: 12),
                             Text(
                               state.isDiscovering
@@ -169,7 +169,7 @@ class _ObdDevicePickerContentState
                               GestureDetector(
                                 onTap: () =>
                                     _scanNotifier.startDeviceDiscovery(),
-                                child: const Text('Search again',
+                                child: Text('Search again',
                                     style: TextStyle(
                                       fontFamily: 'Inter', fontSize: 14,
                                       fontWeight: FontWeight.w700,
@@ -189,7 +189,7 @@ class _ObdDevicePickerContentState
                         horizontal: AppSpacing.pageHorizontal),
                     children: [
                       if (likely.isNotEmpty) ...[
-                        const _SectionLabel('Likely Your Adapter',
+                        _SectionLabel('Likely Your Adapter',
                             color: AppColors.success),
                         for (final result in likely) ...[
                           _DeviceTile(
@@ -285,7 +285,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: AppTypography.microBold.copyWith(
-          color: color ?? const Color(0x66FFFFFF),
+          color: color ?? AppColors.textMuted,
           letterSpacing: 0.8,
         ),
         overflow: TextOverflow.ellipsis,
@@ -318,7 +318,7 @@ class _DeviceTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isLikely ? const Color(0x144CAF50) : const Color(0x0AFFFFFF),
+          color: isLikely ? const Color(0x144CAF50) : AppColors.borderSubtle,
           borderRadius: BorderRadius.circular(AppRadius.card),
           border: Border.all(
               color: isLikely ? const Color(0x664CAF50) : AppColors.border,
@@ -353,7 +353,7 @@ class _DeviceTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   if (isLikely) ...[
                     const SizedBox(height: 2),
-                    const Text('Likely your OBD-II adapter',
+                    Text('Likely your OBD-II adapter',
                         style: TextStyle(
                           fontFamily: 'Inter', fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -364,13 +364,13 @@ class _DeviceTile extends StatelessWidget {
               ),
             ),
             if (isConnecting)
-              const SizedBox(
+              SizedBox(
                 width: 16, height: 16,
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: AppColors.primary),
               )
             else
-              const Icon(Icons.chevron_right_rounded,
+              Icon(Icons.chevron_right_rounded,
                   color: AppColors.textDisabled, size: 18),
           ],
         ),

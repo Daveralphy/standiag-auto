@@ -21,7 +21,6 @@ import '../../../features/credits/providers/credits_provider.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_error_toast.dart';
-import '../../../shared/widget/app_screen_backdrop.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/log_out_dialog.dart';
@@ -42,7 +41,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     _load();
   }
 
@@ -114,224 +113,214 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          const AppScreenBackdrop(),
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppScreenHeader(
-                  title: 'Your Profile',
-                  subtitle: 'Manage your account',
-                  trailingIcon: Icons.monetization_on_outlined,
-                  trailingWidget: GestureDetector(
-                    onTap: () => context.push(RouteNames.userCredits),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppScreenHeader(
+              title: 'Your Profile',
+              subtitle: 'Manage your account',
+              trailingIcon: Icons.monetization_on_outlined,
+              trailingWidget: GestureDetector(
+                onTap: () => context.push(RouteNames.userCredits),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySubtle,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                    border: Border.all(color: AppColors.primaryBorder),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.monetization_on_rounded,
+                        size: 15,
+                        color: AppColors.primary,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primarySubtle,
-                        borderRadius: BorderRadius.circular(AppRadius.full),
-                        border: Border.all(color: AppColors.primaryBorder),
+                      const SizedBox(width: 5),
+                      Text(
+                        '$balance',
+                        style: AppTypography.bodyLarge.copyWith(
+                          color: AppColors.primary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.monetization_on_rounded,
-                            size: 15,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            '$balance',
-                            style: AppTypography.bodyLarge.copyWith(
-                              color: AppColors.primary,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
                 ),
-                Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      if (_isLoading) return const _ProfileSkeletonView();
-                      if (_errorMessage != null) {
-                        return _ProfileErrorView(
-                          message: _errorMessage!,
-                          onRetry: _load,
-                        );
-                      }
-                      final user = _user!;
-                      final displayName = user.fullName.trim().isNotEmpty
-                          ? user.fullName
-                          : user.username;
+              ),
+            ),
+            Expanded(
+              child: Builder(
+                builder: (context) {
+                  if (_isLoading) return const _ProfileSkeletonView();
+                  if (_errorMessage != null) {
+                    return _ProfileErrorView(
+                      message: _errorMessage!,
+                      onRetry: _load,
+                    );
+                  }
+                  final user = _user!;
+                  final displayName = user.fullName.trim().isNotEmpty
+                      ? user.fullName
+                      : user.username;
 
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.pageHorizontal,
-                          AppSpacing.xl,
-                          AppSpacing.pageHorizontal,
-                          AppSpacing.navBarClearance,
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageHorizontal,
+                      AppSpacing.xl,
+                      AppSpacing.pageHorizontal,
+                      AppSpacing.navBarClearance,
+                    ),
+                    child: Column(
+                      children: [
+                        AppAvatar(
+                          name: displayName,
+                          imageUrl: user.profilePhoto,
+                          size: 84,
                         ),
-                        child: Column(
+                        const SizedBox(height: 12),
+                        Text(
+                          displayName,
+                          style: AppTypography.heading3,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '@${user.username}',
+                          style: AppTypography.bodySmall,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        const SizedBox(height: 28),
+                        _ProfileSection(
+                          title: 'Account',
                           children: [
-                            AppAvatar(
-                              name: displayName,
-                              imageUrl: user.profilePhoto,
-                              size: 84,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              displayName,
-                              style: AppTypography.heading3,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '@${user.username}',
-                              style: AppTypography.bodySmall,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                            const SizedBox(height: 28),
-                            _ProfileSection(
-                              title: 'Account',
-                              children: [
-                                _ProfileMenuRow(
-                                  icon: Icons.person_outline_rounded,
-                                  label: 'Profile',
-                                  onTap: () =>
-                                      context.push(RouteNames.userProfileEdit),
-                                ),
-                                _ProfileMenuRow(
-                                  icon: Icons.lock_outline_rounded,
-                                  label: 'Change Password',
-                                  onTap: () => context.push(
-                                    RouteNames.userChangePassword,
-                                  ),
-                                ),
-                                _ProfileMenuRow(
-                                  icon: Icons.delete_outline_rounded,
-                                  label: 'Delete Account',
-                                  onTap: () => context.push(
-                                    RouteNames.userDeleteAccount,
-                                  ),
-                                  isLast: true,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            _ProfileSection(
-                              title: 'Wallet',
-                              children: [
-                                _ProfileMenuRow(
-                                  icon: Icons.monetization_on_outlined,
-                                  label: 'Credits Balance',
-                                  trailingText: '$balance',
-                                  onTap: () =>
-                                      context.push(RouteNames.userCredits),
-                                ),
-                                _ProfileMenuRow(
-                                  icon: Icons.add_card_outlined,
-                                  label: 'Buy Credits',
-                                  onTap: () =>
-                                      context.push(RouteNames.userBuyCredits),
-                                ),
-                                _ProfileMenuRow(
-                                  icon: Icons.receipt_long_outlined,
-                                  label: 'Credits History',
-                                  onTap: () => context.push(
-                                    RouteNames.userCreditsHistory,
-                                  ),
-                                  isLast: true,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            _ProfileSection(
-                              title: 'Activity',
-                              children: [
-                                _ProfileMenuRow(
-                                  icon: Icons.history_rounded,
-                                  label: 'Service/Job History',
-                                  onTap: () =>
-                                      context.push(RouteNames.serviceHistory),
-                                  isLast: true,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            _ProfileSection(
-                              title: 'Preferences',
-                              children: [
-                                _ProfileMenuRow(
-                                  icon: Icons.notifications_outlined,
-                                  label: 'Notification Settings',
-                                  onTap: () => context.push(
-                                    RouteNames.userNotificationSettings,
-                                  ),
-                                ),
-                                _ProfileMenuRow(
-                                  icon: Icons.language_outlined,
-                                  label: 'Language',
-                                  onTap: () =>
-                                      context.push(RouteNames.userLanguage),
-                                ),
-                                _ProfileMenuRow(
-                                  icon: Icons.palette_outlined,
-                                  label: 'Appearance',
-                                  onTap: () =>
-                                      context.push(RouteNames.userAppearance),
-                                ),
-                                _ProfileMenuRow(
-                                  icon: Icons.privacy_tip_outlined,
-                                  label: 'Privacy',
-                                  onTap: () =>
-                                      context.push(RouteNames.userPrivacy),
-                                  isLast: true,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            _ProfileSection(
-                              title: 'Support',
-                              children: [
-                                _ProfileMenuRow(
-                                  icon: Icons.help_outline_rounded,
-                                  label: AppStrings.drawerHelp,
-                                  onTap: () =>
-                                      context.push(RouteNames.userHelpSupport),
-                                  isLast: true,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
                             _ProfileMenuRow(
-                              icon: Icons.logout_rounded,
-                              label: AppStrings.drawerLogOut,
-                              onTap: _signOut,
-                              isDestructive: true,
+                              icon: Icons.person_outline_rounded,
+                              label: 'Profile',
+                              onTap: () =>
+                                  context.push(RouteNames.userProfileEdit),
+                            ),
+                            _ProfileMenuRow(
+                              icon: Icons.lock_outline_rounded,
+                              label: 'Change Password',
+                              onTap: () =>
+                                  context.push(RouteNames.userChangePassword),
+                            ),
+                            _ProfileMenuRow(
+                              icon: Icons.delete_outline_rounded,
+                              label: 'Delete Account',
+                              onTap: () =>
+                                  context.push(RouteNames.userDeleteAccount),
                               isLast: true,
                             ),
                           ],
                         ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+                        const SizedBox(height: 20),
+                        _ProfileSection(
+                          title: 'Wallet',
+                          children: [
+                            _ProfileMenuRow(
+                              icon: Icons.monetization_on_outlined,
+                              label: 'Credits Balance',
+                              trailingText: '$balance',
+                              onTap: () => context.push(RouteNames.userCredits),
+                            ),
+                            _ProfileMenuRow(
+                              icon: Icons.add_card_outlined,
+                              label: 'Buy Credits',
+                              onTap: () =>
+                                  context.push(RouteNames.userBuyCredits),
+                            ),
+                            _ProfileMenuRow(
+                              icon: Icons.receipt_long_outlined,
+                              label: 'Credits History',
+                              onTap: () =>
+                                  context.push(RouteNames.userCreditsHistory),
+                              isLast: true,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _ProfileSection(
+                          title: 'Activity',
+                          children: [
+                            _ProfileMenuRow(
+                              icon: Icons.history_rounded,
+                              label: 'Service/Job History',
+                              onTap: () =>
+                                  context.push(RouteNames.serviceHistory),
+                              isLast: true,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _ProfileSection(
+                          title: 'Preferences',
+                          children: [
+                            _ProfileMenuRow(
+                              icon: Icons.notifications_outlined,
+                              label: 'Notification Settings',
+                              onTap: () => context.push(
+                                RouteNames.userNotificationSettings,
+                              ),
+                            ),
+                            _ProfileMenuRow(
+                              icon: Icons.language_outlined,
+                              label: 'Language',
+                              onTap: () =>
+                                  context.push(RouteNames.userLanguage),
+                            ),
+                            _ProfileMenuRow(
+                              icon: Icons.palette_outlined,
+                              label: 'Appearance',
+                              onTap: () =>
+                                  context.push(RouteNames.userAppearance),
+                            ),
+                            _ProfileMenuRow(
+                              icon: Icons.privacy_tip_outlined,
+                              label: 'Privacy',
+                              onTap: () => context.push(RouteNames.userPrivacy),
+                              isLast: true,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _ProfileSection(
+                          title: 'Support',
+                          children: [
+                            _ProfileMenuRow(
+                              icon: Icons.help_outline_rounded,
+                              label: AppStrings.drawerHelp,
+                              onTap: () =>
+                                  context.push(RouteNames.userHelpSupport),
+                              isLast: true,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        _ProfileMenuRow(
+                          icon: Icons.logout_rounded,
+                          label: AppStrings.drawerLogOut,
+                          onTap: _signOut,
+                          isDestructive: true,
+                          isLast: true,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -429,7 +418,7 @@ class _ProfileMenuRow extends StatelessWidget {
               const SizedBox(width: 6),
             ],
             if (!isDestructive)
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.textDisabled,
                 size: 18,
@@ -442,7 +431,7 @@ class _ProfileMenuRow extends StatelessWidget {
     return Column(
       children: [
         row,
-        const Divider(height: 1, color: AppColors.borderSubtle),
+        Divider(height: 1, color: AppColors.borderSubtle),
       ],
     );
   }
@@ -487,7 +476,7 @@ class _ProfileErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline_rounded,
               color: AppColors.textMuted,
               size: 32,

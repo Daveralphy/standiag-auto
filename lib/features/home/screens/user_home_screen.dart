@@ -10,7 +10,6 @@ import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/mini_mechanic_card.dart';
-import '../../../shared/widget/app_screen_backdrop.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../jobs/models/job_model.dart';
@@ -31,7 +30,7 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = ref.read(currentUserIdProvider);
       if (userId == null) return;
@@ -65,163 +64,156 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          const AppScreenBackdrop(),
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppScreenHeader(
-                  showGreeting: true,
-                  subtitle: _greeting(),
-                  trailingIcon: Icons.notifications_outlined,
-                  onTrailingTap: () =>
-                      context.push(RouteNames.userNotifications),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppScreenHeader(
+              showGreeting: true,
+              subtitle: _greeting(),
+              trailingIcon: Icons.notifications_outlined,
+              onTrailingTap: () => context.push(RouteNames.userNotifications),
+            ),
+            const SizedBox(height: 20),
+
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(
+                  bottom: AppSpacing.navBarClearance,
                 ),
-                const SizedBox(height: 20),
-
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.only(
-                      bottom: AppSpacing.navBarClearance,
+                children: [
+                  // ─── Vehicle card ────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageHorizontal,
                     ),
-                    children: [
-                      // ─── Vehicle card ────────────────────────────────
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.pageHorizontal,
-                        ),
-                        child: vehicle == null
-                            ? _NoVehicleCard(
-                                onAddVehicle: () =>
-                                    context.push(RouteNames.addVehicle),
-                              )
-                            : _VehicleCard(vehicle: vehicle),
-                      ),
-                      const SizedBox(height: 24),
+                    child: vehicle == null
+                        ? _NoVehicleCard(
+                            onAddVehicle: () =>
+                                context.push(RouteNames.addVehicle),
+                          )
+                        : _VehicleCard(vehicle: vehicle),
+                  ),
+                  const SizedBox(height: 24),
 
-                      // ─── Quick Actions ───────────────────────────────
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppSpacing.pageHorizontal,
+                  // ─── Quick Actions ───────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageHorizontal,
+                    ),
+                    child: Text(
+                      'Quick Actions',
+                      style: AppTypography.heading3,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageHorizontal,
+                    ),
+                    child: Row(
+                      children: [
+                        _QuickAction(
+                          icon: Icons.history_rounded,
+                          label: 'Service History',
+                          sublabel: serviceCount == 0
+                              ? 'No records'
+                              : '$serviceCount record${serviceCount == 1 ? '' : 's'}',
+                          onTap: () => context.go(RouteNames.serviceHistory),
                         ),
-                        child: Text(
-                          'Quick Actions',
-                          style: AppTypography.heading3,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+                        const SizedBox(width: 10),
+                        _QuickAction(
+                          icon: Icons.calendar_today_outlined,
+                          label: 'Book Service',
+                          sublabel: 'Schedule',
+                          onTap: () => context.go(RouteNames.myJobs),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.pageHorizontal,
-                        ),
-                        child: Row(
-                          children: [
-                            _QuickAction(
-                              icon: Icons.history_rounded,
-                              label: 'Service History',
-                              sublabel: serviceCount == 0
-                                  ? 'No records'
-                                  : '$serviceCount record${serviceCount == 1 ? '' : 's'}',
-                              onTap: () =>
-                                  context.go(RouteNames.serviceHistory),
-                            ),
-                            const SizedBox(width: 10),
-                            _QuickAction(
-                              icon: Icons.calendar_today_outlined,
-                              label: 'Book Service',
-                              sublabel: 'Schedule',
-                              onTap: () => context.go(RouteNames.myJobs),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
-                      // ─── Nearby Mechanics ────────────────────────────
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.pageHorizontal,
+                  // ─── Nearby Mechanics ────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageHorizontal,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Nearby Mechanics',
+                            style: AppTypography.heading3,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         ),
-                        child: Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                'Nearby Mechanics',
-                                style: AppTypography.heading3,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context.go(RouteNames.userMechanics),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'See all',
-                                    style: AppTypography.bodySmall.copyWith(
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 2),
-                                  const Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 14,
-                                    color: AppColors.primary,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.pageHorizontal,
-                        ),
-                        child: mechanicsAsync.when(
-                          data: (mechanics) {
-                            if (mechanics.isEmpty) {
-                              return const Text(
-                                'No mechanics available nearby.',
-                                style: AppTypography.body,
-                              );
-                            }
-                            final preview = mechanics.take(3).toList();
-                            return Column(
-                              children: [
-                                for (int i = 0; i < preview.length; i++) ...[
-                                  if (i > 0) const SizedBox(height: 10),
-                                  MiniMechanicCard(entry: preview[i]),
-                                ],
-                              ],
-                            );
-                          },
-                          loading: () => const Column(
+                        GestureDetector(
+                          onTap: () => context.go(RouteNames.userMechanics),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              MiniMechanicCardSkeleton(),
-                              SizedBox(height: 10),
-                              MiniMechanicCardSkeleton(),
-                              SizedBox(height: 10),
-                              MiniMechanicCardSkeleton(),
+                              Text(
+                                'See all',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 14,
+                                color: AppColors.primary,
+                              ),
                             ],
                           ),
-                          error: (_, __) => const SizedBox.shrink(),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 14),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageHorizontal,
+                    ),
+                    child: mechanicsAsync.when(
+                      data: (mechanics) {
+                        if (mechanics.isEmpty) {
+                          return Text(
+                            'No mechanics available nearby.',
+                            style: AppTypography.body,
+                          );
+                        }
+                        final preview = mechanics.take(3).toList();
+                        return Column(
+                          children: [
+                            for (int i = 0; i < preview.length; i++) ...[
+                              if (i > 0) const SizedBox(height: 10),
+                              MiniMechanicCard(entry: preview[i]),
+                            ],
+                          ],
+                        );
+                      },
+                      loading: () => const Column(
+                        children: [
+                          MiniMechanicCardSkeleton(),
+                          SizedBox(height: 10),
+                          MiniMechanicCardSkeleton(),
+                          SizedBox(height: 10),
+                          MiniMechanicCardSkeleton(),
+                        ],
+                      ),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -291,14 +283,14 @@ class _NoVehicleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'No vehicle added yet',
             style: AppTypography.heading3,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Add your car to start diagnosing it with OBD.',
             style: AppTypography.body,
           ),

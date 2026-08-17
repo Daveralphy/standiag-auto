@@ -39,16 +39,16 @@ class OnboardingPage extends StatelessWidget {
               ),
               // Gradient fade into dark background
               Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Color(0x80000000),
+                      AppColors.background.withValues(alpha: 0.5),
                       AppColors.background,
                     ],
-                    stops: [0.4, 0.7, 1.0],
+                    stops: const [0.4, 0.7, 1.0],
                   ),
                 ),
               ),

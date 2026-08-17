@@ -83,7 +83,7 @@ class _HealthGaugePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFF1A1A1A);
+      ..color = AppColors.surface;
     canvas.drawArc(rect, startAngle, totalSweep, false, track);
 
     // Tick labels (0 / 5 / 10) along the arc, always shown — this is what
@@ -100,10 +100,10 @@ class _HealthGaugePainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: tick.label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Inter',
             fontSize: 9,
-            color: Color(0x33FFFFFF),
+            color: AppColors.textDisabled,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -121,7 +121,7 @@ class _HealthGaugePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         colors: [AppColors.success, AppColors.warning, AppColors.primary],
       ).createShader(rect);
     canvas.drawArc(rect, startAngle, totalSweep * fraction!, false, progress);
@@ -138,7 +138,7 @@ class _HealthGaugePainter extends CustomPainter {
       ..color = AppColors.primary;
     canvas.drawLine(center, needleEnd, needlePaint);
 
-    canvas.drawCircle(center, 8, Paint()..color = const Color(0xFF141414));
+    canvas.drawCircle(center, 8, Paint()..color = AppColors.background);
     canvas.drawCircle(
       center,
       8,
@@ -150,9 +150,12 @@ class _HealthGaugePainter extends CustomPainter {
     canvas.drawCircle(center, 3.5, Paint()..color = AppColors.primary);
   }
 
+  // Always true, not just on fraction change — this paints several
+  // AppColors.xxx values directly, which change when the theme toggles even
+  // though fraction doesn't, and shouldRepaint has no way to see that
+  // without repainting unconditionally.
   @override
-  bool shouldRepaint(covariant _HealthGaugePainter oldDelegate) =>
-      oldDelegate.fraction != fraction;
+  bool shouldRepaint(covariant _HealthGaugePainter oldDelegate) => true;
 }
 
 /// Status pill showing whether an OBD-II Bluetooth adapter is connected.
@@ -178,9 +181,9 @@ class ObdStatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0x0AFFFFFF),
+        color: AppColors.borderSubtle,
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: const Color(0x14FFFFFF)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

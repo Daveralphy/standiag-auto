@@ -67,7 +67,7 @@ class _MechanicDrawerScreenState extends ConsumerState<MechanicDrawerScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(displayName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
@@ -77,7 +77,7 @@ class _MechanicDrawerScreenState extends ConsumerState<MechanicDrawerScreen> {
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                         const SizedBox(height: 3),
                         Text(email.isNotEmpty ? email : '@mechanic',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -89,13 +89,13 @@ class _MechanicDrawerScreenState extends ConsumerState<MechanicDrawerScreen> {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(Icons.close_rounded,
+                    child: Icon(Icons.close_rounded,
                         color: AppColors.textMuted, size: 24),
                   ),
                 ],
               ),
             ),
-            const Divider(color: AppColors.borderSubtle),
+            Divider(color: AppColors.borderSubtle),
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,

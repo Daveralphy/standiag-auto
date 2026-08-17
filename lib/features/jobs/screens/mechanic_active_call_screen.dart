@@ -1,5 +1,7 @@
 // Mechanic Active Call screen — mechanic is on call with user.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,9 +9,12 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
+import '../../../core/services/call_engine_service.dart';
 import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
+import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../providers/job_provider.dart';
 
@@ -24,21 +29,73 @@ class MechanicActiveCallScreen extends ConsumerStatefulWidget {
 
 class _MechanicActiveCallScreenState
     extends ConsumerState<MechanicActiveCallScreen> {
+  final CallEngineService _callEngine = CallEngineService();
   bool _isMuted = false;
   bool _isSpeaker = false;
+  bool _connected = false;
+  bool _isEnding = false;
   int _seconds = 0;
+  Timer? _durationTimer;
 
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return false;
+    _joinCall();
+  }
+
+  @override
+  void dispose() {
+    _durationTimer?.cancel();
+    _callEngine.leave();
+    super.dispose();
+  }
+
+  Future<void> _joinCall() async {
+    try {
+      await _callEngine.join(
+        channelId: widget.jobId,
+        onRemoteJoined: () {
+          if (!mounted || _connected) return;
+          setState(() => _connected = true);
+          _startDurationTimer();
+        },
+        onRemoteLeft: () {
+          if (mounted) _endCall();
+        },
+      );
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      AppErrorToast.showMessage(context, _callErrorMessage(error, stackTrace));
+    }
+  }
+
+  void _startDurationTimer() {
+    _durationTimer?.cancel();
+    _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
       setState(() => _seconds++);
-      return true;
     });
+  }
+
+  String _callErrorMessage(Object error, StackTrace stackTrace) {
+    if (error is StateError && error.message == 'agora-not-configured') {
+      return "Calling isn't set up yet — add your Agora App ID in agora_config.dart.";
+    }
+    if (error is StateError && error.message == 'microphone-permission-denied') {
+      return 'Microphone permission is required to make calls.';
+    }
+    return ErrorHandler.handle(error, stackTrace).message;
+  }
+
+  Future<void> _endCall() async {
+    if (_isEnding) return;
+    _isEnding = true;
+    _durationTimer?.cancel();
+    await _callEngine.leave();
+    if (!mounted) return;
+    context.go(RouteNames.mechanicPostCall, extra: widget.jobId);
   }
 
   String get _duration {
@@ -62,8 +119,8 @@ class _MechanicActiveCallScreenState
       body: SafeArea(
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal, AppSpacing.md,
                   AppSpacing.pageHorizontal, 0),
               child: Text('StanDiag Call',
@@ -80,7 +137,7 @@ class _MechanicActiveCallScreenState
                       style: AppTypography.heading1,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
-                  Text(_duration,
+                  Text(_connected ? _duration : 'Connecting…',
                       style: AppTypography.body.copyWith(
                           color: AppColors.success),
                       overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -97,19 +154,21 @@ class _MechanicActiveCallScreenState
                   _CallBtn(
                     icon: _isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
                     label: 'Mute',
-                    onTap: () => setState(() => _isMuted = !_isMuted),
+                    onTap: () {
+                      setState(() => _isMuted = !_isMuted);
+                      _callEngine.setMuted(_isMuted);
+                    },
                     isActive: _isMuted,
                   ),
                   GestureDetector(
-                    onTap: () => context.go(RouteNames.mechanicPostCall,
-                        extra: widget.jobId),
+                    onTap: _endCall,
                     child: Container(
                       width: 64, height: 64,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(color: Color(0x66E8281E), blurRadius: 20),
+                          const BoxShadow(color: Color(0x66E8281E), blurRadius: 20),
                         ],
                       ),
                       child: const Icon(Icons.call_end_rounded,
@@ -119,7 +178,10 @@ class _MechanicActiveCallScreenState
                   _CallBtn(
                     icon: Icons.volume_up_rounded,
                     label: 'Speaker',
-                    onTap: () => setState(() => _isSpeaker = !_isSpeaker),
+                    onTap: () {
+                      setState(() => _isSpeaker = !_isSpeaker);
+                      _callEngine.setSpeakerphoneOn(_isSpeaker);
+                    },
                     isActive: _isSpeaker,
                   ),
                 ],
@@ -149,7 +211,7 @@ class _CallBtn extends StatelessWidget {
           Container(
             width: 52, height: 52,
             decoration: BoxDecoration(
-              color: isActive ? AppColors.primarySubtle : const Color(0x12FFFFFF),
+              color: isActive ? AppColors.primarySubtle : AppColors.border,
               shape: BoxShape.circle,
               border: Border.all(
                   color: isActive ? AppColors.primary : AppColors.border),

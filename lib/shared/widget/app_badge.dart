@@ -23,7 +23,7 @@ class ExpertiseTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF), // 5% white
+        color: AppColors.borderSubtle, // 5% white
         borderRadius: BorderRadius.circular(AppRadius.full),
         border: Border.all(color: AppColors.border),
       ),
@@ -141,11 +141,11 @@ class NotificationDot extends StatelessWidget {
     return Container(
       width: 7,
       height: 7,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.primary,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
+          const BoxShadow(
             color: Color(0x66E8281E),
             blurRadius: 6,
           ),
@@ -191,17 +191,18 @@ class RatingStars extends StatelessWidget {
   final double starSize;
 
   /// Color of filled stars. Defaults to amber.
-  final Color filledColor;
+  final Color? filledColor;
 
   const RatingStars({
     super.key,
     required this.rating,
     this.starSize = 14,
-    this.filledColor = AppColors.amber,
+    this.filledColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final Color resolvedFilledColor = filledColor ?? AppColors.amber;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(5, (index) {
@@ -211,10 +212,10 @@ class RatingStars extends StatelessWidget {
 
         if (value >= 1) {
           icon = Icons.star_rounded;
-          color = filledColor;
+          color = resolvedFilledColor;
         } else if (value >= 0.5) {
           icon = Icons.star_half_rounded;
-          color = filledColor;
+          color = resolvedFilledColor;
         } else {
           icon = Icons.star_outline_rounded;
           color = AppColors.textDisabled;

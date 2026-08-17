@@ -39,13 +39,16 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   Future<void> fetch(String userId) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      // Sorted client-side rather than via .orderBy() — combining a
+      // where-equality filter with an order-by on a different field needs a
+      // composite Firestore index, and notification counts per user are
+      // small enough that sorting here costs nothing.
       final query = await FirebaseFirestore.instance
           .collection('notifications')
           .where('userId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
           .get();
-      final notifications =
-          query.docs.map(NotificationModel.fromFirestore).toList();
+      final notifications = query.docs.map(NotificationModel.fromFirestore).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       state = state.copyWith(isLoading: false, notifications: notifications);
     } catch (e, stackTrace) {
       state = state.copyWith(

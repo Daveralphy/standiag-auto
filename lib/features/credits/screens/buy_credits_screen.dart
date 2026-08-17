@@ -39,7 +39,7 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     final userId = ref.read(currentUserIdProvider);
     if (userId != null) {
       ref.read(creditsProvider.notifier).fetchBalance(userId);
@@ -87,14 +87,14 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.buyCreditsTitle,
+                Expanded(child: Text(AppStrings.buyCreditsTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -119,7 +119,7 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
                         Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(AppStrings.creditsBalance,
+                            Text(AppStrings.creditsBalance,
                                 style: AppTypography.caption,
                                 overflow: TextOverflow.ellipsis, maxLines: 1),
                             const SizedBox(height: 4),

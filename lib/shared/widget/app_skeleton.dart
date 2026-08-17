@@ -73,6 +73,13 @@ class _AppSkeletonState extends State<AppSkeleton>
 
   @override
   Widget build(BuildContext context) {
+    // Two opaque, clearly-distinct-but-still-subtle grays for the shimmer
+    // sweep — AppColors' own surface tokens are too close to each other in
+    // light mode (surface/surfaceElevated are both near-white) to read as a
+    // visible shimmer, so this picks its own pair per brightness instead.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? const Color(0xFF1A1A1A) : const Color(0xFFEDEDEE);
+    final highlight = isDark ? const Color(0xFF222222) : const Color(0xFFF7F7F8);
     return Container(
       width: widget.width,
       height: widget.height,
@@ -89,11 +96,7 @@ class _AppSkeletonState extends State<AppSkeleton>
               gradient: LinearGradient(
                 begin: Alignment(_animation.value - 1, 0),
                 end: Alignment(_animation.value, 0),
-                colors: const [
-                  Color(0xFF1A1A1A),
-                  Color(0xFF222222),
-                  Color(0xFF1A1A1A),
-                ],
+                colors: [base, highlight, base],
               ),
             ),
           );

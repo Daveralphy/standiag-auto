@@ -27,7 +27,7 @@ class _MyVehiclesScreenState extends ConsumerState<MyVehiclesScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) return;
@@ -65,14 +65,14 @@ class _MyVehiclesScreenState extends ConsumerState<MyVehiclesScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.vehiclesTitle,
+                Expanded(child: Text(AppStrings.vehiclesTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
                 GestureDetector(
@@ -87,7 +87,7 @@ class _MyVehiclesScreenState extends ConsumerState<MyVehiclesScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.add_rounded,
+                        Icon(Icons.add_rounded,
                             size: 14, color: AppColors.primary),
                         const SizedBox(width: 4),
                         Text(AppStrings.vehiclesAdd,
@@ -118,13 +118,13 @@ class _MyVehiclesScreenState extends ConsumerState<MyVehiclesScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.directions_car_outlined,
-                                    color: Color(0x33FFFFFF), size: 48),
+                                Icon(Icons.directions_car_outlined,
+                                    color: AppColors.textDisabled, size: 48),
                                 const SizedBox(height: 16),
-                                const Text('No vehicles yet',
+                                Text('No vehicles yet',
                                     style: AppTypography.heading3),
                                 const SizedBox(height: 8),
-                                const Text(
+                                Text(
                                     'Add your first vehicle to start diagnosing it with OBD.',
                                     style: AppTypography.body,
                                     textAlign: TextAlign.center),
@@ -240,7 +240,7 @@ class _VehicleCard extends StatelessWidget {
           ),
           GestureDetector(
             onTap: onEdit,
-            child: const Icon(Icons.edit_outlined,
+            child: Icon(Icons.edit_outlined,
                 color: AppColors.textMuted, size: 16),
           ),
         ],

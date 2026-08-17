@@ -38,6 +38,7 @@ import '../../features/jobs/screens/user_mechanic_arrived_screen.dart';
 import '../../features/jobs/screens/user_rate_mechanic_screen.dart';
 import '../../features/jobs/screens/user_tracking_screen.dart';
 import '../../features/mechanics/screens/in_app_call_screen.dart';
+import '../../features/mechanics/screens/outgoing_call_screen.dart';
 import '../../features/mechanics/screens/mechanic_candidate_profile_screen.dart';
 import '../../features/profile/screens/mechanic_profile_screen.dart';
 import '../../features/mechanics/screens/searching_mechanic_screen.dart';
@@ -306,6 +307,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: RouteNames.sendQuote,
         builder: (_, state) =>
             SendQuoteScreen(requestId: state.extra as String? ?? ''),
+      ),
+      GoRoute(
+        path: RouteNames.outgoingCall,
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? const {};
+          return OutgoingCallScreen(
+            jobId: extra['jobId'] as String? ?? '',
+            mechanicId: extra['mechanicId'] as String? ?? '',
+          );
+        },
       ),
       GoRoute(
         path: RouteNames.inAppCall,

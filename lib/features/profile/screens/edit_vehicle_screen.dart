@@ -51,7 +51,7 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   @override
@@ -157,25 +157,25 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text(
+        title: Text(
           'Remove this vehicle?',
           style: AppTypography.heading4,
         ),
-        content: const Text(
+        content: Text(
           'This can\'t be undone. You can add it again later if needed.',
           style: AppTypography.body,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppColors.textMuted),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(
+            child: Text(
               'Remove',
               style: TextStyle(color: AppColors.primary),
             ),
@@ -211,11 +211,11 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Vehicle not found', style: AppTypography.heading3),
+                Text('Vehicle not found', style: AppTypography.heading3),
                 const SizedBox(height: 12),
                 GestureDetector(
                   onTap: () => context.pop(),
-                  child: const Text(
+                  child: Text(
                     'Go back',
                     style: TextStyle(color: AppColors.primary),
                   ),
@@ -249,11 +249,11 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
                       width: 30,
                       height: 30,
                       decoration: BoxDecoration(
-                        color: const Color(0x12FFFFFF),
+                        color: AppColors.border,
                         borderRadius: BorderRadius.circular(AppRadius.full),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_ios_new_rounded,
                         size: 14,
                         color: AppColors.textPrimary,
@@ -261,7 +261,7 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Edit Vehicle',
                       style: AppTypography.heading3,
@@ -272,7 +272,7 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
                   GestureDetector(
                     onTap: _isDeleting ? null : _delete,
                     child: _isDeleting
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
@@ -280,7 +280,7 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
                               color: AppColors.primary,
                             ),
                           )
-                        : const Icon(
+                        : Icon(
                             Icons.delete_outline_rounded,
                             size: 20,
                             color: AppColors.primary,
@@ -306,57 +306,84 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
                       onTap: _isUploadingPhoto ? null : _pickPhoto,
                     ),
                     const SizedBox(height: 16),
-                    AppAutocompleteField(
-                      label: AppStrings.vehicleFieldMake,
-                      hint: AppStrings.vehicleHintMake,
-                      controller: _makeController,
-                      suggestionsBuilder: VehicleReferenceData.makes,
-                    ),
-                    const SizedBox(height: 16),
-                    AppAutocompleteField(
-                      label: AppStrings.vehicleFieldModel,
-                      hint: AppStrings.vehicleHintModel,
-                      controller: _modelController,
-                      suggestionsBuilder: (query) =>
-                          VehicleReferenceData.modelsFor(
-                            _makeController.text,
-                            query,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: AppAutocompleteField(
+                            label: AppStrings.vehicleFieldMake,
+                            hint: AppStrings.vehicleHintMake,
+                            controller: _makeController,
+                            suggestionsBuilder: VehicleReferenceData.makes,
                           ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppAutocompleteField(
+                            label: AppStrings.vehicleFieldModel,
+                            hint: AppStrings.vehicleHintModel,
+                            controller: _modelController,
+                            suggestionsBuilder: (query) =>
+                                VehicleReferenceData.modelsFor(
+                                  _makeController.text,
+                                  query,
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
-                    AppTextField(
-                      label: AppStrings.vehicleFieldYear,
-                      hint: AppStrings.vehicleHintYear,
-                      controller: _yearController,
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.next,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: AppTextField(
+                            label: AppStrings.vehicleFieldYear,
+                            hint: AppStrings.vehicleHintYear,
+                            controller: _yearController,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppTextField(
+                            label: AppStrings.vehicleFieldType,
+                            hint: AppStrings.vehicleHintType,
+                            controller: _typeController,
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
-                    AppTextField(
-                      label: AppStrings.vehicleFieldType,
-                      hint: AppStrings.vehicleHintType,
-                      controller: _typeController,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      label: AppStrings.vehicleFieldColour,
-                      hint: AppStrings.vehicleHintColour,
-                      controller: _colourController,
-                      textInputAction: TextInputAction.next,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: AppTextField(
+                            label: AppStrings.vehicleFieldColour,
+                            hint: AppStrings.vehicleHintColour,
+                            controller: _colourController,
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppTextField(
+                            label: AppStrings.vehicleFieldFuel,
+                            hint: AppStrings.vehicleHintFuel,
+                            controller: _fuelController,
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     AppTextField(
                       label: AppStrings.vehicleFieldPlate,
                       hint: AppStrings.vehicleHintPlate,
                       controller: _plateController,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      label: AppStrings.vehicleFieldFuel,
-                      hint: AppStrings.vehicleHintFuel,
-                      controller: _fuelController,
                       textInputAction: TextInputAction.done,
                     ),
                     const SizedBox(height: 32),

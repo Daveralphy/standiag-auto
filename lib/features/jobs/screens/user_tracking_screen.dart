@@ -1,4 +1,4 @@
-﻿// Displays the live tracking map while the mechanic is en route.
+// Displays the live tracking map while the mechanic is en route.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,7 +30,7 @@ class _UserTrackingScreenState extends ConsumerState<UserTrackingScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
@@ -92,9 +92,9 @@ class _UserTrackingScreenState extends ConsumerState<UserTrackingScreen> {
               ),
             ),
           ),
-          const SafeArea(
+          SafeArea(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
+              padding: const EdgeInsets.fromLTRB(
                 AppSpacing.pageHorizontal,
                 AppSpacing.md,
                 AppSpacing.pageHorizontal,
@@ -121,7 +121,7 @@ class _UserTrackingScreenState extends ConsumerState<UserTrackingScreen> {
                       ],
                     ),
                   ),
-                  Icon(Icons.search_rounded, size: 16, color: Colors.white),
+                  Icon(Icons.search_rounded, size: 16, color: AppColors.textPrimary),
                 ],
               ),
             ),

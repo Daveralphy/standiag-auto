@@ -35,7 +35,7 @@ class _UserMechanicArrivedScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
@@ -83,10 +83,10 @@ class _UserMechanicArrivedScreenState
           ),
 
           Positioned(top: 0, left: 0, right: 0, height: 140,
-            child: Container(decoration: const BoxDecoration(
+            child: Container(decoration: BoxDecoration(
               gradient: LinearGradient(begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xF0060606), Colors.transparent])))),
+                  colors: [AppColors.background.withValues(alpha: 0.9), Colors.transparent])))),
 
           SafeArea(
             child: Padding(
@@ -98,7 +98,7 @@ class _UserMechanicArrivedScreenState
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Mechanic Arrived', style: AppTypography.heading3,
+                    Text('Mechanic Arrived', style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     Text("He's here", style: AppTypography.body.copyWith(
                         color: AppColors.success),
@@ -106,11 +106,11 @@ class _UserMechanicArrivedScreenState
                   ],
                 )),
                 Container(width: 32, height: 32,
-                  decoration: BoxDecoration(color: const Color(0xB3080808),
+                  decoration: BoxDecoration(color: AppColors.surfaceElevated.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(color: const Color(0x1FFFFFFF))),
-                  child: const Icon(Icons.search_rounded,
-                      size: 16, color: Colors.white)),
+                    border: Border.all(color: AppColors.borderActive)),
+                  child: Icon(Icons.search_rounded,
+                      size: 16, color: AppColors.textPrimary)),
               ]),
             ),
           ),
@@ -128,7 +128,7 @@ class _UserMechanicArrivedScreenState
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: const Color(0x334CAF50))),
                 child: Row(children: [
-                  const Icon(Icons.location_on_rounded,
+                  Icon(Icons.location_on_rounded,
                       color: AppColors.success, size: 18),
                   const SizedBox(width: 8),
                   Expanded(child: Column(
@@ -136,7 +136,7 @@ class _UserMechanicArrivedScreenState
                     children: [
                       Text('$mechanicName is here!', style: AppTypography.bodyLarge,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
-                      const Text('Ready to get started',
+                      Text('Ready to get started',
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
                     ],

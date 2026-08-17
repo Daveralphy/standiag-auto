@@ -53,6 +53,13 @@ class JobModel {
   final double? rating;
   final String? ratingComment;
 
+  /// When the mechanic tapped Accept on the incoming-call screen — distinct
+  /// from [acceptedAt], which marks the JOB being accepted (a separate,
+  /// later decision made on the post-call screen). The car owner's outgoing
+  /// call screen watches this to know when to stop ringing and join the
+  /// actual voice channel.
+  final DateTime? callAnsweredAt;
+
   const JobModel({
     required this.id,
     required this.carOwnerId,
@@ -67,6 +74,7 @@ class JobModel {
     this.completedAt,
     this.rating,
     this.ratingComment,
+    this.callAnsweredAt,
   });
 
   factory JobModel.fromFirestore(DocumentSnapshot doc) {
@@ -93,6 +101,9 @@ class JobModel {
           : null,
       rating: (data['rating'] as num?)?.toDouble(),
       ratingComment: data['ratingComment'],
+      callAnsweredAt: data['callAnsweredAt'] is Timestamp
+          ? (data['callAnsweredAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -110,11 +121,14 @@ class JobModel {
       if (completedAt != null) 'completedAt': Timestamp.fromDate(completedAt!),
       if (rating != null) 'rating': rating,
       if (ratingComment != null) 'ratingComment': ratingComment,
+      if (callAnsweredAt != null)
+        'callAnsweredAt': Timestamp.fromDate(callAnsweredAt!),
     };
   }
 
   JobModel copyWith({JobStatus? status, double? rating, String? ratingComment,
-      DateTime? acceptedAt, DateTime? completedAt, GeoPoint? mechanicLocation}) {
+      DateTime? acceptedAt, DateTime? completedAt, GeoPoint? mechanicLocation,
+      DateTime? callAnsweredAt}) {
     return JobModel(
       id: id,
       carOwnerId: carOwnerId,
@@ -129,6 +143,7 @@ class JobModel {
       completedAt: completedAt ?? this.completedAt,
       rating: rating ?? this.rating,
       ratingComment: ratingComment ?? this.ratingComment,
+      callAnsweredAt: callAnsweredAt ?? this.callAnsweredAt,
     );
   }
 }

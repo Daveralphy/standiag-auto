@@ -41,6 +41,7 @@ class RouteNames {
   // Mechanic search flow
   static const String mechanicProfile = '/user/mechanic-profile';
   static const String userSearchingMechanic = '/user/searching-mechanic';
+  static const String outgoingCall = '/user/outgoing-call';
   static const String inAppCall = '/user/in-app-call';
 
   // Job flow — user side

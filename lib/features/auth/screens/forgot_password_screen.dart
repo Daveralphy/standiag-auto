@@ -38,7 +38,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   @override
@@ -64,12 +64,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         _isLoading = false;
         _sent = true;
       });
-    } on StateError {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _emailError = 'No account found with that email';
-      });
     } catch (error, stackTrace) {
       if (!mounted) return;
       setState(() {
@@ -94,12 +88,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 child: Container(
                   width: 36, height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0x12FFFFFF),
+                    color: AppColors.border,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0x14FFFFFF)),
+                    border: Border.all(color: AppColors.border),
                   ),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 14, color: Colors.white),
+                  child: Icon(Icons.arrow_back_ios_new_rounded,
+                      size: 14, color: AppColors.textPrimary),
                 ),
               ),
               const SizedBox(height: 40),
@@ -118,20 +112,20 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           'Forgot your\npassword?',
           style: TextStyle(
             fontFamily: 'Inter', fontSize: 30,
-            fontWeight: FontWeight.w900, color: Colors.white,
+            fontWeight: FontWeight.w900, color: AppColors.textPrimary,
             height: 1.12, letterSpacing: -1,
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Enter the email on your account and we\'ll send you a link to reset your password.',
           style: TextStyle(
             fontFamily: 'Inter', fontSize: 15,
-            color: Color(0x99FFFFFF), height: 1.5,
+            color: AppColors.textSecondary, height: 1.5,
           ),
         ),
         const SizedBox(height: 28),
@@ -196,24 +190,24 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             borderRadius: BorderRadius.circular(AppRadius.xl),
             border: Border.all(color: AppColors.primaryBorder),
           ),
-          child: const Icon(Icons.mail_outline_rounded,
+          child: Icon(Icons.mail_outline_rounded,
               color: AppColors.primary, size: 26),
         ),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           'Check your email',
           style: TextStyle(
             fontFamily: 'Inter', fontSize: 26,
-            fontWeight: FontWeight.w900, color: Colors.white,
+            fontWeight: FontWeight.w900, color: AppColors.textPrimary,
             letterSpacing: -0.8,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           'We\'ve sent a password reset link to ${_emailController.text.trim()}. Open it to set a new password, then come back here and sign in.',
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Inter', fontSize: 15,
-            color: Color(0x99FFFFFF), height: 1.5,
+            color: AppColors.textSecondary, height: 1.5,
           ),
         ),
         const SizedBox(height: 28),
@@ -223,11 +217,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              color: const Color(0x0FFFFFFF),
+              color: AppColors.borderSubtle,
               borderRadius: BorderRadius.circular(AppRadius.full),
-              border: Border.all(color: const Color(0x17FFFFFF)),
+              border: Border.all(color: AppColors.borderActive),
             ),
-            child: const Center(
+            child: Center(
               child: Text('Back to Sign In',
                   style: AppTypography.button),
             ),

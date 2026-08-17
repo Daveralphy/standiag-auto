@@ -3,6 +3,11 @@
 // soon as the first frame lands — no artificial hold — since its only job
 // is to paint the brand mark while Flutter finishes initializing.
 // The OS status bar is styled light (white icons) via SystemUiStyle.
+//
+// Deliberately pinned to AppColors.dark rather than the current theme —
+// the logo art (assets/images/logo_icon.png) was only ever designed against
+// a dark background, so this screen always renders dark regardless of the
+// user's Appearance setting.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -24,7 +29,7 @@ class _SplashOneScreenState extends State<SplashOneScreen> {
   void initState() {
     super.initState();
 
-    // Apply white status bar icons — app background is dark
+    // Apply white status bar icons — this screen is always dark
     SystemUiStyle.applyDark();
 
     // Advance right after the first frame renders — just enough for the
@@ -37,7 +42,7 @@ class _SplashOneScreenState extends State<SplashOneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.dark.background,
       // No AppBar — full screen, status bar styled by SystemUiStyle
       body: SafeArea(
         // SafeArea keeps content below the status bar

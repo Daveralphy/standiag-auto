@@ -53,7 +53,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   @override
@@ -125,7 +125,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               decoration: BoxDecoration(
                                 color: active
                                     ? AppColors.primary
-                                    : const Color(0x38FFFFFF),
+                                    : AppColors.textDisabled,
                                 borderRadius:
                                     BorderRadius.circular(AppRadius.full),
                                 boxShadow: active
@@ -160,7 +160,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                   style: AppTypography.bodySmall.copyWith(
-                                    color: const Color(0x99FFFFFF),
+                                    color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w500,
                                     fontSize: 16,
                                   ),
@@ -185,11 +185,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       RichText(
                         textAlign: TextAlign.center,
                         text: TextSpan(
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 33,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                             height: 1.15,
                             letterSpacing: -1.4,
                           ),
@@ -197,7 +197,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             TextSpan(text: '${data.headline}\n'),
                             TextSpan(
                               text: data.accent,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: AppColors.primary),
                             ),
                           ],
@@ -209,11 +209,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       Text(
                         data.subline,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 16,
                           fontWeight: FontWeight.w400,
-                          color: Color(0x99FFFFFF),
+                          color: AppColors.textSecondary,
                           height: 1.55,
                           letterSpacing: -0.1,
                         ),
@@ -276,20 +276,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             padding: const EdgeInsets.only(top: 18),
                             child: RichText(
                               textAlign: TextAlign.center,
-                              text: const TextSpan(
+                              text: TextSpan(
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 15,
                                   fontWeight: FontWeight.w400,
-                                  color: Color(0x59FFFFFF),
+                                  color: AppColors.textTag,
                                   letterSpacing: -0.1,
                                 ),
                                 children: [
-                                  TextSpan(text: 'Have an account? '),
+                                  const TextSpan(text: 'Have an account? '),
                                   TextSpan(
                                     text: 'Sign in',
                                     style:
-                                        TextStyle(color: Colors.white),
+                                        TextStyle(color: AppColors.textPrimary),
                                   ),
                                 ],
                               ),
@@ -334,14 +334,14 @@ class _PhotoLayer extends StatelessWidget {
               ),
               // Bottom fade — blends the photo into the dark background.
               Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Color(0x73000000),
-                      Color(0xE0000000),
+                      const Color(0x73000000),
+                      const Color(0xE0000000),
                       AppColors.background,
                     ],
                     stops: [0.0, 0.35, 0.65, 1.0],

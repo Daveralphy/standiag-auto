@@ -138,6 +138,23 @@ class JobNotifier extends StateNotifier<JobState> {
     }
   }
 
+  /// Signals that the mechanic answered the incoming call — separate from
+  /// the job's own status, since accepting a *call* isn't the same as
+  /// accepting the *job* (that decision happens after the call, on the
+  /// post-call screen). The car owner's outgoing-call screen watches this
+  /// field on the same job doc to know when to stop ringing.
+  Future<void> markCallAnswered(String jobId) async {
+    try {
+      await FirebaseFirestore.instance.collection('jobs').doc(jobId).update({
+        'callAnsweredAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      state = state.copyWith(
+        error: ErrorHandler.handle(e, StackTrace.current).message,
+      );
+    }
+  }
+
   Future<void> updateStatus(String jobId, JobStatus status) async {
     try {
       await FirebaseFirestore.instance.collection('jobs').doc(jobId).update({

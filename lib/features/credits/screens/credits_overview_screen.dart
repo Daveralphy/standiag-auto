@@ -33,7 +33,7 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) return;
@@ -74,14 +74,14 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.creditsTitle,
+                Expanded(child: Text(AppStrings.creditsTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
                 // History icon
@@ -92,10 +92,10 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x0DFFFFFF),
+                      color: AppColors.borderSubtle,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.history_rounded,
+                    child: Icon(Icons.history_rounded,
                         size: 16, color: AppColors.textMuted)),
                 ),
               ]),
@@ -163,7 +163,7 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     const SizedBox(height: 10),
                     if (isMechanic)
-                      const Text(
+                      Text(
                           'Credits are earned and spent automatically as you take jobs.',
                           style: AppTypography.bodySmall,
                           overflow: TextOverflow.ellipsis, maxLines: 2)
@@ -191,8 +191,8 @@ class _CreditsOverviewScreenState extends ConsumerState<CreditsOverviewScreen> {
                         (_) => const TransactionRowSkeleton(),
                       )
                     else if (state.history.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Text('No credit activity yet.',
                             style: AppTypography.body),
                       )
@@ -227,7 +227,7 @@ class _CreditRule extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0x08FFFFFF),
+        color: AppColors.borderSubtle,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.borderSubtle)),
       child: Row(children: [

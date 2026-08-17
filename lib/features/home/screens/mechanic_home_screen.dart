@@ -41,7 +41,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final mechanicId = ref.read(currentUserIdProvider);
       if (mechanicId != null) {
@@ -108,7 +108,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                         const SizedBox(height: 24),
 
                         // ─── Pending section ──────────────────────────────
-                        const Text(
+                        Text(
                           'PENDING',
                           style: AppTypography.captionLarge,
                           overflow: TextOverflow.ellipsis,
@@ -123,7 +123,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                                 pendingJobsForMechanicProvider(mechanicId));
                             return requestsAsync.when(
                               data: (jobs) => jobs.isEmpty
-                                  ? const Text('No pending requests right now.',
+                                  ? Text('No pending requests right now.',
                                       style: AppTypography.body)
                                   : Column(
                                       children: [
@@ -141,7 +141,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                                   _JobTileSkeleton(),
                                 ],
                               ),
-                              error: (_, __) => const Text(
+                              error: (_, __) => Text(
                                   'Unable to load pending requests.',
                                   style: AppTypography.body),
                             );
@@ -150,7 +150,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
 
                         // ─── Nearby open requests — car owners who
                         // broadcast a search; quote to be considered ──────
-                        const Text(
+                        Text(
                           'NEARBY REQUESTS',
                           style: AppTypography.captionLarge,
                           overflow: TextOverflow.ellipsis,
@@ -165,7 +165,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                                 .watch(nearbyServiceRequestsProvider(mechanicId));
                             return requestsAsync.when(
                               data: (requests) => requests.isEmpty
-                                  ? const Text(
+                                  ? Text(
                                       'No one nearby is searching for a mechanic right now.',
                                       style: AppTypography.body)
                                   : Column(
@@ -183,7 +183,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                                   _JobTileSkeleton(),
                                 ],
                               ),
-                              error: (_, __) => const Text(
+                              error: (_, __) => Text(
                                   'Unable to load nearby requests.',
                                   style: AppTypography.body),
                             );
@@ -202,7 +202,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
+                                        Text(
                                           'ACTIVE',
                                           style: AppTypography.captionLarge,
                                           overflow: TextOverflow.ellipsis,
@@ -295,7 +295,7 @@ class _MechanicProfileCard extends ConsumerWidget {
               if (mechanic != null)
                 Row(
                   children: [
-                    const Icon(Icons.star_rounded,
+                    Icon(Icons.star_rounded,
                         color: AppColors.primary, size: 14),
                     const SizedBox(width: 3),
                     Text(mechanic.rating.toStringAsFixed(1),
@@ -308,7 +308,7 @@ class _MechanicProfileCard extends ConsumerWidget {
                 ),
               const SizedBox(height: 10),
               if (expertise.isEmpty)
-                const Text('No expertise added yet',
+                Text('No expertise added yet',
                     style: AppTypography.bodySmall)
               else
                 Wrap(
@@ -320,7 +320,7 @@ class _MechanicProfileCard extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: const Color(0x0DFFFFFF),
+                          color: AppColors.borderSubtle,
                           borderRadius: BorderRadius.circular(AppRadius.full),
                           border: Border.all(color: AppColors.border),
                         ),
@@ -411,7 +411,7 @@ class _PendingJobTile extends ConsumerWidget {
               child: Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: AppColors.primaryButtonGradient,
                   shape: BoxShape.circle,
                 ),
@@ -545,11 +545,11 @@ class _ActiveJobTile extends ConsumerWidget {
                   Container(
                     width: 7,
                     height: 7,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: AppColors.success,
                       boxShadow: [
-                        BoxShadow(color: Color(0xCC4CAF50), blurRadius: 6),
+                        const BoxShadow(color: Color(0xCC4CAF50), blurRadius: 6),
                       ],
                     ),
                   ),
@@ -575,7 +575,7 @@ class _ActiveJobTile extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                     border: Border.all(color: const Color(0x33E8281E)),
                   ),
-                  child: const Text('Close Job',
+                  child: Text('Close Job',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 14,
@@ -608,15 +608,15 @@ class _ProfileCardSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(width: 140, height: 16,
-              decoration: BoxDecoration(color: const Color(0x14FFFFFF),
+              decoration: BoxDecoration(color: AppColors.border,
                   borderRadius: BorderRadius.circular(4))),
           const SizedBox(height: 10),
           Container(width: 90, height: 12,
-              decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
+              decoration: BoxDecoration(color: AppColors.borderSubtle,
                   borderRadius: BorderRadius.circular(4))),
           const SizedBox(height: 16),
           Container(width: double.infinity, height: 44,
-              decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
+              decoration: BoxDecoration(color: AppColors.borderSubtle,
                   borderRadius: BorderRadius.circular(AppRadius.full))),
         ],
       ),
@@ -642,11 +642,11 @@ class _JobTileSkeleton extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(width: 120, height: 14,
-                    decoration: BoxDecoration(color: const Color(0x14FFFFFF),
+                    decoration: BoxDecoration(color: AppColors.border,
                         borderRadius: BorderRadius.circular(4))),
                 const SizedBox(height: 6),
                 Container(width: 80, height: 11,
-                    decoration: BoxDecoration(color: const Color(0x0AFFFFFF),
+                    decoration: BoxDecoration(color: AppColors.borderSubtle,
                         borderRadius: BorderRadius.circular(4))),
               ],
             ),

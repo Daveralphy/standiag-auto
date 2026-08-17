@@ -57,7 +57,7 @@ class _MechanicProfileEditScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     _load();
   }
 
@@ -211,19 +211,19 @@ class _MechanicProfileEditScreenState
                   child: Container(
                     width: 30, height: 30,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text('My Profile',
+                Expanded(child: Text('My Profile',
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
                 GestureDetector(
                   onTap: () => context.go(RouteNames.mechanicProfileView),
-                  child: const Text('Cancel',
+                  child: Text('Cancel',
                       style: TextStyle(
                         fontFamily: 'Inter', fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -234,7 +234,7 @@ class _MechanicProfileEditScreenState
             ),
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(
+                  ? Center(child: CircularProgressIndicator(
                       color: AppColors.primary, strokeWidth: 2))
                   : _errorMessage != null
                       ? Center(
@@ -243,7 +243,7 @@ class _MechanicProfileEditScreenState
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.error_outline_rounded,
+                                Icon(Icons.error_outline_rounded,
                                     color: AppColors.textMuted, size: 32),
                                 const SizedBox(height: 12),
                                 Text(_errorMessage!,
@@ -307,7 +307,7 @@ class _MechanicProfileEditScreenState
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              const Text('Change Photo',
+                              Text('Change Photo',
                                   style: TextStyle(
                                     fontFamily: 'Inter', fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -383,9 +383,9 @@ class _LockedField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Inter', fontSize: 11.5, fontWeight: FontWeight.w600,
-              color: Color(0x33FFFFFF),
+              color: AppColors.textDisabled,
             )),
         const SizedBox(height: 7),
         Container(
@@ -394,14 +394,14 @@ class _LockedField extends StatelessWidget {
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: const Color(0x05FFFFFF),
+            color: AppColors.borderSubtle,
             borderRadius: BorderRadius.circular(AppRadius.input),
-            border: Border.all(color: const Color(0x0DFFFFFF)),
+            border: Border.all(color: AppColors.borderSubtle),
           ),
           child: Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500,
-                color: Color(0x33FFFFFF),
+                color: AppColors.textDisabled,
               ),
               overflow: TextOverflow.ellipsis, maxLines: 1),
         ),

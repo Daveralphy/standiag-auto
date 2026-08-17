@@ -43,7 +43,7 @@ class _MechanicProfileOwnScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     _load();
   }
 
@@ -130,11 +130,11 @@ class _MechanicProfileOwnScreenState
                       width: 30,
                       height: 30,
                       decoration: BoxDecoration(
-                        color: const Color(0x12FFFFFF),
+                        color: AppColors.border,
                         borderRadius: BorderRadius.circular(AppRadius.full),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_ios_new_rounded,
                         size: 14,
                         color: AppColors.textPrimary,
@@ -142,7 +142,7 @@ class _MechanicProfileOwnScreenState
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'My Profile',
                       style: AppTypography.heading3,
@@ -156,14 +156,14 @@ class _MechanicProfileOwnScreenState
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: const Color(0x0FFFFFFF),
+                        color: AppColors.borderSubtle,
                         borderRadius: BorderRadius.circular(AppRadius.full),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.edit_outlined,
                         size: 15,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -214,7 +214,7 @@ class _MechanicProfileOwnScreenState
                           maxLines: 1,
                         ),
                         const SizedBox(height: 18),
-                        const Divider(height: 1, color: Color(0x0FFFFFFF)),
+                        Divider(height: 1, color: AppColors.borderSubtle),
                         ProfileFieldRow(
                           label: 'Full Name',
                           value: user.fullName,
@@ -287,7 +287,7 @@ class _ProfileSkeletonView extends StatelessWidget {
           const SizedBox(height: 8),
           const AppSkeleton(width: 80, height: 11, radius: AppRadius.xs),
           const SizedBox(height: 18),
-          const Divider(height: 1, color: Color(0x0FFFFFFF)),
+          Divider(height: 1, color: AppColors.borderSubtle),
           for (int i = 0; i < 7; i++)
             ProfileFieldRowSkeleton(valueWidth: i.isEven ? 160 : 120),
         ],
@@ -310,7 +310,7 @@ class _ProfileErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline_rounded,
               color: AppColors.textMuted,
               size: 32,

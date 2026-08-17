@@ -103,9 +103,9 @@ class _MechanicIdLookupSheetContentState
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(
+            borderRadius: const BorderRadius.vertical(
               top: Radius.circular(AppRadius.xl5),
             ),
             border: Border.fromBorderSide(BorderSide(color: AppColors.border)),
@@ -121,8 +121,8 @@ class _MechanicIdLookupSheetContentState
                   borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal,
                   AppSpacing.xl4,
                   AppSpacing.pageHorizontal,
@@ -146,7 +146,7 @@ class _MechanicIdLookupSheetContentState
                     AppSpacing.xl2,
                   ),
                   children: [
-                    const Text(
+                    Text(
                       'Enter a mechanic\'s ID to request them directly, '
                       'wherever they are.',
                       style: AppTypography.body,
@@ -167,7 +167,7 @@ class _MechanicIdLookupSheetContentState
                     ),
                     const SizedBox(height: 20),
                     if (_searched && _found == null)
-                      const Text(
+                      Text(
                         'No mechanic found with that ID.',
                         style: TextStyle(
                           fontFamily: 'Inter',
@@ -202,7 +202,7 @@ class _MechanicIdLookupSheetContentState
                                   const SizedBox(height: 3),
                                   Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.star_rounded,
                                         color: AppColors.primary,
                                         size: 12,

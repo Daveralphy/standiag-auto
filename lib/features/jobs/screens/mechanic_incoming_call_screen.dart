@@ -33,7 +33,7 @@ class _MechanicIncomingCallScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
     _ringController = AnimationController(
       vsync: this,
@@ -50,18 +50,35 @@ class _MechanicIncomingCallScreenState
     super.dispose();
   }
 
+  bool _handled = false;
+
   void _decline() {
+    if (_handled) return;
+    _handled = true;
     ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.rejected);
     context.go(RouteNames.mechanicHome);
   }
 
   void _accept() {
+    if (_handled) return;
+    _handled = true;
+    ref.read(jobProvider.notifier).markCallAnswered(widget.jobId);
     context.go(RouteNames.mechanicActiveCall, extra: widget.jobId);
   }
 
   @override
   Widget build(BuildContext context) {
     final job = ref.watch(jobProvider.select((s) => s.activeJob));
+
+    ref.listen(jobProvider.select((s) => s.activeJob), (previous, next) {
+      // The car owner cancelled or timed out while this screen was still
+      // showing — leave it rather than let the mechanic sit on a dead ring.
+      if (!_handled && next?.status == JobStatus.rejected) {
+        _handled = true;
+        context.go(RouteNames.mechanicHome);
+      }
+    });
+
     final callerAsync = job == null
         ? null
         : ref.watch(mechanicUserProvider(job.carOwnerId));
@@ -74,8 +91,8 @@ class _MechanicIncomingCallScreenState
       body: SafeArea(
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal, AppSpacing.md,
                   AppSpacing.pageHorizontal, 0),
               child: Text('Incoming Call',
@@ -107,7 +124,7 @@ class _MechanicIncomingCallScreenState
                       style: AppTypography.heading1,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
-                  const Text('StanDiag Call · Incoming',
+                  Text('StanDiag Call · Incoming',
                       style: AppTypography.body,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                 ],
@@ -129,15 +146,15 @@ class _MechanicIncomingCallScreenState
                         Container(
                           width: 64, height: 64,
                           decoration: BoxDecoration(
-                            color: const Color(0x12FFFFFF),
+                            color: AppColors.border,
                             shape: BoxShape.circle,
                             border: Border.all(color: AppColors.border),
                           ),
-                          child: const Icon(Icons.call_end_rounded,
+                          child: Icon(Icons.call_end_rounded,
                               color: AppColors.textMuted, size: 28),
                         ),
                         const SizedBox(height: 8),
-                        const Text('Decline',
+                        Text('Decline',
                             style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],
@@ -150,11 +167,11 @@ class _MechanicIncomingCallScreenState
                       children: [
                         Container(
                           width: 64, height: 64,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppColors.success,
                             shape: BoxShape.circle,
                             boxShadow: [
-                              BoxShadow(
+                              const BoxShadow(
                                 color: Color(0x664CAF50),
                                 blurRadius: 20,
                               ),
@@ -164,7 +181,7 @@ class _MechanicIncomingCallScreenState
                               color: Colors.white, size: 28),
                         ),
                         const SizedBox(height: 8),
-                        const Text('Accept',
+                        Text('Accept',
                             style: AppTypography.caption,
                             overflow: TextOverflow.ellipsis, maxLines: 1),
                       ],

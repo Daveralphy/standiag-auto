@@ -43,24 +43,24 @@ class LogOutDialog {
                     width: 26,
                     height: 26,
                     decoration: BoxDecoration(
-                      color: const Color(0x0FFFFFFF),
+                      color: AppColors.borderSubtle,
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.border),
                     ),
-                    child: const Icon(Icons.close_rounded,
+                    child: Icon(Icons.close_rounded,
                         size: 13, color: AppColors.textMuted),
                   ),
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 AppStrings.logOutTitle,
                 style: AppTypography.heading3,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 AppStrings.logOutMessage,
                 style: AppTypography.bodySmall,
                 maxLines: 3,

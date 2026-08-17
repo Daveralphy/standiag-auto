@@ -176,22 +176,22 @@ class _PrimaryButtonSurface extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: AppColors.primaryButtonGradient,
           borderRadius: BorderRadius.circular(AppRadius.buttonPrimary),
-          boxShadow: const [
+          boxShadow: [
             // Inner top highlight — creates the 3D raised effect
-            BoxShadow(
-              color: Color(0x47FFFFFF),
+            const BoxShadow(
+              color: Color(0x40FFFFFF),
               offset: Offset(0, 1.5),
               blurRadius: 0,
               spreadRadius: 0,
             ),
             // Near red glow
-            BoxShadow(
+            const BoxShadow(
               color: Color(0x80820F0A),
               offset: Offset(0, 2),
               blurRadius: 6,
             ),
             // Far red glow
-            BoxShadow(
+            const BoxShadow(
               color: Color(0x38E8281E),
               offset: Offset(0, 6),
               blurRadius: 20,
@@ -251,13 +251,13 @@ class _GhostButtonSurface extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(vertical: paddingV, horizontal: 20),
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF), // 5% white
+        color: AppColors.borderSubtle, // 5% white
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.border),
       ),
       child: Center(
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(

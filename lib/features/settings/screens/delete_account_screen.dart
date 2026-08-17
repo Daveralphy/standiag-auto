@@ -32,7 +32,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   Future<void> _deleteUserSubcollection(
@@ -61,12 +61,14 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       await _deleteUserSubcollection('credits_history', 'userId', uid);
       await FirebaseFirestore.instance.collection('mechanics').doc(uid).delete();
       await FirebaseFirestore.instance.collection('users').doc(uid).delete();
-      await user.delete();
+      final deleted = await _deleteAuthUser(user);
       if (!mounted) {
         return;
       }
       setState(() => _isLoading = false);
-      context.go(RouteNames.onboarding);
+      if (deleted) {
+        context.go(RouteNames.onboarding);
+      }
     } catch (error, stackTrace) {
       if (!mounted) {
         return;
@@ -77,6 +79,71 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
         ErrorHandler.handle(error, stackTrace).message,
       );
     }
+  }
+
+  /// Firebase requires a *recent* sign-in before allowing account deletion,
+  /// and this modal can be reached long after login — so a plain
+  /// [user.delete] intermittently throws `requires-recent-login`. On that
+  /// error, transparently re-authenticate with the account's password and
+  /// retry, rather than surfacing a confusing failure for what the user
+  /// already confirmed they want to do. Returns false (no error shown) if
+  /// the user backs out of the password prompt instead of confirming it.
+  Future<bool> _deleteAuthUser(User user) async {
+    try {
+      await user.delete();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      if (e.code != 'requires-recent-login' || user.email == null) rethrow;
+      if (!mounted) return false;
+      final password = await _promptForPassword();
+      if (password == null || password.isEmpty) return false;
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: user.email!, password: password),
+      );
+      await user.delete();
+      return true;
+    }
+  }
+
+  Future<String?> _promptForPassword() {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(
+          'Confirm your password',
+          style: AppTypography.heading4,
+        ),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          autofocus: true,
+          style: AppTypography.body,
+          cursorColor: AppColors.primary,
+          decoration: InputDecoration(
+            hintText: 'Password',
+            hintStyle: AppTypography.inputLabel,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: Text(
+              'Confirm',
+              style: TextStyle(color: AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -92,8 +159,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
                       AppSpacing.pageHorizontal,
                       AppSpacing.md,
                       AppSpacing.pageHorizontal,
@@ -106,7 +173,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       maxLines: 1,
                     ),
                   ),
-                  const Divider(color: AppColors.borderSubtle),
+                  Divider(color: AppColors.borderSubtle),
                   ...[
                     AppStrings.settingsNotifications,
                     AppStrings.settingsLanguage,
@@ -164,11 +231,11 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                         width: 26,
                         height: 26,
                         decoration: BoxDecoration(
-                          color: const Color(0x0FFFFFFF),
+                          color: AppColors.borderSubtle,
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColors.border),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close_rounded,
                           size: 13,
                           color: AppColors.textMuted,
@@ -185,14 +252,14 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                       border: Border.all(color: AppColors.primaryBorder),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.warning_amber_rounded,
                       color: AppColors.primary,
                       size: 22,
                     ),
                   ),
                   const SizedBox(height: 14),
-                  const Text(
+                  Text(
                     AppStrings.deleteAccountTitle,
                     style: AppTypography.heading3,
                     textAlign: TextAlign.center,
@@ -200,7 +267,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                     maxLines: 1,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     AppStrings.deleteAccountMessage,
                     style: AppTypography.bodySmall,
                     textAlign: TextAlign.center,

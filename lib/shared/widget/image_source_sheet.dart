@@ -28,9 +28,9 @@ class ImageSourceSheet {
           AppSpacing.pageHorizontal,
           28,
         ),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(
+          borderRadius: const BorderRadius.vertical(
             top: Radius.circular(AppRadius.xl5),
           ),
           border: Border.fromBorderSide(BorderSide(color: AppColors.border)),
@@ -38,7 +38,7 @@ class ImageSourceSheet {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Add a Photo',
               style: AppTypography.heading3,
               overflow: TextOverflow.ellipsis,
@@ -84,7 +84,7 @@ class _SourceRow extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0x0AFFFFFF),
+          color: AppColors.borderSubtle,
           borderRadius: BorderRadius.circular(AppRadius.card),
           border: Border.all(color: AppColors.border),
         ),

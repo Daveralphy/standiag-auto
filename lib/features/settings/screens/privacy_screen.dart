@@ -27,7 +27,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   @override
@@ -55,14 +55,14 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                   child: Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.privacyTitle,
+                Expanded(child: Text(AppStrings.privacyTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
               ]),
@@ -110,7 +110,7 @@ class _ToggleItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(
             color: AppColors.borderSubtle, width: 1))),
       child: Row(children: [
@@ -128,7 +128,7 @@ class _ToggleItem extends StatelessWidget {
           onChanged: onChanged,
           activeColor: AppColors.primary,
           activeTrackColor: AppColors.primarySubtle,
-          inactiveTrackColor: const Color(0x1FFFFFFF),
+          inactiveTrackColor: AppColors.borderActive,
           inactiveThumbColor: AppColors.textMuted,
         ),
       ]),

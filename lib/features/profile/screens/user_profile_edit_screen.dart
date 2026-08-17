@@ -53,7 +53,7 @@ class _UserProfileEditScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     _load();
   }
 
@@ -190,19 +190,19 @@ class _UserProfileEditScreenState
                   child: Container(
                     width: 30, height: 30,
                     decoration: BoxDecoration(
-                      color: const Color(0x12FFFFFF),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                       border: Border.all(color: AppColors.border)),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 14, color: AppColors.textPrimary)),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(child: Text(AppStrings.profileTitle,
+                Expanded(child: Text(AppStrings.profileTitle,
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
                 GestureDetector(
                   onTap: () => context.go(RouteNames.userProfile),
-                  child: const Text('Cancel',
+                  child: Text('Cancel',
                       style: TextStyle(
                         fontFamily: 'Inter', fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -213,7 +213,7 @@ class _UserProfileEditScreenState
             ),
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(
+                  ? Center(child: CircularProgressIndicator(
                       color: AppColors.primary, strokeWidth: 2))
                   : _errorMessage != null
                       ? Center(
@@ -222,7 +222,7 @@ class _UserProfileEditScreenState
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.error_outline_rounded,
+                                Icon(Icons.error_outline_rounded,
                                     color: AppColors.textMuted, size: 32),
                                 const SizedBox(height: 12),
                                 Text(_errorMessage!,
@@ -286,7 +286,7 @@ class _UserProfileEditScreenState
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              const Text('Change Photo',
+                              Text('Change Photo',
                                   style: TextStyle(
                                     fontFamily: 'Inter', fontSize: 13,
                                     fontWeight: FontWeight.w600,

@@ -35,7 +35,7 @@ class QuickActionButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: isActive
                   ? AppColors.primarySubtle
-                  : const Color(0x0DFFFFFF),
+                  : AppColors.borderSubtle,
               borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(
                 color: isActive

@@ -1,7 +1,15 @@
-// Defines the global ThemeData for StanDiag Auto.
-// Applied once in app.dart via MaterialApp.router(theme: AppTheme.dark).
-// All color and typography values come from AppColors and AppTypography.
-// Never define theme properties inline in widget files.
+// Defines the global ThemeData for StanDiag Auto — one for dark, one for
+// light. Applied in app.dart via MaterialApp.router(theme:, darkTheme:,
+// themeMode:). Never define theme properties inline in widget files.
+//
+// Every screen builds its own header/scaffold background explicitly from
+// AppColors/AppTypography rather than relying on Flutter's built-in AppBar
+// or ambient TextTheme, so the fields below matter mostly for the few
+// built-in widgets (dialogs, bottom sheets, dividers, default icon color)
+// that do fall back to theme data. Each variant is built from AppColors.dark
+// or AppColors.light directly — the stable, brightness-independent palettes
+// — not the dynamic AppColors.xxx getters, so both ThemeData objects stay
+// correct regardless of which one the app is currently rendering.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,37 +21,58 @@ import '../constants/app_typography.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get dark {
+  static ThemeData get dark => _build(AppColors.dark, Brightness.dark);
+  static ThemeData get light => _build(AppColors.light, Brightness.light);
+
+  static ThemeData _build(AppColorPalette colors, Brightness brightness) {
+    final bool isDark = brightness == Brightness.dark;
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: brightness,
       fontFamily: 'Inter',
-      scaffoldBackgroundColor: AppColors.background,
-      colorScheme: const ColorScheme.dark(
-        primary: AppColors.primary,
-        onPrimary: Colors.white,
-        secondary: AppColors.primary,
-        onSecondary: Colors.white,
-        surface: AppColors.surface,
-        onSurface: AppColors.textPrimary,
-        error: AppColors.primary,
-        onError: Colors.white,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textPrimary,
+      scaffoldBackgroundColor: colors.background,
+      colorScheme: isDark
+          ? ColorScheme.dark(
+              primary: colors.primary,
+              onPrimary: Colors.white,
+              secondary: colors.primary,
+              onSecondary: Colors.white,
+              surface: colors.surface,
+              onSurface: colors.textPrimary,
+              error: colors.primary,
+              onError: Colors.white,
+            )
+          : ColorScheme.light(
+              primary: colors.primary,
+              onPrimary: Colors.white,
+              secondary: colors.primary,
+              onSecondary: Colors.white,
+              surface: colors.surface,
+              onSurface: colors.textPrimary,
+              error: colors.primary,
+              onError: Colors.white,
+            ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: colors.background,
+        foregroundColor: colors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          statusBarBrightness: Brightness.dark,
-        ),
+        systemOverlayStyle: isDark
+            ? const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+              )
+            : const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.light,
+              ),
         titleTextStyle: AppTypography.heading3,
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: colors.textPrimary),
       ),
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         displayLarge: AppTypography.display,
         displayMedium: AppTypography.displaySmall,
         headlineLarge: AppTypography.heading1,
@@ -61,7 +90,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: colors.primary,
           foregroundColor: Colors.white,
           textStyle: AppTypography.button,
           shape: RoundedRectangleBorder(
@@ -73,49 +102,49 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: colors.primary,
           textStyle: AppTypography.body,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceElevated,
+        fillColor: colors.surfaceElevated,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.input),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: colors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.input),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: colors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.input),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderSide: BorderSide(color: colors.primary),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.input),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderSide: BorderSide(color: colors.primary),
         ),
         labelStyle: AppTypography.inputLabel,
         hintStyle: AppTypography.inputLabel,
       ),
-      dividerTheme: const DividerThemeData(
-        color: AppColors.borderSubtle,
+      dividerTheme: DividerThemeData(
+        color: colors.borderSubtle,
         thickness: 1,
         space: 0,
       ),
-      iconTheme: const IconThemeData(color: AppColors.textMuted, size: 20),
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.surface,
-        modalBackgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
+      iconTheme: IconThemeData(color: colors.textMuted, size: 20),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colors.surface,
+        modalBackgroundColor: colors.surface,
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.modal)),
         ),
       ),
       // DialogThemeData (not DialogTheme) is correct for Flutter 3.18+
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.modal),
@@ -124,7 +153,7 @@ class AppTheme {
         contentTextStyle: AppTypography.body,
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surfaceElevated,
+        backgroundColor: colors.surfaceElevated,
         contentTextStyle: AppTypography.body,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),

@@ -37,7 +37,7 @@ class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
   }
 
   @override
@@ -144,7 +144,7 @@ class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
               children: [
                 Container(
                   height: 32,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -173,13 +173,13 @@ class _UserSearchResultsList extends ConsumerWidget {
     return Container(
       constraints: const BoxConstraints(maxHeight: 320),
       decoration: BoxDecoration(
-        color: const Color(0xE1141414),
+        color: AppColors.surface.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.border),
       ),
       child: results.isEmpty
-          ? const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl4),
+          ? Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl4),
               child: Text('No users found with that name.',
                   style: AppTypography.body, textAlign: TextAlign.center),
             )
@@ -188,7 +188,7 @@ class _UserSearchResultsList extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.md),
               itemCount: results.length,
               separatorBuilder: (_, __) =>
-                  const Divider(color: AppColors.borderSubtle, height: 1),
+                  Divider(color: AppColors.borderSubtle, height: 1),
               itemBuilder: (context, i) {
                 final entry = results[i];
                 final user = ref

@@ -1,4 +1,4 @@
-﻿// Mechanic Job Completed screen â€” job done, shows customer rating received.
+// Mechanic Job Completed screen â€” job done, shows customer rating received.
 // Mechanic nav bar, Users active, search icon top right.
 
 import 'package:flutter/material.dart';
@@ -32,7 +32,7 @@ class _MechanicJobCompletedScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
@@ -74,10 +74,10 @@ class _MechanicJobCompletedScreenState
           ),
 
           Positioned(top: 0, left: 0, right: 0, height: 140,
-            child: Container(decoration: const BoxDecoration(
+            child: Container(decoration: BoxDecoration(
               gradient: LinearGradient(begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xF0060606), Colors.transparent])))),
+                  colors: [AppColors.background.withValues(alpha: 0.9), Colors.transparent])))),
 
           SafeArea(
             child: Padding(
@@ -89,7 +89,7 @@ class _MechanicJobCompletedScreenState
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Job Completed', style: AppTypography.heading3,
+                    Text('Job Completed', style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                     Text('Well done!', style: AppTypography.body.copyWith(
                         color: AppColors.success),
@@ -97,11 +97,11 @@ class _MechanicJobCompletedScreenState
                   ],
                 )),
                 Container(width: 32, height: 32,
-                  decoration: BoxDecoration(color: const Color(0xB3080808),
+                  decoration: BoxDecoration(color: AppColors.surfaceElevated.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(color: const Color(0x1FFFFFFF))),
-                  child: const Icon(Icons.search_rounded,
-                      size: 16, color: Colors.white)),
+                    border: Border.all(color: AppColors.borderActive)),
+                  child: Icon(Icons.search_rounded,
+                      size: 16, color: AppColors.textPrimary)),
               ]),
             ),
           ),
@@ -118,10 +118,10 @@ class _MechanicJobCompletedScreenState
                   color: const Color(0x144CAF50),
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: const Color(0x334CAF50))),
-                child: const Row(children: [
+                child: Row(children: [
                   Icon(Icons.check_circle_outline_rounded,
                       color: AppColors.success, size: 18),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -155,11 +155,11 @@ class _MechanicJobCompletedScreenState
                     )),
                   ]),
                   const SizedBox(height: 12),
-                  const Text('Customer rating', style: AppTypography.bodySmall,
+                  Text('Customer rating', style: AppTypography.bodySmall,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
                   if (job?.rating == null)
-                    const Text('Awaiting ratingâ€¦',
+                    Text('Awaiting ratingâ€¦',
                         style: AppTypography.bodySmall,
                         overflow: TextOverflow.ellipsis, maxLines: 1)
                   else ...[

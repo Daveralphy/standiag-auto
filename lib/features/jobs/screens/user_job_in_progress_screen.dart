@@ -33,7 +33,7 @@ class _UserJobInProgressScreenState
   @override
   void initState() {
     super.initState();
-    SystemUiStyle.applyDark();
+    SystemUiStyle.apply();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
@@ -76,10 +76,10 @@ class _UserJobInProgressScreenState
           ),
 
           Positioned(top: 0, left: 0, right: 0, height: 140,
-            child: Container(decoration: const BoxDecoration(
+            child: Container(decoration: BoxDecoration(
               gradient: LinearGradient(begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xF0060606), Colors.transparent])))),
+                  colors: [AppColors.background.withValues(alpha: 0.9), Colors.transparent])))),
 
           SafeArea(
             child: Padding(
@@ -88,7 +88,7 @@ class _UserJobInProgressScreenState
               child: Row(children: [
                 const AppAvatar(name: 'John Doe', size: 36),
                 const SizedBox(width: 10),
-                const Expanded(child: Column(
+                Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Job In Progress', style: AppTypography.heading3,
@@ -98,11 +98,11 @@ class _UserJobInProgressScreenState
                   ],
                 )),
                 Container(width: 32, height: 32,
-                  decoration: BoxDecoration(color: const Color(0xB3080808),
+                  decoration: BoxDecoration(color: AppColors.surfaceElevated.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(color: const Color(0x1FFFFFFF))),
-                  child: const Icon(Icons.search_rounded,
-                      size: 16, color: Colors.white)),
+                    border: Border.all(color: AppColors.borderActive)),
+                  child: Icon(Icons.search_rounded,
+                      size: 16, color: AppColors.textPrimary)),
               ]),
             ),
           ),
