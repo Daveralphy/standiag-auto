@@ -53,5 +53,11 @@
 		<string>StanDiag Auto uses Bluetooth to connect to your OBD-II adapter for vehicle diagnostics.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>StanDiag Auto uses your microphone for in-app voice calls with mechanics and car owners.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>StanDiag Auto uses your camera to take profile and vehicle photos.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>StanDiag Auto accesses your photo library so you can choose profile and vehicle photos.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>StanDiag Auto saves photos you take to your photo library.</string>
 	</dict>
 </plist>
