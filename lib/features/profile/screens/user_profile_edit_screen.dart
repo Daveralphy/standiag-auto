@@ -3,11 +3,11 @@
 // overlay + "Change Photo", editable fields, Save Changes) but with the
 // CarOwner-relevant fields only: no workshop/experience/expertise/rating.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,7 +20,9 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/config/cloudinary_config.dart';
 import '../../../core/errors/error_handler.dart';
+import '../../../core/services/cloudinary_service.dart';
 import '../../../features/auth/models/user_model.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
@@ -117,14 +119,14 @@ class _UserProfileEditScreenState
         .pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (picked == null || !mounted) return;
 
+    final oldUrl = _profilePhotoUrl;
     setState(() => _isUploadingPhoto = true);
     try {
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('profile_photos')
-          .child('$userId.jpg');
-      await ref.putFile(File(picked.path));
-      final url = await ref.getDownloadURL();
+      final url = await CloudinaryService.uploadImage(
+        File(picked.path),
+        preset: CloudinaryConfig.profilePhotoPreset,
+        ownerId: userId,
+      );
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
@@ -134,6 +136,9 @@ class _UserProfileEditScreenState
         _profilePhotoUrl = url;
         _isUploadingPhoto = false;
       });
+      // Fire-and-forget, and only once the new photo is safely saved — a
+      // failed delete here should never affect the successful update above.
+      if (oldUrl != null) unawaited(CloudinaryService.deleteImage(oldUrl));
     } catch (e, stackTrace) {
       if (!mounted) return;
       setState(() => _isUploadingPhoto = false);
@@ -142,6 +147,20 @@ class _UserProfileEditScreenState
         ErrorHandler.handle(e, stackTrace, screen: 'UserProfileEditScreen')
             .message,
       );
+    }
+  }
+
+  /// This screen is reached via context.push from UserProfileScreen (a
+  /// persistent tab-shell branch, kept alive across navigation) — popping
+  /// back to it, rather than context.go'ing a full location replace, is
+  /// what lets that push's caller actually notice we're done and refresh
+  /// its own stale, one-time-fetched data. context.go is only the fallback
+  /// for the rare case this screen was somehow reached with nothing to pop.
+  void _close() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(RouteNames.userProfile);
     }
   }
 
@@ -161,7 +180,7 @@ class _UserProfileEditScreenState
       });
       if (!mounted) return;
       setState(() => _isSaving = false);
-      context.go(RouteNames.userProfile);
+      _close();
     } catch (error, stackTrace) {
       if (!mounted) return;
       setState(() => _isSaving = false);
@@ -186,7 +205,7 @@ class _UserProfileEditScreenState
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userProfile),
+                  onTap: _close,
                   child: Container(
                     width: 30, height: 30,
                     decoration: BoxDecoration(
@@ -201,7 +220,7 @@ class _UserProfileEditScreenState
                     style: AppTypography.heading3,
                     overflow: TextOverflow.ellipsis, maxLines: 1)),
                 GestureDetector(
-                  onTap: () => context.go(RouteNames.userProfile),
+                  onTap: _close,
                   child: Text('Cancel',
                       style: TextStyle(
                         fontFamily: 'Inter', fontSize: 15,

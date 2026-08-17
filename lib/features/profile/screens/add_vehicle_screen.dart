@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +16,9 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/data/vehicle_reference_data.dart';
+import '../../../core/config/cloudinary_config.dart';
 import '../../../core/errors/error_handler.dart';
+import '../../../core/services/cloudinary_service.dart';
 import '../../../features/profile/models/vehicle_model.dart';
 import '../../../features/profile/providers/profile_provider.dart';
 import '../../../shared/widget/app_autocomplete_field.dart';
@@ -71,23 +72,21 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     setState(() => _pickedPhoto = picked);
   }
 
-  /// Uploaded lazily on save, not on pick — no point spending a Storage
-  /// write on a photo for a vehicle the user might still abandon adding.
-  /// Nested under the owner's own folder (not a combined filename) so
-  /// storage.rules can scope write access by owner uid with a plain path
-  /// match — EditVehicleScreen's upload uses this same convention.
+  /// Uploaded lazily on save, not on pick — no point spending an upload on a
+  /// photo for a vehicle the user might still abandon adding. No vehicle id
+  /// exists yet at this point (it's assigned by addVehicle right after), so
+  /// this upload is tagged by owner only — good enough to find every photo
+  /// a given owner has ever uploaded from Cloudinary's dashboard.
   Future<String?> _uploadPhotoIfNeeded(String userId) async {
     final photo = _pickedPhoto;
     if (photo == null) return null;
     setState(() => _isUploadingPhoto = true);
     try {
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('vehicle_photos')
-          .child(userId)
-          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
-      await ref.putFile(File(photo.path));
-      return await ref.getDownloadURL();
+      return await CloudinaryService.uploadImage(
+        File(photo.path),
+        preset: CloudinaryConfig.vehiclePhotoPreset,
+        ownerId: userId,
+      );
     } finally {
       if (mounted) setState(() => _isUploadingPhoto = false);
     }

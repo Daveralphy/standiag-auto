@@ -14,12 +14,22 @@
 // sends them a push notification so they can open the app and send a
 // quote.
 //
+// deleteCloudinaryImage — called by the app immediately after a profile or
+// vehicle photo is replaced (or a vehicle removed entirely), to delete the
+// old Cloudinary asset. Cloudinary deletion needs a signed request with its
+// API secret — the one credential in this whole app that can never live in
+// the client — so this is the only piece that has to run server-side.
+//
 // NOT YET DEPLOYED. To deploy:
 //   cd functions && npm install && npm run build
 //   firebase deploy --only functions
 // Requires the Firebase project to be on the Blaze (pay-as-you-go) plan —
-// Cloud Functions that make outbound network calls (sending FCM messages
-// is one) aren't available on the free Spark plan.
+// Cloud Functions that make outbound network calls (sending FCM messages,
+// calling Cloudinary, both are) aren't available on the free Spark plan.
+// Also needs, once per environment (never committed):
+//   firebase functions:secrets:set CLOUDINARY_API_KEY
+//   firebase functions:secrets:set CLOUDINARY_API_SECRET
+// plus a plain (non-secret) functions/.env with CLOUDINARY_CLOUD_NAME=...
 
 import * as crypto from "crypto";
 import { initializeApp } from "firebase-admin/app";
@@ -27,6 +37,7 @@ import { getFirestore, GeoPoint, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { defineSecret } from "firebase-functions/params";
 
 initializeApp();
 const db = getFirestore();
@@ -266,5 +277,79 @@ export const notifyNearbyMechanics = onDocumentCreated(
       const chunk = tokens.slice(i, i + chunkSize);
       await messaging.sendEachForMulticast({ ...message, tokens: chunk });
     }
+  }
+);
+
+// ─── Cloudinary photo cleanup ────────────────────────────────────────────
+
+const cloudinaryApiKey = defineSecret("CLOUDINARY_API_KEY");
+const cloudinaryApiSecret = defineSecret("CLOUDINARY_API_SECRET");
+
+/**
+ * Deletes one Cloudinary image by its public_id. Every public_id this app
+ * ever creates is "{uid}_{timestamp}" (see CloudinaryService in the Flutter
+ * app) — checking that prefix here is what lets a caller only ever delete
+ * their own photos, the same ownership boundary storage.rules used to
+ * enforce for Firebase Storage, just checked server-side now since
+ * Cloudinary's delete endpoint needs a signed request the client can never
+ * safely hold the signing key for.
+ */
+export const deleteCloudinaryImage = onCall(
+  { secrets: [cloudinaryApiKey, cloudinaryApiSecret] },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "You must be signed in.");
+    }
+
+    const publicId = request.data?.publicId;
+    if (typeof publicId !== "string" || publicId.length === 0) {
+      throw new HttpsError("invalid-argument", "publicId is required.");
+    }
+    if (!publicId.startsWith(`${uid}_`)) {
+      throw new HttpsError(
+        "permission-denied",
+        "You can only delete your own photos."
+      );
+    }
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    if (!cloudName) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Cloudinary isn't configured on the server."
+      );
+    }
+
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const paramsToSign =
+      `public_id=${publicId}&timestamp=${timestamp}${cloudinaryApiSecret.value()}`;
+    const signature = crypto.createHash("sha1").update(paramsToSign).digest("hex");
+
+    const body = new URLSearchParams({
+      public_id: publicId,
+      timestamp,
+      api_key: cloudinaryApiKey.value(),
+      signature,
+    });
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      }
+    );
+    const result = (await response.json()) as { result?: string };
+
+    // Cloudinary returns "not found" (not an error) if it's already gone —
+    // a fine outcome for a cleanup call, not something to surface as a
+    // failure to the app.
+    if (result.result !== "ok" && result.result !== "not found") {
+      throw new HttpsError("internal", "Failed to delete the old image.");
+    }
+
+    return { result: result.result };
   }
 );

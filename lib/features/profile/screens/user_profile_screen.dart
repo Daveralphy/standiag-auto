@@ -182,7 +182,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         AppAvatar(
                           name: displayName,
                           imageUrl: user.profilePhoto,
-                          size: 84,
+                          size: 84 * 3,
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -205,8 +205,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                             _ProfileMenuRow(
                               icon: Icons.person_outline_rounded,
                               label: 'Profile',
-                              onTap: () =>
-                                  context.push(RouteNames.userProfileEdit),
+                              // This screen lives inside a persistent tab
+                              // shell — its one-time _load() never reruns
+                              // just because we navigated away and back, so
+                              // the edit screen's own changes (e.g. a new
+                              // photo) would otherwise never show up here
+                              // without this explicit refresh on return.
+                              onTap: () async {
+                                await context.push(RouteNames.userProfileEdit);
+                                _load();
+                              },
                             ),
                             _ProfileMenuRow(
                               icon: Icons.lock_outline_rounded,
@@ -451,7 +459,7 @@ class _ProfileSkeletonView extends StatelessWidget {
       ),
       child: Column(
         children: [
-          AppSkeleton.circle(size: 84),
+          AppSkeleton.circle(size: 84 * 3),
           SizedBox(height: 12),
           AppSkeleton(width: 140, height: 16, radius: AppRadius.xs),
           SizedBox(height: 8),

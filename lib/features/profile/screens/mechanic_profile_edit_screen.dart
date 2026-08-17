@@ -3,11 +3,11 @@
 // header, tappable avatar with camera overlay + "Change Photo", editable
 // fields, then locked Expertise/Rating display fields, Save Changes button.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,7 +19,9 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/config/cloudinary_config.dart';
 import '../../../core/errors/error_handler.dart';
+import '../../../core/services/cloudinary_service.dart';
 import '../../../features/auth/models/mechanic_model.dart';
 import '../../../features/auth/models/user_model.dart';
 import '../../../shared/widget/app_avatar.dart';
@@ -133,14 +135,14 @@ class _MechanicProfileEditScreenState
         await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (picked == null || !mounted) return;
 
+    final oldUrl = _profilePhotoUrl;
     setState(() => _isUploadingPhoto = true);
     try {
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('profile_photos')
-          .child('$userId.jpg');
-      await ref.putFile(File(picked.path));
-      final url = await ref.getDownloadURL();
+      final url = await CloudinaryService.uploadImage(
+        File(picked.path),
+        preset: CloudinaryConfig.profilePhotoPreset,
+        ownerId: userId,
+      );
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
@@ -150,6 +152,7 @@ class _MechanicProfileEditScreenState
         _profilePhotoUrl = url;
         _isUploadingPhoto = false;
       });
+      if (oldUrl != null) unawaited(CloudinaryService.deleteImage(oldUrl));
     } catch (e, stackTrace) {
       if (!mounted) return;
       setState(() => _isUploadingPhoto = false);

@@ -23,12 +23,15 @@ dependencies:
   go_router: ^14.6.2              # GoRouter — all navigation
 
   # ─── Firebase ──────────────────────────────────────────────────────────────
+  # Auth + Firestore + Crashlytics + push + Functions — no firebase_storage.
+  # Image uploads (profile/vehicle photos) go to Cloudinary instead, since
+  # Storage needs the paid Blaze plan just to be enabled. See CloudinaryConfig.
   firebase_core: ^3.13.1
   firebase_auth: ^5.5.3
   cloud_firestore: ^5.6.6
-  firebase_storage: ^12.4.5
   firebase_crashlytics: ^4.3.4
   firebase_messaging: ^15.2.5     # Push notifications — mechanics get alerted to nearby service requests
+  cloud_functions: ^5.2.5         # Calls deleteCloudinaryImage — the one Cloudinary op that needs its secret held server-side
 
   # ─── Local Cache ───────────────────────────────────────────────────────────
   hive_flutter: ^1.1.0            # Persistent local cache

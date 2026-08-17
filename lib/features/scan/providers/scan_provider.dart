@@ -279,12 +279,16 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
   Future<void> fetchHistory(String ownerId) async {
     try {
+      // Sorted client-side rather than via .orderBy() — combining a
+      // where-equality filter with an order-by on a different field needs a
+      // composite Firestore index, and one owner's scan count is small
+      // enough that sorting here costs nothing.
       final query = await FirebaseFirestore.instance
           .collection('scans')
           .where('ownerId', isEqualTo: ownerId)
-          .orderBy('createdAt', descending: true)
           .get();
-      final history = query.docs.map(ScanModel.fromFirestore).toList();
+      final history = query.docs.map(ScanModel.fromFirestore).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       try {
         await CacheManager.instance.write(
           box: CacheKeys.scansBox,

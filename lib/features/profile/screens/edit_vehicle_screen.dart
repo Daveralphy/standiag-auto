@@ -1,9 +1,9 @@
 // Edit Vehicle screen — same floating-label form as Add Vehicle, prefilled
 // with the selected vehicle's real data, with Save and Delete actions.
 
+import 'dart:async';
 import 'dart:io';
 
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,7 +15,9 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/data/vehicle_reference_data.dart';
+import '../../../core/config/cloudinary_config.dart';
 import '../../../core/errors/error_handler.dart';
+import '../../../core/services/cloudinary_service.dart';
 import '../models/vehicle_model.dart';
 import '../providers/profile_provider.dart';
 import '../../../shared/widget/app_autocomplete_field.dart';
@@ -84,22 +86,21 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
     setState(() => _pickedPhoto = picked);
   }
 
-  /// Uploaded lazily on save, not on pick — mirrors AddVehicleScreen. Keyed
-  /// by the vehicle's *owner*, matching AddVehicleScreen's path exactly —
-  /// storage.rules scopes write access to that folder by owner uid, so the
-  /// two upload sites need to agree on the convention.
-  Future<String?> _uploadPhotoIfNeeded(String ownerId) async {
+  /// Uploaded lazily on save, not on pick — mirrors AddVehicleScreen, but
+  /// this vehicle already has a real id, so the upload gets tagged with
+  /// both owner and vehicle — `tag:vehicle_{id}` in Cloudinary's dashboard
+  /// finds every photo this specific vehicle has ever had.
+  Future<String?> _uploadPhotoIfNeeded(VehicleModel original) async {
     final photo = _pickedPhoto;
     if (photo == null) return null;
     setState(() => _isUploadingPhoto = true);
     try {
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('vehicle_photos')
-          .child(ownerId)
-          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
-      await ref.putFile(File(photo.path));
-      return await ref.getDownloadURL();
+      return await CloudinaryService.uploadImage(
+        File(photo.path),
+        preset: CloudinaryConfig.vehiclePhotoPreset,
+        ownerId: original.ownerId,
+        vehicleId: original.id,
+      );
     } finally {
       if (mounted) setState(() => _isUploadingPhoto = false);
     }
@@ -117,7 +118,7 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
     setState(() => _isSaving = true);
     String? photoUrl;
     try {
-      photoUrl = await _uploadPhotoIfNeeded(original.ownerId);
+      photoUrl = await _uploadPhotoIfNeeded(original);
     } catch (e, stackTrace) {
       if (!mounted) return;
       setState(() => _isSaving = false);
@@ -148,11 +149,18 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (success) {
+      // Only once the update itself has succeeded, and only when a new
+      // photo actually replaced the old one — not when the vehicle was
+      // saved with no photo change at all.
+      final oldPhotoUrl = original.photoUrl;
+      if (photoUrl != null && oldPhotoUrl != null && oldPhotoUrl.isNotEmpty) {
+        unawaited(CloudinaryService.deleteImage(oldPhotoUrl));
+      }
       context.pop();
     }
   }
 
-  Future<void> _delete() async {
+  Future<void> _delete(VehicleModel vehicle) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -189,6 +197,10 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
     await ref.read(profileProvider.notifier).deleteVehicle(widget.vehicleId);
     if (!mounted) return;
     setState(() => _isDeleting = false);
+    final photoUrl = vehicle.photoUrl;
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      unawaited(CloudinaryService.deleteImage(photoUrl));
+    }
     context.pop();
   }
 
@@ -270,7 +282,7 @@ class _EditVehicleScreenState extends ConsumerState<EditVehicleScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: _isDeleting ? null : _delete,
+                    onTap: _isDeleting ? null : () => _delete(vehicle),
                     child: _isDeleting
                         ? SizedBox(
                             width: 16,
