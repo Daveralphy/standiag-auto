@@ -215,11 +215,13 @@ class _PrimaryButtonSurface extends StatelessWidget {
                       icon!,
                       const SizedBox(width: 8),
                     ],
-                    Text(
-                      label,
-                      style: AppTypography.button,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: AppTypography.button,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                   ],
                 ),
@@ -273,11 +275,13 @@ class _GhostButtonSurface extends StatelessWidget {
                     icon!,
                     const SizedBox(width: 8),
                   ],
-                  Text(
-                    label,
-                    style: AppTypography.buttonSecondary,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: AppTypography.buttonSecondary,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
                 ],
               ),

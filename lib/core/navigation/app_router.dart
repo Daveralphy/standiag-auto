@@ -300,8 +300,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RouteNames.userSearchingMechanic,
-        builder: (_, state) =>
-            SearchingMechanicScreen(requestId: state.extra as String? ?? ''),
+        // Slides up from the bottom — continuing the same direction the
+        // "Find Nearby Mechanic" sheet it's reached from slid in from,
+        // instead of the default platform side-slide.
+        pageBuilder: (_, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: SearchingMechanicScreen(
+            requestId: state.extra as String? ?? '',
+          ),
+          transitionsBuilder: (_, animation, __, child) => SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            child: child,
+          ),
+        ),
       ),
       GoRoute(
         path: RouteNames.sendQuote,

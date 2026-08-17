@@ -213,9 +213,14 @@ class ServiceRequestNotifier extends StateNotifier<ServiceRequestState> {
     }
   }
 
+  // Cancels the internal Firestore listener only — never touches `state`.
+  // Nothing in the app watches this notifier's own state (the searching
+  // screen reads serviceRequestByIdProvider instead), and callers rely on
+  // being able to call this from dispose(), where Riverpod forbids any
+  // provider state mutation (it happens inside Flutter's locked tree-teardown
+  // pass, the same restriction that blocks mutating state during build).
   void stopWatching() {
     _requestSub?.cancel();
-    state = const ServiceRequestState();
   }
 
   @override

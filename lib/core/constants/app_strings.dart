@@ -204,6 +204,14 @@ class AppStrings {
   static const String logOutConfirm = 'Log Out';
   static const String logOutCancel = 'Cancel';
 
+  // ─── Cancel Search Modal ────────────────────────────────────────────────────
+
+  static const String cancelSearchTitle = 'Cancel Search?';
+  static const String cancelSearchMessage =
+      'This will cancel your request and stop notifying mechanics. You can start a new search anytime.';
+  static const String cancelSearchConfirm = 'Cancel Search';
+  static const String cancelSearchDismiss = 'Keep Searching';
+
   // ─── Profile ───────────────────────────────────────────────────────────────
 
   static const String profileTitle = 'My Profile';
