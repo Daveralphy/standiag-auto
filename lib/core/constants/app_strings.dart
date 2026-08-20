@@ -2,6 +2,8 @@
 // Never hardcode user-facing strings in widget files — always reference this class.
 // This makes future localisation straightforward and keeps all copy in one place.
 
+import 'credits_pricing.dart';
+
 class AppStrings {
   // Private constructor — this class is never instantiated.
   AppStrings._();
@@ -321,8 +323,12 @@ class AppStrings {
   static const String creditsRecentActivity = 'Recent Activity';
   static const String creditsContactMechanic = 'Contact a mechanic';
   static const String creditsOBDScan = 'OBD Scan';
-  static const String creditsContactCost = '5 cr';
-  static const String creditsScanCost = '10 cr';
+  // Derived from CreditsPricing (the single source both display AND the
+  // real charge read from) rather than a separate hardcoded number, so
+  // this can never drift from what actually gets charged.
+  static const String creditsContactCost =
+      '${CreditsPricing.contactMechanicCost} cr';
+  static const String creditsScanCost = '${CreditsPricing.obdScanCost} cr';
 
   static const String buyCreditsTitle = 'Buy Credits';
   static const String buyCreditsSubtitle =

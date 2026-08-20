@@ -22,6 +22,12 @@ class RouteNames {
   static const String otpPhone = '/otp-phone';
   static const String otpEmail = '/otp-email';
 
+  // Reached after a *new* Google/Apple sign-in — that account has no
+  // StanDiag profile (type + username) yet. Deliberately not under
+  // /user/ or /mechanic/ so the router's type-based redirect never tries
+  // to bounce someone off this screen before they've actually picked one.
+  static const String completeSocialProfile = '/complete-profile';
+
   // User signup steps
   static const String userSignupStepOne = '/signup/user/step-one';
   static const String userSignupStepTwo = '/signup/user/step-two';

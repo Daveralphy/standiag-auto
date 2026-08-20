@@ -175,6 +175,7 @@ class ScanModalCard extends ConsumerWidget {
   Widget _buildCardContent(
     BuildContext context,
     WidgetRef ref,
+    List<VehicleModel> vehicles,
     VehicleModel? vehicle,
     ScanState scanState,
     int? latestScore,
@@ -187,6 +188,17 @@ class ScanModalCard extends ConsumerWidget {
           style: AppTypography.heading3,
           textAlign: TextAlign.center,
         ),
+        // Only shown with 2+ vehicles — otherwise there's nothing to pick
+        // between, and showing a one-item picker would just be noise.
+        if (vehicles.length > 1) ...[
+          const SizedBox(height: 14),
+          _VehiclePicker(
+            vehicles: vehicles,
+            selectedId: vehicle?.id,
+            onSelect: (id) =>
+                ref.read(scanProvider.notifier).selectVehicle(id),
+          ),
+        ],
         const SizedBox(height: 18),
         GestureDetector(
           onTap: () => ObdDevicePickerSheet.show(context),
@@ -235,8 +247,16 @@ class ScanModalCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final visible = stage == ScanOverlayStage.open;
     final vehicles = ref.watch(profileProvider).vehicles;
-    final vehicle = vehicles.isNotEmpty ? vehicles.first : null;
     final scanState = ref.watch(scanProvider);
+    // Prefer whichever vehicle was explicitly selected, as long as it still
+    // exists — falls back to the first vehicle only when nothing's been
+    // picked yet (e.g. an owner with just one vehicle never needs to pick).
+    final vehicle = vehicles.isEmpty
+        ? null
+        : vehicles.firstWhere(
+            (v) => v.id == scanState.selectedVehicleId,
+            orElse: () => vehicles.first,
+          );
     final latestScore = scanState.latestScan?.vehicleId == vehicle?.id
         ? scanState.latestScan?.healthScore
         : null;
@@ -279,6 +299,7 @@ class ScanModalCard extends ConsumerWidget {
                       child: _buildCardContent(
                         context,
                         ref,
+                        vehicles,
                         vehicle,
                         scanState,
                         latestScore,
@@ -290,6 +311,62 @@ class ScanModalCard extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A horizontally scrollable row of tappable vehicle chips — lets an owner
+/// with more than one vehicle actually choose which one a scan applies to,
+/// instead of it silently always targeting whichever vehicle an unordered
+/// Firestore query happened to return first.
+class _VehiclePicker extends StatelessWidget {
+  final List<VehicleModel> vehicles;
+  final String? selectedId;
+  final ValueChanged<String> onSelect;
+
+  const _VehiclePicker({
+    required this.vehicles,
+    required this.selectedId,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 34,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        shrinkWrap: true,
+        itemCount: vehicles.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final v = vehicles[i];
+          final isSelected = v.id == selectedId;
+          return GestureDetector(
+            onTap: () => onSelect(v.id),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primarySubtle : AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : AppColors.border,
+                  width: isSelected ? 1.2 : 1,
+                ),
+              ),
+              child: Text(
+                v.displayName,
+                style: AppTypography.captionSmall.copyWith(
+                  color: isSelected ? AppColors.primary : AppColors.textMuted,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          );
+        },
       ),
     );
   }

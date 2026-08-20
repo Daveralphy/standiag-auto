@@ -107,6 +107,7 @@ class JobNotifier extends StateNotifier<JobState> {
     required String mechanicId,
     required String vehicleId,
     required String issue,
+    GeoPoint? carOwnerLocation,
   }) async {
     final doc = await FirebaseFirestore.instance.collection('jobs').add(
       JobModel(
@@ -116,6 +117,7 @@ class JobNotifier extends StateNotifier<JobState> {
         vehicleId: vehicleId,
         issue: issue,
         status: JobStatus.pending,
+        carOwnerLocation: carOwnerLocation,
         createdAt: DateTime.now(),
       ).toFirestore(),
     );
@@ -178,7 +180,24 @@ class JobNotifier extends StateNotifier<JobState> {
       await FirebaseFirestore.instance.collection('jobs').doc(jobId).update({
         'rating': rating,
         'ratingComment': comment,
-        'completedAt': FieldValue.serverTimestamp(),
+        'reviewedAt': FieldValue.serverTimestamp(),
+      });
+      state = state.copyWith(clearActiveJob: true);
+    } catch (e) {
+      state = state.copyWith(
+        error: ErrorHandler.handle(e, StackTrace.current).message,
+      );
+    }
+  }
+
+  /// Marks a completed job as acknowledged without a rating — the "Skip"
+  /// path on the completed screen. Without this, skipping left the job
+  /// looking identical to one that was never reviewed at all, so it kept
+  /// resurfacing as this owner's "active job" forever.
+  Future<void> skipRating(String jobId) async {
+    try {
+      await FirebaseFirestore.instance.collection('jobs').doc(jobId).update({
+        'reviewedAt': FieldValue.serverTimestamp(),
       });
       state = state.copyWith(clearActiveJob: true);
     } catch (e) {
@@ -236,11 +255,15 @@ final activeJobForMechanicProvider =
 });
 
 /// Real-time listener for this car owner's current active job (any status
-/// from accepted through in-progress) — used by the Mechanics tab's
+/// from accepted through completed) — used by the Mechanics tab's
 /// active-job header icon so it reflects the mechanic's live status
-/// (en route → arrived → in progress) without a manual refresh. One of the
-/// Rule-13-sanctioned live-query cases, same reasoning as the mechanic-side
-/// equivalent above.
+/// (en route → arrived → in progress → completed) without a manual
+/// refresh. Includes `completed` — not just the in-progress statuses — so
+/// the icon (and UserJobInProgressScreen's own listener) can actually
+/// notice the transition and route to the completed/rating screens instead
+/// of the badge just disappearing the moment the mechanic finishes. One of
+/// the Rule-13-sanctioned live-query cases, same reasoning as the
+/// mechanic-side equivalent above.
 final activeJobForCarOwnerProvider =
     StreamProvider.family<JobModel?, String>((ref, carOwnerId) {
   return FirebaseFirestore.instance
@@ -251,10 +274,22 @@ final activeJobForCarOwnerProvider =
         JobStatus.enRoute.value,
         JobStatus.arrived.value,
         JobStatus.inProgress.value,
+        JobStatus.completed.value,
       ])
-      .limit(1)
       .snapshots()
-      .map((snap) => snap.docs.isEmpty ? null : JobModel.fromFirestore(snap.docs.first));
+      .map((snap) {
+        // No .limit(1) here — a completed-but-already-reviewed job needs to
+        // be filtered out client-side (matching this project's usual
+        // composite-index-avoidance pattern) before picking "the" active
+        // one, otherwise .limit(1) could hand back a stale reviewed job
+        // while a genuinely active one sits unseen in the same result set.
+        final jobs = snap.docs
+            .map(JobModel.fromFirestore)
+            .where((job) =>
+                job.status != JobStatus.completed || job.reviewedAt == null)
+            .toList();
+        return jobs.isEmpty ? null : jobs.first;
+      });
 });
 
 /// Real-time listener for an incoming job request addressed to this

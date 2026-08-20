@@ -53,6 +53,8 @@ class _UserMechanicsScreenState extends ConsumerState<UserMechanicsScreen> {
         return RouteNames.userMechanicArrived;
       case JobStatus.inProgress:
         return RouteNames.userJobInProgress;
+      case JobStatus.completed:
+        return RouteNames.userJobCompleted;
       default:
         return null;
     }

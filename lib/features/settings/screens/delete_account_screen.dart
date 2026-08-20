@@ -56,11 +56,24 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     setState(() => _isLoading = true);
     try {
       final uid = user.uid;
+      final firestore = FirebaseFirestore.instance;
+
+      // Read the username *before* deleting the users/{uid} doc that holds
+      // it — without this, usernames/{username} was never cleaned up, and
+      // that lookup doc's own rules only let its owner delete it, so a
+      // deleted account's username stayed permanently unavailable to
+      // literally anyone, forever, including the same person re-signing up.
+      final userDoc = await firestore.collection('users').doc(uid).get();
+      final username = userDoc.data()?['username'] as String?;
+
       await _deleteUserSubcollection('vehicles', 'ownerId', uid);
       await _deleteUserSubcollection('scans', 'ownerId', uid);
       await _deleteUserSubcollection('credits_history', 'userId', uid);
-      await FirebaseFirestore.instance.collection('mechanics').doc(uid).delete();
-      await FirebaseFirestore.instance.collection('users').doc(uid).delete();
+      if (username != null && username.isNotEmpty) {
+        await firestore.collection('usernames').doc(username).delete();
+      }
+      await firestore.collection('mechanics').doc(uid).delete();
+      await firestore.collection('users').doc(uid).delete();
       final deleted = await _deleteAuthUser(user);
       if (!mounted) {
         return;

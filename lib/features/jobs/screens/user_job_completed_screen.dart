@@ -1,6 +1,7 @@
 ﻿// User Job Completed screen â€” job is done, user prompted to rate mechanic.
 // Map background, user nav Mechanics active, search icon top right.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,7 +55,9 @@ class _UserJobCompletedScreenState
         : 'Mechanic';
     final mechanicRating = mechanicAsync?.valueOrNull?.rating ?? 0.0;
     final mechanicJobs = mechanicAsync?.valueOrNull?.totalJobs ?? 0;
-    const LatLng userLocation = LatLng(6.5244, 3.3792);
+    final userLocation = job?.carOwnerLocation != null
+        ? LatLng(job!.carOwnerLocation!.latitude, job.carOwnerLocation!.longitude)
+        : const LatLng(6.5244, 3.3792);
     const LatLng mechanicLocation = LatLng(6.5246, 3.37935);
 
     return Scaffold(
@@ -91,7 +94,10 @@ class _UserJobCompletedScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                const AppAvatar(name: 'John Doe', size: 36),
+                AppAvatar(
+                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
+                  size: 36,
+                ),
                 const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,7 +184,13 @@ class _UserJobCompletedScreenState
                   Row(children: [
                     Expanded(child: AppButton(
                       label: 'Skip',
-                      onTap: () => context.go(RouteNames.userHome),
+                      onTap: () {
+                        // Without this, a skipped job looks identical to
+                        // one never reviewed at all, and keeps resurfacing
+                        // as the owner's "active job" indefinitely.
+                        ref.read(jobProvider.notifier).skipRating(widget.jobId);
+                        context.go(RouteNames.userHome);
+                      },
                       variant: AppButtonVariant.ghost,
                     )),
                     const SizedBox(width: 10),

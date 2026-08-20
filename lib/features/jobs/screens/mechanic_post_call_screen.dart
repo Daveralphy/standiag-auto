@@ -1,5 +1,6 @@
 ﻿// Mechanic Post Call screen â€” after call ends, mechanic decides to accept or reject job.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,7 +59,9 @@ class _MechanicPostCallScreenState
             .trim()
         : 'Car Owner';
     const LatLng mechanicLocation = LatLng(6.5282, 3.3822);
-    const LatLng userLocation = LatLng(6.5244, 3.3792);
+    final userLocation = job?.carOwnerLocation != null
+        ? LatLng(job!.carOwnerLocation!.latitude, job.carOwnerLocation!.longitude)
+        : const LatLng(6.5244, 3.3792);
 
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
@@ -94,7 +97,10 @@ class _MechanicPostCallScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                const AppAvatar(name: 'Kwame Asante', size: 36),
+                AppAvatar(
+                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
+                  size: 36,
+                ),
                 const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

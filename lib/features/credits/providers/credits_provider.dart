@@ -45,6 +45,10 @@ class CreditsState {
 class CreditsNotifier extends StateNotifier<CreditsState> {
   CreditsNotifier() : super(const CreditsState());
 
+  void setError(String message) {
+    state = state.copyWith(error: message);
+  }
+
   Future<void> fetchBalance(String userId) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -73,12 +77,16 @@ class CreditsNotifier extends StateNotifier<CreditsState> {
 
   Future<void> fetchHistory(String userId) async {
     try {
+      // Sorted client-side rather than via .orderBy() — combining a
+      // where-equality filter with an order-by on a different field needs a
+      // composite Firestore index, and one user's transaction count is
+      // small enough that sorting here costs nothing.
       final query = await FirebaseFirestore.instance
           .collection('credits_history')
           .where('userId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
           .get();
-      final history = query.docs.map(CreditsModel.fromFirestore).toList();
+      final history = query.docs.map(CreditsModel.fromFirestore).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       await CacheManager.instance.write(
         box: CacheKeys.creditsBox,
         key: CacheKeys.creditsHistory,
@@ -92,8 +100,15 @@ class CreditsNotifier extends StateNotifier<CreditsState> {
     }
   }
 
+  /// Client-enforced charge — real (a genuine Firestore transaction, a
+  /// genuine balance check, a genuine ledger entry), but trusts the caller
+  /// on the amount, since nothing stops a client from calling this with
+  /// whatever number it wants. [CreditsGateway] tries the server-verified
+  /// Cloud Function version of this first and only falls back to calling
+  /// this directly if that function isn't deployed yet — see its own
+  /// comment for why that's an acceptable interim tradeoff.
   Future<bool> deduct(String userId, int amount, String reason,
-      {String? jobId}) async {
+      {String? relatedEntityId}) async {
     try {
       if (state.balance < amount) {
         state = state.copyWith(
@@ -124,7 +139,7 @@ class CreditsNotifier extends StateNotifier<CreditsState> {
             type: TransactionType.debit,
             amount: amount,
             reason: reason,
-            relatedJobId: jobId,
+            relatedEntityId: relatedEntityId,
             createdAt: DateTime.now(),
           ).toFirestore(),
         );
@@ -146,8 +161,11 @@ class CreditsNotifier extends StateNotifier<CreditsState> {
     }
   }
 
-  Future<void> purchase(String userId, int amount) async {
-    state = state.copyWith(isPurchasing: true, error: null);
+  /// Client-side fallback refund — the counterpart to [deduct]'s fallback
+  /// role. Used when a charged action then fails for a system reason (a
+  /// scan whose adapter disconnected mid-read, not the user's fault).
+  Future<void> refund(String userId, int amount, String reason,
+      {String? relatedEntityId}) async {
     try {
       final firestore = FirebaseFirestore.instance;
       await firestore.runTransaction((transaction) async {
@@ -164,26 +182,35 @@ class CreditsNotifier extends StateNotifier<CreditsState> {
             userId: userId,
             type: TransactionType.credit,
             amount: amount,
-            reason: 'Purchased credits',
+            reason: reason,
+            relatedEntityId: relatedEntityId,
             createdAt: DateTime.now(),
           ).toFirestore(),
         );
       });
-      state = state.copyWith(
-        isPurchasing: false,
-        balance: state.balance + amount,
-      );
+
+      final nextBalance = state.balance + amount;
+      state = state.copyWith(balance: nextBalance);
       await CacheManager.instance.write(
         box: CacheKeys.creditsBox,
         key: CacheKeys.creditsBalance,
-        value: state.balance,
+        value: nextBalance,
       );
     } catch (e) {
       state = state.copyWith(
-        isPurchasing: false,
         error: ErrorHandler.handle(e, StackTrace.current).message,
       );
     }
+  }
+
+  /// Marks a purchase attempt as in flight — the actual crediting never
+  /// happens here anymore. A direct client-side balance increment is
+  /// exactly the hole CreditsGateway.initiatePurchase closes: real credit
+  /// only ever gets granted by the paystackWebhook Cloud Function, using
+  /// Paystack's own server-verified confirmation that money actually
+  /// changed hands, never a client's say-so.
+  void setPurchasing(bool value) {
+    state = state.copyWith(isPurchasing: value, error: null);
   }
 }
 

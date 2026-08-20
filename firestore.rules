@@ -72,11 +72,32 @@ service cloud.firestore {
     // transaction as the balance update on users/{userId}.credits) and
     // reads its own, but never edits one after the fact. Delete is only
     // used by account self-deletion, wiping a user's own entries.
+    //
+    // NOT YET TIGHTENED — deliberately. Once Blaze/Functions are live and
+    // chargeForAction/refundCredits/paystackWebhook (functions/src/
+    // index.ts) are the only things granting/spending credits, this
+    // should become `allow create, delete: if false` here and
+    // `allow write: if isSelf(userId) && request.resource.data.credits ==
+    // resource.data.credits` on users/{userId} below — locking both the
+    // ledger and the balance field to server writes only. Deploying that
+    // now would break CreditsNotifier.deduct()/refund()
+    // (credits_provider.dart), the real-but-client-enforced fallback the
+    // pilot currently depends on with no Blaze plan — so this tightening
+    // must ship in the same deploy as Functions going live, not before.
     match /credits_history/{entryId} {
       allow read, delete: if isSignedIn() &&
           resource.data.userId == request.auth.uid;
       allow create: if isSignedIn() &&
           request.resource.data.userId == request.auth.uid;
+    }
+
+    // ─── Pending Paystack Purchases ─────────────────────────────────────
+    // Written by initializePaystackTransaction and only ever read/resolved
+    // by paystackWebhook — both Admin SDK, both server-side. No client
+    // (buyer or otherwise) has any business reading or writing this
+    // collection directly.
+    match /pending_purchases/{reference} {
+      allow read, write: if false;
     }
 
     // ─── Notifications ──────────────────────────────────────────────────

@@ -13,7 +13,10 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/cache/cache_keys.dart';
 import '../../../core/cache/cache_manager.dart';
+import '../../../core/constants/credits_pricing.dart';
 import '../../../core/errors/error_handler.dart';
+import '../../credits/providers/credits_provider.dart';
+import '../../credits/services/credits_gateway.dart';
 
 import '../models/scan_model.dart';
 import '../services/elm327_service.dart';
@@ -27,6 +30,12 @@ class ScanState {
   final bool isDiscovering;
   final String? connectedDeviceName;
   final List<ScanResult> discoveredDevices;
+
+  /// Which of the owner's vehicles a scan applies to — explicit, rather
+  /// than always silently defaulting to whichever vehicle an unordered
+  /// Firestore query happens to return first. Null until the owner (with
+  /// more than one vehicle) actually picks one.
+  final String? selectedVehicleId;
 
   /// Error from the Bluetooth connect/scan flow — shown near the Connect
   /// Adapter / Tap to Scan button.
@@ -47,6 +56,7 @@ class ScanState {
     this.isDiscovering = false,
     this.connectedDeviceName,
     this.discoveredDevices = const [],
+    this.selectedVehicleId,
     this.error,
     this.historyError,
   });
@@ -60,6 +70,7 @@ class ScanState {
     bool? isDiscovering,
     String? connectedDeviceName,
     List<ScanResult>? discoveredDevices,
+    String? selectedVehicleId,
     String? error,
     String? historyError,
   }) {
@@ -72,6 +83,7 @@ class ScanState {
       isDiscovering: isDiscovering ?? this.isDiscovering,
       connectedDeviceName: connectedDeviceName ?? this.connectedDeviceName,
       discoveredDevices: discoveredDevices ?? this.discoveredDevices,
+      selectedVehicleId: selectedVehicleId ?? this.selectedVehicleId,
       error: error,
       historyError: historyError,
     );
@@ -79,9 +91,30 @@ class ScanState {
 }
 
 class ScanNotifier extends StateNotifier<ScanState> {
-  ScanNotifier() : super(const ScanState());
+  ScanNotifier(this._ref) : super(const ScanState());
+
+  // Needed to charge/refund credits for a scan via CreditsGateway, which
+  // reads creditsProvider.notifier — this notifier has no WidgetRef of its
+  // own the way a widget would, so it's handed the provider's own Ref
+  // instead, same as any provider that needs to reach another one.
+  final Ref _ref;
 
   final Elm327Service _elm327 = Elm327Service();
+
+  /// Tracks the adapter's real BLE connection state so a physical
+  /// disconnect (out of range, adapter powered off) is reflected in
+  /// [ScanState.isConnected] immediately, instead of the UI going on
+  /// showing "Connected" until the next scan attempt fails. Cancelled
+  /// before every *voluntary* disconnect (see [disconnectDevice]) so that
+  /// path doesn't also show a spurious "lost connection" error.
+  StreamSubscription<BluetoothConnectionState>? _connectionSub;
+
+  void selectVehicle(String vehicleId) {
+    state = state.copyWith(
+        selectedVehicleId: vehicleId,
+        error: state.error,
+        historyError: state.historyError);
+  }
 
   /// Requests the Bluetooth runtime permissions needed to scan/connect.
   ///
@@ -197,6 +230,18 @@ class ScanNotifier extends StateNotifier<ScanState> {
             : device.remoteId.str,
         historyError: state.historyError,
       );
+      _connectionSub?.cancel();
+      _connectionSub = device.connectionState.listen((connState) {
+        if (connState != BluetoothConnectionState.disconnected) return;
+        _connectionSub?.cancel();
+        _connectionSub = null;
+        state = state.copyWith(
+          isConnected: false,
+          connectedDeviceName: null,
+          error: 'Lost connection to the OBD-II adapter.',
+          historyError: state.historyError,
+        );
+      });
       return true;
     } catch (e, stackTrace) {
       state = state.copyWith(
@@ -212,6 +257,11 @@ class ScanNotifier extends StateNotifier<ScanState> {
   }
 
   Future<void> disconnectDevice() async {
+    // Cancelled before the actual disconnect so the connection-state
+    // listener above never sees this voluntary disconnect and shows a
+    // spurious "Lost connection" error over what the user asked for.
+    await _connectionSub?.cancel();
+    _connectionSub = null;
     await _elm327.disconnect();
     state = state.copyWith(
         isConnected: false,
@@ -233,12 +283,32 @@ class ScanNotifier extends StateNotifier<ScanState> {
     }
     state = state.copyWith(
         isScanning: true, error: null, historyError: state.historyError);
+
+    final scanId = FirebaseFirestore.instance.collection('scans').doc().id;
+    final canProceed = await CreditsGateway.charge(
+      _ref.read(creditsProvider.notifier),
+      userId: ownerId,
+      action: 'obd_scan',
+      fallbackAmount: CreditsPricing.obdScanCost,
+      reason: 'Ran an OBD-II scan',
+      relatedEntityId: scanId,
+    );
+    if (!canProceed) {
+      state = state.copyWith(
+        isScanning: false,
+        error: _ref.read(creditsProvider).error ??
+            'You don\'t have enough credits for this.',
+        historyError: state.historyError,
+      );
+      return;
+    }
+
     try {
       final reading = await _elm327.runDiagnostics();
       final healthScore = (10 - (reading.dtcCodes.length * 2)).clamp(0, 10);
 
       final scan = ScanModel(
-        id: FirebaseFirestore.instance.collection('scans').doc().id,
+        id: scanId,
         ownerId: ownerId,
         vehicleId: vehicleId,
         healthScore: healthScore,
@@ -267,6 +337,18 @@ class ScanNotifier extends StateNotifier<ScanState> {
         // Ignore — the Firestore write and in-memory state already succeeded.
       }
     } catch (e, stackTrace) {
+      // The scan was already charged for above — if it then failed for a
+      // system reason (the adapter disconnected mid-read, the save to
+      // Firestore failed), that's not the user's fault, so give the
+      // credits back rather than leaving them out the cost of a reading
+      // the app itself couldn't complete.
+      await CreditsGateway.refund(
+        _ref.read(creditsProvider.notifier),
+        userId: ownerId,
+        amount: CreditsPricing.obdScanCost,
+        reason: 'Refund: scan did not complete',
+        relatedEntityId: scanId,
+      );
       state = state.copyWith(
         isScanning: false,
         error: ErrorHandler.handle(e, stackTrace,
@@ -312,6 +394,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
   @override
   void dispose() {
+    _connectionSub?.cancel();
     // Fire-and-forget cleanup — must never let an unhandled rejection escape
     // a dispose() call.
     _elm327.disconnect().catchError((_) {});
@@ -320,4 +403,4 @@ class ScanNotifier extends StateNotifier<ScanState> {
 }
 
 final scanProvider =
-    StateNotifierProvider<ScanNotifier, ScanState>((ref) => ScanNotifier());
+    StateNotifierProvider<ScanNotifier, ScanState>((ref) => ScanNotifier(ref));

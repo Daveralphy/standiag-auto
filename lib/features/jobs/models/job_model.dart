@@ -60,6 +60,13 @@ class JobModel {
   /// actual voice channel.
   final DateTime? callAnsweredAt;
 
+  /// When the car owner acknowledged this job's completion — by rating the
+  /// mechanic or explicitly skipping. Distinct from [completedAt] (set by
+  /// the *mechanic* marking the work done): without this, a completed job
+  /// would stay flagged as this owner's "active job" forever, since nothing
+  /// else ever moves it out of the completed status.
+  final DateTime? reviewedAt;
+
   const JobModel({
     required this.id,
     required this.carOwnerId,
@@ -75,6 +82,7 @@ class JobModel {
     this.rating,
     this.ratingComment,
     this.callAnsweredAt,
+    this.reviewedAt,
   });
 
   factory JobModel.fromFirestore(DocumentSnapshot doc) {
@@ -104,6 +112,9 @@ class JobModel {
       callAnsweredAt: data['callAnsweredAt'] is Timestamp
           ? (data['callAnsweredAt'] as Timestamp).toDate()
           : null,
+      reviewedAt: data['reviewedAt'] is Timestamp
+          ? (data['reviewedAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -123,12 +134,13 @@ class JobModel {
       if (ratingComment != null) 'ratingComment': ratingComment,
       if (callAnsweredAt != null)
         'callAnsweredAt': Timestamp.fromDate(callAnsweredAt!),
+      if (reviewedAt != null) 'reviewedAt': Timestamp.fromDate(reviewedAt!),
     };
   }
 
   JobModel copyWith({JobStatus? status, double? rating, String? ratingComment,
       DateTime? acceptedAt, DateTime? completedAt, GeoPoint? mechanicLocation,
-      DateTime? callAnsweredAt}) {
+      DateTime? callAnsweredAt, DateTime? reviewedAt}) {
     return JobModel(
       id: id,
       carOwnerId: carOwnerId,
@@ -144,6 +156,7 @@ class JobModel {
       rating: rating ?? this.rating,
       ratingComment: ratingComment ?? this.ratingComment,
       callAnsweredAt: callAnsweredAt ?? this.callAnsweredAt,
+      reviewedAt: reviewedAt ?? this.reviewedAt,
     );
   }
 }

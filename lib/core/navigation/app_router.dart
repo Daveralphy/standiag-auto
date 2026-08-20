@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/models/user_model.dart';
+import '../../features/auth/screens/complete_social_profile_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/mechanic_signup_step_one_screen.dart';
@@ -169,6 +170,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: RouteNames.otpEmail,
         builder: (_, __) =>
             OtpEmailScreen(), // ignore: prefer_const_constructors
+      ),
+      GoRoute(
+        path: RouteNames.completeSocialProfile,
+        builder: (_, __) => const CompleteSocialProfileScreen(),
       ),
       GoRoute(
         path: RouteNames.userSignupStepOne,

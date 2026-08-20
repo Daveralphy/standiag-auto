@@ -1,6 +1,7 @@
 ﻿// User Rate Mechanic screen â€” user taps stars and leaves optional comment.
 // Map background, user nav Mechanics active, search icon top right.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -103,7 +104,10 @@ class _UserRateMechanicScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                const AppAvatar(name: 'John Doe', size: 36),
+                AppAvatar(
+                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
+                  size: 36,
+                ),
                 const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

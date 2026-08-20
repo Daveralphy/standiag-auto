@@ -59,5 +59,21 @@
 		<string>StanDiag Auto accesses your photo library so you can choose profile and vehicle photos.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>StanDiag Auto saves photos you take to your photo library.</string>
+		<!-- Google Sign-In's iOS redirect back into the app — the one social
+		     sign-in credential that can't come from .env, since URL schemes
+		     are static. Replace YOUR_IOS_CLIENT_ID below with the numeric part
+		     of GOOGLE_IOS_CLIENT_ID (.env) reversed, e.g. if that value is
+		     "1234-abc.apps.googleusercontent.com" this becomes
+		     "com.googleusercontent.apps.1234-abc". See SETUP.md's Google
+		     Sign-In section. -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.YOUR_IOS_CLIENT_ID</string>
+				</array>
+			</dict>
+		</array>
 	</dict>
 </plist>

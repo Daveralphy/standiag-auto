@@ -277,9 +277,12 @@ class Elm327Service {
   }
 
   /// Runs a real diagnostic pass: queries RPM, coolant temperature, vehicle
-  /// speed, and any stored trouble codes. Any PID the adapter can't answer
-  /// (engine off, unsupported PID, etc.) is simply left null — never
-  /// substituted with a fabricated value.
+  /// speed, and any stored trouble codes. A PID the adapter genuinely has
+  /// nothing to report for (engine off, unsupported PID, etc.) is simply
+  /// left null — never substituted with a fabricated value. A real
+  /// communication failure (the adapter stops responding, a BLE write
+  /// fails) is a different thing entirely and throws instead of returning
+  /// a reading — the caller must not treat that as "no trouble codes".
   Future<ObdReading> runDiagnostics() async {
     final rpm = await _queryPid('010C', _parseRpm);
     final coolant = await _queryPid('0105', _parseCoolantTemp);
@@ -293,25 +296,27 @@ class Elm327Service {
     );
   }
 
+  /// Deliberately does NOT catch here. A clean "the adapter has nothing to
+  /// report for this PID" (engine off, unsupported PID) comes back as a
+  /// normal response string and is turned into `null` by
+  /// [_extractDataBytes] without throwing at all — that path is unaffected.
+  /// What must NOT be swallowed is a real communication failure (a BLE
+  /// write error, a timeout because the adapter stopped responding
+  /// mid-scan): those need to reach [runDiagnostics] and abort the scan,
+  /// not get silently downgraded into "no data", which is how a mid-scan
+  /// disconnect used to get saved as a perfectly healthy result.
   Future<T?> _queryPid<T>(
       String pid, T? Function(List<int> dataBytes) parse) async {
-    try {
-      final response = await _sendCommand(pid);
-      final bytes = _extractDataBytes(response, expectedModeEcho: pid.substring(0, 2));
-      if (bytes == null) return null;
-      return parse(bytes);
-    } catch (_) {
-      return null;
-    }
+    final response = await _sendCommand(pid);
+    final bytes = _extractDataBytes(response, expectedModeEcho: pid.substring(0, 2));
+    if (bytes == null) return null;
+    return parse(bytes);
   }
 
+  /// See [_queryPid]'s doc comment — same reasoning applies here.
   Future<List<String>> _queryDtcs() async {
-    try {
-      final response = await _sendCommand('03');
-      return _parseDtcResponse(response);
-    } catch (_) {
-      return const [];
-    }
+    final response = await _sendCommand('03');
+    return _parseDtcResponse(response);
   }
 
   /// Strips ELM327 whitespace/echo noise and returns the hex data bytes

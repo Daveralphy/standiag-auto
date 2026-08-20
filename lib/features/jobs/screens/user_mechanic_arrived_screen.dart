@@ -1,6 +1,7 @@
 ﻿// User Mechanic Arrived screen â€” mechanic has arrived at user location.
 // Map background, arrival confirmation, confirm job started button.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,7 +55,9 @@ class _UserMechanicArrivedScreenState
         ? '${mechanicAsync!.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
             .trim()
         : 'Mechanic';
-    const LatLng userLocation = LatLng(6.5244, 3.3792);
+    final userLocation = job?.carOwnerLocation != null
+        ? LatLng(job!.carOwnerLocation!.latitude, job.carOwnerLocation!.longitude)
+        : const LatLng(6.5244, 3.3792);
     final mechanicLocation = job?.mechanicLocation != null
         ? LatLng(job!.mechanicLocation!.latitude, job.mechanicLocation!.longitude)
         : const LatLng(6.5248, 3.3795);
@@ -93,7 +96,10 @@ class _UserMechanicArrivedScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                const AppAvatar(name: 'John Doe', size: 36),
+                AppAvatar(
+                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
+                  size: 36,
+                ),
                 const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

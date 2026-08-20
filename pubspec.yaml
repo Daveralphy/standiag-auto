@@ -33,6 +33,11 @@ dependencies:
   firebase_messaging: ^15.2.5     # Push notifications — mechanics get alerted to nearby service requests
   cloud_functions: ^5.2.5         # Calls deleteCloudinaryImage — the one Cloudinary op that needs its secret held server-side
 
+  # ─── Social Sign-In ─────────────────────────────────────────────────────────
+  google_sign_in: ^6.3.0          # Google credential exchange for Firebase Auth
+  sign_in_with_apple: ^6.1.4      # Apple credential exchange for Firebase Auth
+  crypto: ^3.0.3                  # Hashes the nonce Apple's replay-attack protection requires
+
   # ─── Local Cache ───────────────────────────────────────────────────────────
   hive_flutter: ^1.1.0            # Persistent local cache
 

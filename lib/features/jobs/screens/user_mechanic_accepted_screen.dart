@@ -47,7 +47,9 @@ class _UserMechanicAcceptedScreenState
         ? '${mechanicAsync!.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
             .trim()
         : 'Mechanic';
-    const LatLng userLocation = LatLng(6.5244, 3.3792);
+    final userLocation = job?.carOwnerLocation != null
+        ? LatLng(job!.carOwnerLocation!.latitude, job.carOwnerLocation!.longitude)
+        : const LatLng(6.5244, 3.3792);
     final mechanicLocation = job?.mechanicLocation != null
         ? LatLng(job!.mechanicLocation!.latitude, job.mechanicLocation!.longitude)
         : const LatLng(6.5280, 3.3820);

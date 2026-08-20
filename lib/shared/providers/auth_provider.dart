@@ -3,10 +3,19 @@
 // can reactively respond to login and logout events.
 // The GoRouter watches this to redirect users automatically.
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:convert';
+import 'dart:io' show Platform;
+import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+import '../../core/config/social_signin_config.dart';
 import '../../features/auth/models/mechanic_model.dart';
 import '../../features/auth/models/user_model.dart';
 import '../../features/auth/providers/signup_draft_provider.dart';
@@ -190,20 +199,99 @@ class AuthController {
     }
   }
 
-  /// Sends (or resends) the verification link to the signed-in user's email.
-  Future<void> sendEmailVerification() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.emailVerified) return;
-    await user.sendEmailVerification();
+  /// Signs in (or up — Google's account picker handles both identically)
+  /// with Google, exchanging its credential for a Firebase one. Callers
+  /// check `userCredential.additionalUserInfo?.isNewUser` (or
+  /// [hasProfile]) to know whether this account still needs a StanDiag
+  /// profile — type + username — created for it, same as a brand-new
+  /// email signup would.
+  Future<UserCredential> signInWithGoogle() async {
+    if (!SocialSignInConfig.isGoogleConfigured) {
+      throw StateError('google-signin-not-configured');
+    }
+    final googleSignIn = GoogleSignIn(
+      serverClientId: SocialSignInConfig.googleWebClientId,
+      clientId: !kIsWeb && Platform.isIOS
+          ? SocialSignInConfig.googleIosClientId
+          : null,
+    );
+    final account = await googleSignIn.signIn();
+    if (account == null) {
+      // The user closed the account picker — not a real error.
+      throw StateError('google-signin-cancelled');
+    }
+    final googleAuth = await account.authentication;
+    final credential = GoogleAuthProvider.credential(
+      idToken: googleAuth.idToken,
+      accessToken: googleAuth.accessToken,
+    );
+    return FirebaseAuth.instance.signInWithCredential(credential);
   }
 
-  /// Reloads the signed-in user from Firebase and reports whether their
-  /// email has been verified (i.e. they clicked the link).
-  Future<bool> checkEmailVerified() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
-    await user.reload();
-    return FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+  /// Signs in (or up) with Apple. Native on iOS/macOS (just the Xcode
+  /// "Sign in with Apple" capability, already in
+  /// ios/Runner/Runner.entitlements) — everywhere else goes through the
+  /// Services ID + hosted redirect page configured in .env.
+  Future<UserCredential> signInWithApple() async {
+    final needsWebFlow = kIsWeb || (!Platform.isIOS && !Platform.isMacOS);
+    if (needsWebFlow && !SocialSignInConfig.isAppleConfiguredForAndroid) {
+      throw StateError('apple-signin-not-configured');
+    }
+
+    final rawNonce = _generateNonce();
+    final nonce = _sha256ofString(rawNonce);
+
+    final appleCredential = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+      nonce: nonce,
+      webAuthenticationOptions: needsWebFlow
+          ? WebAuthenticationOptions(
+              clientId: SocialSignInConfig.appleServiceId,
+              redirectUri: Uri.parse(SocialSignInConfig.appleRedirectUri),
+            )
+          : null,
+    );
+
+    final oauthCredential = OAuthProvider('apple.com').credential(
+      idToken: appleCredential.identityToken,
+      rawNonce: rawNonce,
+    );
+    final userCredential =
+        await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+
+    // Apple only ever hands back the person's name on the *first*
+    // authorization ever — never again after that, even on a fresh
+    // install — so this is the one moment it's available to save at all.
+    final name = [appleCredential.givenName, appleCredential.familyName]
+        .where((s) => s != null && s.isNotEmpty)
+        .join(' ');
+    if (name.isNotEmpty && (userCredential.user?.displayName ?? '').isEmpty) {
+      await userCredential.user?.updateDisplayName(name);
+    }
+    return userCredential;
+  }
+
+  String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
+  }
+
+  String _sha256ofString(String input) =>
+      sha256.convert(utf8.encode(input)).toString();
+
+  /// Whether [uid] already has a StanDiag profile (a users/{uid} doc) —
+  /// true for a returning social sign-in, false for one whose Firebase
+  /// Auth account just got created via Google/Apple and still needs the
+  /// type + username completion step every other signup path collects.
+  Future<bool> hasProfile(String uid) async {
+    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    return doc.exists;
   }
 
   /// Starts phone number verification. [onCodeSent] receives the

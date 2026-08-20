@@ -1,6 +1,7 @@
 ﻿// User Job In Progress screen â€” job is underway.
 // Map background, user nav bar Mechanics active, search icon top right.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +18,7 @@ import '../../../shared/widget/notched_nav_bar.dart';
 import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:latlong2/latlong.dart';
+import '../models/job_model.dart';
 import '../providers/job_provider.dart';
 
 class UserJobInProgressScreen extends ConsumerStatefulWidget {
@@ -39,6 +41,22 @@ class _UserJobInProgressScreenState
 
   @override
   Widget build(BuildContext context) {
+    // The mechanic marking the job done only updates Firestore — nothing
+    // was ever listening for that transition on this side, so the owner
+    // was stuck on this screen forever with no way to reach the
+    // completed/rating screens. addPostFrameCallback defers the navigation
+    // out of build(), matching the framework's own rule against pushing
+    // routes mid-build.
+    ref.listen(jobProvider.select((s) => s.activeJob), (previous, next) {
+      if (next?.status == JobStatus.completed &&
+          previous?.status != JobStatus.completed) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          context.go(RouteNames.userJobCompleted, extra: widget.jobId);
+        });
+      }
+    });
+
     final job = ref.watch(jobProvider.select((s) => s.activeJob));
     final mechanicAsync = job == null
         ? null
@@ -47,7 +65,9 @@ class _UserJobInProgressScreenState
         ? '${mechanicAsync!.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
             .trim()
         : 'Mechanic';
-    const LatLng userLocation = LatLng(6.5244, 3.3792);
+    final userLocation = job?.carOwnerLocation != null
+        ? LatLng(job!.carOwnerLocation!.latitude, job.carOwnerLocation!.longitude)
+        : const LatLng(6.5244, 3.3792);
     final mechanicLocation = job?.mechanicLocation != null
         ? LatLng(job!.mechanicLocation!.latitude, job.mechanicLocation!.longitude)
         : const LatLng(6.5246, 3.37935);
@@ -86,7 +106,10 @@ class _UserJobInProgressScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                const AppAvatar(name: 'John Doe', size: 36),
+                AppAvatar(
+                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
+                  size: 36,
+                ),
                 const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

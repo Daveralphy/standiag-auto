@@ -199,6 +199,63 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     }
   }
 
+  Future<void> _continueWithGoogle() => _continueWithSocial(
+        (auth) => auth.signInWithGoogle(),
+        cancelledMessage: 'google-signin-cancelled',
+        notConfiguredMessage:
+            'Google sign-in isn\'t set up yet — add your Google client IDs to .env.',
+      );
+
+  Future<void> _continueWithApple() => _continueWithSocial(
+        (auth) => auth.signInWithApple(),
+        notConfiguredMessage:
+            'Apple sign-in isn\'t set up yet — add your Apple Services ID to .env.',
+      );
+
+  /// Shared by both social buttons: sign in, then either go straight home
+  /// (a returning account already has a StanDiag profile) or — for a
+  /// brand-new Google/Apple account — on to the one-time type + username
+  /// completion step every other signup path already collects.
+  Future<void> _continueWithSocial(
+    Future<UserCredential> Function(AuthController auth) signIn, {
+    String? cancelledMessage,
+    required String notConfiguredMessage,
+  }) async {
+    setState(() => _isLoading = true);
+    try {
+      final auth = ref.read(authControllerProvider);
+      final credential = await signIn(auth);
+      final user = credential.user;
+      if (!mounted || user == null) return;
+
+      final hasProfile = await auth.hasProfile(user.uid);
+      if (!mounted) return;
+      if (!hasProfile) {
+        context.go(RouteNames.completeSocialProfile);
+        return;
+      }
+      final type = await auth.fetchUserType(user.uid);
+      if (!mounted) return;
+      context.go(RouteNames.homeFor(type));
+    } on StateError catch (e) {
+      if (!mounted) return;
+      if (e.message == cancelledMessage) return;
+      if (e.message.endsWith('not-configured')) {
+        _showToast(notConfiguredMessage);
+        return;
+      }
+      _showToast(ErrorHandler.handle(e, StackTrace.current).message);
+    } catch (error, stackTrace) {
+      if (mounted) {
+        _showToast(ErrorHandler.handle(error, stackTrace).message);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -346,7 +403,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     child: _SocialButton(
                       label: 'Google',
                       icon: const _GoogleIcon(),
-                      onTap: () => _showToast('Google sign-in is coming soon.'),
+                      onTap: () {
+                        if (!_isLoading) _continueWithGoogle();
+                      },
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -358,7 +417,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         size: 18,
                         color: AppColors.textPrimary,
                       ),
-                      onTap: () => _showToast('Apple sign-in is coming soon.'),
+                      onTap: () {
+                        if (!_isLoading) _continueWithApple();
+                      },
                     ),
                   ),
                 ],

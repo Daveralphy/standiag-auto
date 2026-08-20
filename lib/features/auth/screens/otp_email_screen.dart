@@ -1,4 +1,8 @@
 import 'dart:async';
+import 'dart:math';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +11,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
-import '../../../shared/providers/auth_provider.dart';
+import '../../../core/services/otp_email_service.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../models/user_model.dart';
@@ -21,17 +25,50 @@ class OtpEmailScreen extends ConsumerStatefulWidget {
 }
 
 class _OtpEmailScreenState extends ConsumerState<OtpEmailScreen> {
+  static const _codeValidity = Duration(minutes: 10);
+
   final List<String> _digits = List.filled(6, '');
   int _countdown = 59;
   Timer? _timer;
   bool _isLoading = false;
+
+  // The code actually being checked against — generated and emailed
+  // client-side via EmailJS, the same real (not link-based) verification
+  // this app already uses for password changes. Previously this screen's
+  // keypad checked nothing at all: any 6 digits "verified" as long as the
+  // user had separately clicked a Firebase-emailed link.
+  String? _sentCode;
+  DateTime? _codeSentAt;
 
   @override
   void initState() {
     super.initState();
     SystemUiStyle.apply();
     _startCountdown();
-    ref.read(authControllerProvider).sendEmailVerification();
+    _sendNewCode();
+  }
+
+  String _generateCode() {
+    final random = Random.secure();
+    return List.generate(6, (_) => random.nextInt(10)).join();
+  }
+
+  Future<void> _sendNewCode() async {
+    final email = FirebaseAuth.instance.currentUser?.email;
+    if (email == null) return;
+    final code = _generateCode();
+    _sentCode = code;
+    _codeSentAt = DateTime.now();
+    try {
+      await OtpEmailService.sendCode(toEmail: email, code: code);
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      final message =
+          error is StateError && error.message == 'emailjs-not-configured'
+          ? "Email delivery isn't set up yet — add your EmailJS keys in emailjs_config.dart."
+          : ErrorHandler.handle(error, stackTrace).message;
+      AppErrorToast.showMessage(context, message);
+    }
   }
 
   void _startCountdown() {
@@ -80,26 +117,36 @@ class _OtpEmailScreenState extends ConsumerState<OtpEmailScreen> {
 
   Future<void> _resend() async {
     if (_countdown != 0) return;
-    await ref.read(authControllerProvider).sendEmailVerification();
-    if (!mounted) return;
     setState(() => _countdown = 59);
     _startCountdown();
+    await _sendNewCode();
   }
 
   Future<void> _verify() async {
+    final entered = _digits.join();
+    if (_sentCode == null || _codeSentAt == null ||
+        DateTime.now().difference(_codeSentAt!) > _codeValidity) {
+      AppErrorToast.showMessage(
+        context,
+        'This code has expired. Tap Resend to get a new one.',
+      );
+      return;
+    }
+    if (entered != _sentCode) {
+      AppErrorToast.showMessage(context, 'Incorrect code. Please try again.');
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
-      final verified = await ref
-          .read(authControllerProvider)
-          .checkEmailVerified();
-      if (!mounted) return;
-      if (!verified) {
-        AppErrorToast.showMessage(
-          context,
-          'Not verified yet — open the link we emailed you, then try again.',
-        );
-        return;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .set({'emailVerified': true}, SetOptions(merge: true));
       }
+      if (!mounted) return;
       context.push(RouteNames.otpPhone);
     } catch (error, stackTrace) {
       if (!mounted) return;

@@ -1,9 +1,17 @@
 // Buy Credits screen — shows credit bundles for purchase in Naira.
-// Bundle options: 10 free (first time), 100cr, 250cr, 500cr (best value), 1000cr.
+// Bundle options: 100cr, 250cr, 500cr (best value), 1000cr.
+//
+// Purchasing opens a Paystack checkout page in the browser
+// (initializePaystackTransaction) and never credits the account itself —
+// only the paystackWebhook Cloud Function does that, once Paystack
+// confirms the charge actually succeeded. This screen just watches for the
+// balance to move after the user returns to the app.
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/navigation/route_names.dart';
 
@@ -26,8 +34,12 @@ class BuyCreditsScreen extends ConsumerStatefulWidget {
   ConsumerState<BuyCreditsScreen> createState() => _BuyCreditsScreenState();
 }
 
-class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
+class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen>
+    with WidgetsBindingObserver {
   int? _selectedBundle;
+  bool _isAwaitingPayment = false;
+  int? _pendingCredits;
+  int _balanceBeforePurchase = 0;
 
   static const List<_Bundle> _bundles = [
     _Bundle(credits: 100, priceNaira: 2000, label: null),
@@ -40,9 +52,36 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
   void initState() {
     super.initState();
     SystemUiStyle.apply();
+    WidgetsBinding.instance.addObserver(this);
     final userId = ref.read(currentUserIdProvider);
     if (userId != null) {
       ref.read(creditsProvider.notifier).fetchBalance(userId);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isAwaitingPayment) {
+      _checkForCompletion();
+    }
+  }
+
+  Future<void> _checkForCompletion() async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return;
+    await ref.read(creditsProvider.notifier).fetchBalance(userId);
+    if (!mounted || !_isAwaitingPayment) return;
+    if (ref.read(creditsProvider).balance > _balanceBeforePurchase) {
+      setState(() {
+        _isAwaitingPayment = false;
+        _pendingCredits = null;
+      });
     }
   }
 
@@ -50,16 +89,42 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
     final bundleIndex = _selectedBundle;
     final userId = ref.read(currentUserIdProvider);
     if (bundleIndex == null || userId == null) return;
-    await ref
-        .read(creditsProvider.notifier)
-        .purchase(userId, _bundles[bundleIndex].credits);
-    if (!mounted) return;
-    final error = ref.read(creditsProvider).error;
-    if (error != null) {
-      AppErrorToast.showMessage(context, error);
-      return;
+
+    ref.read(creditsProvider.notifier).setPurchasing(true);
+    try {
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('initializePaystackTransaction')
+          .call<Map<String, dynamic>>({'bundleIndex': bundleIndex});
+      final url = result.data['authorizationUrl'] as String?;
+      if (url == null) throw StateError('No checkout URL returned.');
+
+      final launched = await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) throw StateError('Could not open the payment page.');
+
+      if (!mounted) return;
+      ref.read(creditsProvider.notifier).setPurchasing(false);
+      setState(() {
+        _isAwaitingPayment = true;
+        _pendingCredits = _bundles[bundleIndex].credits;
+        _balanceBeforePurchase = ref.read(creditsProvider).balance;
+      });
+    } on FirebaseFunctionsException catch (e) {
+      if (!mounted) return;
+      ref.read(creditsProvider.notifier).setPurchasing(false);
+      AppErrorToast.showMessage(
+        context,
+        e.code == 'not-found' || e.code == 'unavailable'
+            ? 'Payments aren\'t set up yet. Please check back later.'
+            : e.message ?? 'Could not start the payment.',
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ref.read(creditsProvider.notifier).setPurchasing(false);
+      AppErrorToast.showMessage(context, 'Could not start the payment.');
     }
-    context.go(RouteNames.userCredits);
   }
 
   @override
@@ -143,6 +208,40 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
                       ]),
                     ),
                     const SizedBox(height: 20),
+
+                    if (_isAwaitingPayment) ...[
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Waiting for payment confirmation',
+                                style: AppTypography.bodyLarge,
+                                overflow: TextOverflow.ellipsis, maxLines: 1),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Complete the payment in your browser, then '
+                              'come back here. Your $_pendingCredits credits '
+                              'will appear as soon as it\'s confirmed.',
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: AppColors.textMuted),
+                            ),
+                            const SizedBox(height: 16),
+                            AppButton(
+                              label: 'Check again',
+                              variant: AppButtonVariant.ghost,
+                              onTap: _checkForCompletion,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
                     Text(AppStrings.buyCreditsChoose,
                         style: AppTypography.microBold.copyWith(
@@ -231,7 +330,9 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen> {
                       label: _selectedBundle != null
                           ? 'Pay ${Formatters.naira(_bundles[_selectedBundle!].priceNaira)}'
                           : AppStrings.buyCreditsConfirm,
-                      onTap: _selectedBundle != null ? _purchase : null,
+                      onTap: _selectedBundle != null && !_isAwaitingPayment
+                          ? _purchase
+                          : null,
                       isLoading: creditsState.isPurchasing,
                     ),
                     const SizedBox(height: 24),

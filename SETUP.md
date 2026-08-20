@@ -112,11 +112,90 @@ fallback.
    firebase deploy --only functions --project <your-project-id>
    ```
 
-This also deploys `sendSignupOtp` / `verifySignupOtp` (signup email
-verification) and `notifyNearbyMechanics` (push notifications to nearby
-mechanics) — both already written, just inert until this step runs.
+This also deploys `notifyNearbyMechanics` (push notifications to nearby
+mechanics), already written but inert until this step runs.
+(`sendSignupOtp`/`verifySignupOtp` are dead code, not deployed by this
+step or any other — signup email verification uses the same client-side
+EmailJS flow as password changes instead, needing no Cloud Function.)
 
-## 7. Run
+## 7. Social sign-in (optional)
+
+The Google/Apple buttons on the login screen work without this section —
+they show a clear "not set up yet" toast instead of failing confusingly
+until you complete it.
+
+**Google** — free, no card required:
+1. Firebase console → Authentication → Sign-in method → enable Google.
+2. Project settings → General → "Your apps" → copy the Web app's client ID
+   into `GOOGLE_WEB_CLIENT_ID` (`.env`) and the iOS app's into
+   `GOOGLE_IOS_CLIENT_ID`.
+3. Android needs a SHA-1 fingerprint registered too: `cd android &&
+   ./gradlew signingReport`, then add it in Firebase console → your Android
+   app → Add fingerprint.
+4. iOS needs its reversed client ID added as a URL scheme — the only
+   social sign-in credential that can't come from `.env`, since URL
+   schemes are static. `ios/Runner/Info.plist` already has a placeholder
+   with exact replacement instructions.
+
+**Apple** — needs an active Apple Developer Program membership
+($99/year) to configure at all; nothing here works without one, the same
+way Blaze blocks Cloud Functions.
+1. Native iOS/macOS sign-in needs no `.env` values — just add the "Sign
+   in with Apple" capability in Xcode's Signing & Capabilities tab (this
+   uses `ios/Runner/Runner.entitlements`, already prepared).
+2. Android/web go through a web flow instead: create a Services ID under
+   Apple Developer → Certificates, Identifiers & Profiles → Identifiers,
+   enable Sign in with Apple on it, and set its Return URL to a page you
+   host that redirects to `standiagauto://oauthredirect` (the scheme
+   `android/app/src/main/AndroidManifest.xml` already listens for) — see
+   the `sign_in_with_apple` package's own docs for a ready-made redirect
+   page template. The Services ID goes in `APPLE_SIGNIN_SERVICE_ID`, the
+   hosted page's URL in `APPLE_SIGNIN_REDIRECT_URI`.
+
+## 8. Credits & payments (optional)
+
+The app works fully without this step. Contacting a mechanic and running an
+OBD-II scan already charge real credits the moment you deploy Cloud
+Functions (step 6) — `chargeForAction`/`refundCredits` handle those
+server-side once deployed, and fall back to a client-enforced charge if
+they're not. What this step adds specifically is **real purchases**: buying
+more credits with actual money via Paystack. Until it's done, tapping a
+bundle on the Buy Credits screen shows a clear "payments aren't set up yet"
+message instead of charging a card it can't actually credit for.
+
+This needs the same **Blaze plan** as step 6 (`initializePaystackTransaction`
+and `paystackWebhook` both make outbound network calls), and a Paystack
+account.
+
+1. Sign up at [paystack.com](https://paystack.com) (a free Business account
+   is enough to start in Test mode; switch to Live once you're ready to
+   accept real payments).
+2. Dashboard → Settings → API Keys & Webhooks → copy the **Secret Key**
+   (Test or Live, matching whichever mode you're accepting payments in).
+3. Store it as a Cloud Functions secret — never the app's own `.env`, the
+   same reasoning as Cloudinary's API secret in step 6:
+   ```
+   firebase functions:secrets:set PAYSTACK_SECRET_KEY --project <your-project-id>
+   ```
+4. Deploy (or redeploy) functions:
+   ```
+   cd functions && npm install && npm run build
+   firebase deploy --only functions --project <your-project-id>
+   ```
+5. Copy the deployed `paystackWebhook` URL from the deploy output (or
+   Firebase console → Functions), then in the Paystack dashboard → Settings
+   → API Keys & Webhooks, paste it into the **Webhook URL** field. This is
+   what lets Paystack actually notify your app when a payment succeeds —
+   without it, a buyer's money would go through but their credits would
+   never arrive, since `paystackWebhook` is the only thing that ever grants
+   them.
+6. Once Blaze is live and this step is done, deploy the tightened Firestore
+   rules noted in `firestore.rules`' "NOT YET TIGHTENED" comment near
+   `credits_history` — locking the credits ledger and balance to
+   server-only writes. Skip this until then; deploying it early would break
+   the client-enforced fallback charge the pilot currently depends on.
+
+## 9. Run
 
 ```
 flutter run
@@ -135,3 +214,10 @@ flutter run
 | Camera closes the app instantly on iOS | Missing `NSCameraUsageDescription` | Already fixed in `ios/Runner/Info.plist` — only resurfaces if that file is reverted |
 | In-app calls fail immediately | `AGORA_APP_ID` empty or Authentication Mechanism isn't "App ID" | Recheck Agora project settings |
 | Password-change OTP email never arrives | EmailJS vars empty or template misconfigured | See `lib/core/config/emailjs_config.dart` |
+| Signup email verification code never arrives | Same EmailJS vars empty/misconfigured — signup verification reuses that flow | See `lib/core/config/emailjs_config.dart` |
+| "Google/Apple sign-in isn't set up yet" toast | Relevant `.env` values empty | Step 7 above |
+| Google sign-in works on Android but not iOS | Missing/wrong URL scheme in `Info.plist` | Step 7 above — the one credential that needs a manual (not `.env`) edit |
+| Apple sign-in fails no matter what's in `.env` | No Apple Developer Program membership | Expected — nothing works here without one, same as Blaze blocking Cloud Functions |
+| "Payments aren't set up yet" on Buy Credits | `PAYSTACK_SECRET_KEY` secret not set, or functions (step 6) not deployed | Step 8 above |
+| Paystack payment succeeds but credits never appear | Webhook URL not registered in the Paystack dashboard | Step 8.5 above — `paystackWebhook` is the only thing that ever grants purchased credits |
+| Contacting a mechanic / scanning charges credits even with no Cloud Functions deployed | Expected — `CreditsGateway` falls back to a real, client-enforced charge when `chargeForAction` isn't deployed yet | Deploy step 6 for the server-verified version; the pilot still works correctly either way |

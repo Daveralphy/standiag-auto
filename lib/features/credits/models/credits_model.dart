@@ -10,7 +10,11 @@ class CreditsModel {
   final TransactionType type;
   final int amount;
   final String reason;
-  final String? relatedJobId;
+
+  /// The scan, job, or payment reference this transaction is tied to —
+  /// generic (not job-specific) so a scan charge or a Paystack purchase
+  /// can be traced back to what it was actually for, same as a job can.
+  final String? relatedEntityId;
   final DateTime createdAt;
 
   const CreditsModel({
@@ -19,7 +23,7 @@ class CreditsModel {
     required this.type,
     required this.amount,
     required this.reason,
-    this.relatedJobId,
+    this.relatedEntityId,
     required this.createdAt,
   });
 
@@ -35,7 +39,7 @@ class CreditsModel {
           : TransactionType.debit,
       amount: data['amount'] ?? 0,
       reason: data['reason'] ?? '',
-      relatedJobId: data['relatedJobId'],
+      relatedEntityId: data['relatedEntityId'],
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
@@ -48,7 +52,7 @@ class CreditsModel {
       'type': type == TransactionType.credit ? 'credit' : 'debit',
       'amount': amount,
       'reason': reason,
-      if (relatedJobId != null) 'relatedJobId': relatedJobId,
+      if (relatedEntityId != null) 'relatedEntityId': relatedEntityId,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }

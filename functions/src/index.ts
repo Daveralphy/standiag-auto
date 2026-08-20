@@ -20,22 +20,34 @@
 // API secret — the one credential in this whole app that can never live in
 // the client — so this is the only piece that has to run server-side.
 //
+// chargeForAction / refundCredits / initializePaystackTransaction /
+// paystackWebhook — the secure half of the credits economy. The client
+// (lib/features/credits/services/credits_gateway.dart) tries these first
+// for every gated action and every purchase, falling back to a
+// client-enforced (real, but not server-verified) charge only for
+// chargeForAction/refundCredits when these functions aren't deployed —
+// never for purchases, which have no insecure fallback at all. See
+// credits_gateway.dart's own comment for the full reasoning.
+//
 // NOT YET DEPLOYED. To deploy:
 //   cd functions && npm install && npm run build
 //   firebase deploy --only functions
 // Requires the Firebase project to be on the Blaze (pay-as-you-go) plan —
 // Cloud Functions that make outbound network calls (sending FCM messages,
-// calling Cloudinary, both are) aren't available on the free Spark plan.
-// Also needs, once per environment (never committed):
+// calling Cloudinary, calling Paystack, all are) aren't available on the
+// free Spark plan. Also needs, once per environment (never committed):
 //   firebase functions:secrets:set CLOUDINARY_API_KEY
 //   firebase functions:secrets:set CLOUDINARY_API_SECRET
+//   firebase functions:secrets:set PAYSTACK_SECRET_KEY
 // plus a plain (non-secret) functions/.env with CLOUDINARY_CLOUD_NAME=...
+// See SETUP.md's "Credits & payments" section for the full Paystack setup,
+// including registering the webhook URL after first deploy.
 
 import * as crypto from "crypto";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, GeoPoint, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 
@@ -351,5 +363,267 @@ export const deleteCloudinaryImage = onCall(
     }
 
     return { result: result.result };
+  }
+);
+
+// ─── Credits: gated actions ──────────────────────────────────────────────
+
+// Mirrors lib/core/constants/credits_pricing.dart — keep the two in sync;
+// this table (not anything the client sends) is the only source of truth
+// for what an action actually costs.
+const ACTION_PRICING: Record<string, { amount: number; reason: string }> = {
+  contact_mechanic: { amount: 5, reason: "Contacted a mechanic" },
+  obd_scan: { amount: 10, reason: "Ran an OBD-II scan" },
+};
+
+/**
+ * Charges the signed-in user for a gated action. The balance check and the
+ * ledger write happen inside the same Firestore transaction as the debit
+ * itself, so "charged twice" or "charged but balance never actually moved"
+ * are structurally impossible here, unlike the client-side fallback this
+ * is meant to replace (credits_provider.dart's deduct()).
+ */
+export const chargeForAction = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const action = request.data?.action;
+  const pricing = typeof action === "string" ? ACTION_PRICING[action] : undefined;
+  if (!pricing) {
+    throw new HttpsError("invalid-argument", "Unknown action.");
+  }
+  const relatedEntityId = request.data?.relatedEntityId as string | undefined;
+
+  const userRef = db.collection("users").doc(uid);
+  await db.runTransaction(async (transaction) => {
+    const snap = await transaction.get(userRef);
+    const balance = (snap.data()?.credits as number | undefined) ?? 0;
+    if (balance < pricing.amount) {
+      throw new HttpsError("resource-exhausted", "Not enough credits.");
+    }
+
+    transaction.update(userRef, { credits: balance - pricing.amount });
+    const historyRef = db.collection("credits_history").doc();
+    transaction.set(historyRef, {
+      userId: uid,
+      type: "debit",
+      amount: pricing.amount,
+      reason: pricing.reason,
+      ...(relatedEntityId ? { relatedEntityId } : {}),
+      createdAt: Timestamp.now(),
+    });
+  });
+
+  return { charged: pricing.amount };
+});
+
+/**
+ * Refunds a charge for a system-caused failure (e.g. a scan whose adapter
+ * disconnected mid-read) — never for a user-caused one. Requires proof a
+ * matching, not-yet-refunded debit for this exact relatedEntityId really
+ * happened, so a client can't call this to just grant itself free credits
+ * under the guise of a "refund"; that's the exact hole this whole rewrite
+ * exists to close.
+ */
+export const refundCredits = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+  const relatedEntityId = request.data?.relatedEntityId;
+  if (typeof relatedEntityId !== "string" || relatedEntityId.length === 0) {
+    throw new HttpsError("invalid-argument", "relatedEntityId is required.");
+  }
+
+  // A single equality filter — relatedEntityId is a Firestore-generated
+  // id (a scanId, a contact-request id), so at most one debit anywhere
+  // in the collection should ever match it. Deliberately not adding
+  // userId/type as extra where() clauses (which would need a composite
+  // index); ownership and type are checked below instead, in code.
+  const matches = await db
+    .collection("credits_history")
+    .where("relatedEntityId", "==", relatedEntityId)
+    .limit(5)
+    .get();
+  const chargeDoc = matches.docs.find(
+    (doc) =>
+      doc.data().userId === uid &&
+      doc.data().type === "debit" &&
+      doc.data().refunded !== true
+  );
+  if (!chargeDoc) {
+    throw new HttpsError(
+      "not-found",
+      "No matching, un-refunded charge found for this."
+    );
+  }
+  const amount = chargeDoc.data().amount as number;
+
+  const userRef = db.collection("users").doc(uid);
+  await db.runTransaction(async (transaction) => {
+    const snap = await transaction.get(userRef);
+    const balance = (snap.data()?.credits as number | undefined) ?? 0;
+    transaction.update(userRef, { credits: balance + amount });
+    transaction.update(chargeDoc.ref, { refunded: true });
+
+    const historyRef = db.collection("credits_history").doc();
+    transaction.set(historyRef, {
+      userId: uid,
+      type: "credit",
+      amount,
+      reason: `Refund: ${
+        typeof request.data?.reason === "string"
+          ? request.data.reason
+          : "action did not complete"
+      }`,
+      relatedEntityId,
+      createdAt: Timestamp.now(),
+    });
+  });
+
+  return { refunded: amount };
+});
+
+// ─── Credits: Paystack purchases ─────────────────────────────────────────
+
+const paystackSecretKey = defineSecret("PAYSTACK_SECRET_KEY");
+
+// Mirrors lib/features/credits/screens/buy_credits_screen.dart's own
+// bundle list. Kept here too, and never trusted from the client — a caller
+// only ever picks an index into this fixed table, never an amount.
+const CREDIT_BUNDLES: { credits: number; priceNaira: number }[] = [
+  { credits: 100, priceNaira: 2000 },
+  { credits: 250, priceNaira: 4500 },
+  { credits: 500, priceNaira: 8500 },
+  { credits: 1000, priceNaira: 15000 },
+];
+
+/**
+ * Starts a Paystack transaction and returns its checkout URL. This never
+ * grants credits itself — that only ever happens in paystackWebhook, once
+ * Paystack confirms the payment actually succeeded. All this does is
+ * record what the eventual webhook call should credit, keyed by the
+ * transaction reference it mints here.
+ */
+export const initializePaystackTransaction = onCall(
+  { secrets: [paystackSecretKey] },
+  async (request) => {
+    const uid = request.auth?.uid;
+    const email = request.auth?.token.email as string | undefined;
+    if (!uid || !email) {
+      throw new HttpsError("unauthenticated", "You must be signed in.");
+    }
+
+    const bundleIndex = request.data?.bundleIndex;
+    const bundle =
+      typeof bundleIndex === "number" ? CREDIT_BUNDLES[bundleIndex] : undefined;
+    if (!bundle) {
+      throw new HttpsError("invalid-argument", "Unknown bundle.");
+    }
+
+    const reference = `sda_${uid.slice(0, 8)}_${Timestamp.now().toMillis()}`;
+    const response = await fetch(
+      "https://api.paystack.co/transaction/initialize",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${paystackSecretKey.value()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          amount: bundle.priceNaira * 100, // Paystack wants kobo.
+          reference,
+          currency: "NGN",
+        }),
+      }
+    );
+    const body = (await response.json()) as {
+      status?: boolean;
+      data?: { authorization_url?: string };
+      message?: string;
+    };
+    if (!response.ok || !body.status || !body.data?.authorization_url) {
+      throw new HttpsError(
+        "internal",
+        body.message ?? "Could not start the payment."
+      );
+    }
+
+    // Only paystackWebhook ever reads this — it's how it knows who and how
+    // much to credit once Paystack confirms the charge succeeded.
+    await db.collection("pending_purchases").doc(reference).set({
+      uid,
+      credits: bundle.credits,
+      amountKobo: bundle.priceNaira * 100,
+      status: "pending",
+      createdAt: Timestamp.now(),
+    });
+
+    return { authorizationUrl: body.data.authorization_url, reference };
+  }
+);
+
+/**
+ * Paystack's server-to-server confirmation that a payment actually went
+ * through — the only place a purchase's credits are ever granted. Verifies
+ * the x-paystack-signature header (HMAC-SHA512 of the raw request body,
+ * using the same secret key) before trusting anything in the payload; an
+ * unsigned or mis-signed request is rejected outright, never processed.
+ */
+export const paystackWebhook = onRequest(
+  { secrets: [paystackSecretKey] },
+  async (req, res) => {
+    const signature = req.headers["x-paystack-signature"];
+    const expectedSignature = crypto
+      .createHmac("sha512", paystackSecretKey.value())
+      .update(req.rawBody)
+      .digest("hex");
+    if (signature !== expectedSignature) {
+      res.status(401).send("Invalid signature");
+      return;
+    }
+
+    const event = req.body as {
+      event?: string;
+      data?: { reference?: string };
+    };
+    if (event.event !== "charge.success" || !event.data?.reference) {
+      res.status(200).send("Ignored");
+      return;
+    }
+    const reference = event.data.reference;
+    const pendingRef = db.collection("pending_purchases").doc(reference);
+
+    await db.runTransaction(async (transaction) => {
+      const pendingSnap = await transaction.get(pendingRef);
+      if (!pendingSnap.exists) return; // Unknown reference — nothing to credit.
+      const pending = pendingSnap.data() as {
+        uid: string;
+        credits: number;
+        status: string;
+      };
+      if (pending.status === "completed") return; // Already credited.
+
+      const userRef = db.collection("users").doc(pending.uid);
+      const userSnap = await transaction.get(userRef);
+      const balance = (userSnap.data()?.credits as number | undefined) ?? 0;
+      transaction.update(userRef, { credits: balance + pending.credits });
+      transaction.update(pendingRef, { status: "completed" });
+
+      const historyRef = db.collection("credits_history").doc();
+      transaction.set(historyRef, {
+        userId: pending.uid,
+        type: "credit",
+        amount: pending.credits,
+        reason: "Purchased credits",
+        relatedEntityId: reference,
+        createdAt: Timestamp.now(),
+      });
+    });
+
+    res.status(200).send("OK");
   }
 );

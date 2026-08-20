@@ -42,6 +42,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Catches the redirect back from Apple's web sign-in flow
+                 (native iOS/macOS Apple sign-in doesn't use this at all).
+                 The hosted redirect page named in APPLE_SIGNIN_REDIRECT_URI
+                 (.env) must send the browser here once Apple's OAuth
+                 response comes back — see SETUP.md's Apple Sign-In section. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="standiagauto" android:host="oauthredirect"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
