@@ -70,7 +70,10 @@ class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen>
     if (_handled || !mounted) return;
     _handled = true;
     ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.rejected);
-    AppErrorToast.showMessage(context, "No answer. Try again later.");
+    AppErrorToast.showMessage(
+      context,
+      'The mechanic is unavailable right now. Please try another mechanic or try again later.',
+    );
     context.pop();
   }
 

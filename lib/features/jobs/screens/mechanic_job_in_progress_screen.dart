@@ -2,7 +2,8 @@
 // Mechanic nav bar, Users active, search icon top right.
 // Mark job as done button.
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,8 +16,9 @@ import '../../../core/navigation/route_names.dart';
 import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
-import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_map.dart';
+import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/notched_nav_bar.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/job_model.dart';
@@ -33,11 +35,39 @@ class MechanicJobInProgressScreen extends ConsumerStatefulWidget {
 
 class _MechanicJobInProgressScreenState
     extends ConsumerState<MechanicJobInProgressScreen> {
+  Timer? _timer;
+  DateTime _now = DateTime.now();
+
   @override
   void initState() {
     super.initState();
     SystemUiStyle.apply();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _elapsedTime(DateTime? startedAt) {
+    if (startedAt == null) return 'Ready to start';
+    final elapsed = _now.difference(startedAt);
+    final totalSeconds = elapsed.isNegative ? 0 : elapsed.inSeconds;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    return hours > 0
+        ? '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}'
+        : '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void _startJob() {
+    ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.inProgress);
   }
 
   void _markDone() {
@@ -96,11 +126,6 @@ class _MechanicJobInProgressScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                AppAvatar(
-                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
-                  size: 36,
-                ),
-                const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -142,26 +167,44 @@ class _MechanicJobInProgressScreenState
                       Text(job?.issue ?? '',
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis, maxLines: 1),
+                      const SizedBox(height: 3),
+                      Text(
+                        job?.status == JobStatus.inProgress
+                          ? 'Duration ${_elapsedTime(job?.startedAt)}'
+                          : _elapsedTime(null),
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.primary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ],
                   )),
                 ]),
               ),
               AppButton(
-                label: 'Mark Job as Done',
-                onTap: _markDone,
+                label: job?.status == JobStatus.inProgress
+                    ? 'Mark Job as Done'
+                    : 'Start Job',
+                onTap: job?.status == JobStatus.inProgress
+                    ? _markDone
+                    : _startJob,
               ),
             ]),
           ),
 
-          AppNavBar(
-            activeIndex: 2,
+          NotchedNavBar(
+            activeIndex: 1,
+            onScanTap: () => context.go(RouteNames.mechanicScan),
             items: [
-              AppNavItem(icon: Icons.qr_code_scanner_rounded, label: 'Scan',
-                  onTap: () => context.go(RouteNames.mechanicScan)),
               AppNavItem(icon: Icons.home_rounded, label: 'Home',
                   onTap: () => context.go(RouteNames.mechanicHome)),
               AppNavItem(icon: Icons.groups_rounded, label: 'Users',
                   onTap: () {}),
+              AppNavItem(icon: Icons.history_rounded, label: 'Jobs',
+                  onTap: () => context.go(RouteNames.jobHistory)),
+              AppNavItem(icon: Icons.person_rounded, label: 'Profile',
+                  onTap: () => context.go(RouteNames.mechanicProfileView)),
             ],
           ),
         ],

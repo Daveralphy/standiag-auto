@@ -136,6 +136,9 @@ class _HistoryCard extends ConsumerWidget {
         ? '${mechanicAsync.valueOrNull!.firstName} ${mechanicAsync.valueOrNull!.lastName}'
             .trim()
         : null;
+    final duration = job.startedAt != null && job.completedAt != null
+      ? _formatDuration(job.completedAt!.difference(job.startedAt!))
+      : null;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl2),
@@ -158,6 +161,10 @@ class _HistoryCard extends ConsumerWidget {
             Formatters.shortDate(job.completedAt ?? job.createdAt),
             style: AppTypography.caption,
             overflow: TextOverflow.ellipsis, maxLines: 1),
+        if (duration != null)
+          Text('Duration: $duration',
+              style: AppTypography.caption,
+              overflow: TextOverflow.ellipsis, maxLines: 1),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -182,6 +189,16 @@ class _HistoryCard extends ConsumerWidget {
       ]),
     );
   }
+}
+
+String _formatDuration(Duration duration) {
+  final totalSeconds = duration.inSeconds < 0 ? 0 : duration.inSeconds;
+  final hours = totalSeconds ~/ 3600;
+  final minutes = (totalSeconds % 3600) ~/ 60;
+  final seconds = totalSeconds % 60;
+  return hours > 0
+      ? '${hours}h ${minutes}m'
+      : '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
 }
 
 class _HistoryCardSkeleton extends StatelessWidget {

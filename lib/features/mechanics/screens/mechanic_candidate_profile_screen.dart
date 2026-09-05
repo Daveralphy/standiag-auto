@@ -22,6 +22,7 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/constants/credits_pricing.dart';
+import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../features/credits/providers/credits_provider.dart';
 import '../../../features/credits/services/credits_gateway.dart';
@@ -69,7 +70,10 @@ class _MechanicCandidateProfileScreenState
 
     setState(() => _isBusy = true);
     final carOwnerId = ref.read(currentUserIdProvider);
-    if (carOwnerId == null) return;
+    if (carOwnerId == null) {
+      setState(() => _isBusy = false);
+      return;
+    }
 
     final canProceed = await CreditsGateway.charge(
       ref.read(creditsProvider.notifier),
@@ -107,13 +111,29 @@ class _MechanicCandidateProfileScreenState
     }
     if (!mounted) return;
 
-    final jobId = await ref.read(jobProvider.notifier).createJob(
-          carOwnerId: carOwnerId,
-          mechanicId: widget.mechanicId,
-          vehicleId: details.vehicleId ?? '',
-          issue: details.issue,
-          carOwnerLocation: origin,
-        );
+    late final String jobId;
+    try {
+      jobId = await ref.read(jobProvider.notifier).createJob(
+            carOwnerId: carOwnerId,
+            mechanicId: widget.mechanicId,
+            vehicleId: details.vehicleId ?? '',
+            issue: details.issue,
+            carOwnerLocation: origin,
+          );
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      setState(() => _isBusy = false);
+      AppErrorToast.showMessage(
+        context,
+        ErrorHandler.handle(
+          error,
+          stackTrace,
+          screen: 'MechanicCandidateProfileScreen.createCallJob',
+          userId: carOwnerId,
+        ).message,
+      );
+      return;
+    }
     if (!mounted) return;
     setState(() => _isBusy = false);
     context.push(RouteNames.outgoingCall,

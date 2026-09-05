@@ -21,6 +21,7 @@ import '../../../features/auth/models/mechanic_model.dart';
 import '../../../features/auth/models/user_model.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_error_toast.dart';
+import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/app_skeleton.dart';
 import '../../../shared/widget/profile_field_row.dart';
 import '../../../shared/widget/system_ui_style.dart';
@@ -109,66 +110,11 @@ class _MechanicProfileOwnScreenState
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageHorizontal,
-                AppSpacing.md,
-                AppSpacing.pageHorizontal,
-                0,
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.go(RouteNames.mechanicHome);
-                      }
-                    },
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(AppRadius.full),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'My Profile',
-                      style: AppTypography.heading3,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => context.go(RouteNames.mechanicProfileEdit),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: AppColors.borderSubtle,
-                        borderRadius: BorderRadius.circular(AppRadius.full),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Icon(
-                        Icons.edit_outlined,
-                        size: 15,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            AppScreenHeader(
+              title: 'My Profile',
+              subtitle: 'Manage your account',
+              trailingIcon: Icons.edit_outlined,
+              onTrailingTap: () => context.go(RouteNames.mechanicProfileEdit),
             ),
             Expanded(
               child: Builder(
@@ -197,7 +143,7 @@ class _MechanicProfileOwnScreenState
                         AppAvatar(
                           name: name,
                           imageUrl: user.profilePhoto,
-                          size: 84,
+                          size: 84 * 2,
                         ),
                         const SizedBox(height: 12),
                         Text(

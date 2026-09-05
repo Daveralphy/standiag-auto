@@ -10,6 +10,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart' show GeoPoint;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
@@ -42,6 +43,7 @@ class _QuoteCardStackState extends ConsumerState<QuoteCardStack> {
 
   void _applyDiff(List<QuoteModel> incoming) {
     final incomingIds = incoming.map((q) => q.mechanicId).toSet();
+    var addedQuote = false;
     for (var i = _quotes.length - 1; i >= 0; i--) {
       if (!incomingIds.contains(_quotes[i].mechanicId)) {
         final removed = _quotes.removeAt(i);
@@ -59,12 +61,14 @@ class _QuoteCardStackState extends ConsumerState<QuoteCardStack> {
         final insertIndex = _quotes.length;
         _quotes.insert(insertIndex, quote);
         _listKey.currentState?.insertItem(insertIndex);
+        addedQuote = true;
       } else {
         // Same mechanic, still pending — just refresh the held copy in case
         // they edited their price/note without a status change.
         _quotes[existingIndex] = quote;
       }
     }
+    if (addedQuote) HapticFeedback.mediumImpact();
     if (mounted) setState(() {});
   }
 

@@ -13,7 +13,9 @@ import '../../../core/constants/app_typography.dart';
 import '../../../core/errors/error_handler.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../core/services/call_engine_service.dart';
+import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
+import '../../../shared/widget/app_button.dart';
 import '../../../shared/widget/app_error_toast.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../providers/mechanics_provider.dart';
@@ -34,6 +36,7 @@ class _InAppCallScreenState extends ConsumerState<InAppCallScreen> {
   bool _isSpeaker = false;
   bool _connected = false;
   bool _isEnding = false;
+  String? _callError;
   int _seconds = 0;
   Timer? _durationTimer;
 
@@ -66,8 +69,21 @@ class _InAppCallScreenState extends ConsumerState<InAppCallScreen> {
       );
     } catch (error, stackTrace) {
       if (!mounted) return;
-      AppErrorToast.showMessage(context, _callErrorMessage(error, stackTrace));
+      ErrorHandler.handle(
+        error,
+        stackTrace,
+        screen: 'InAppCallScreen.joinCall',
+        userId: ref.read(currentUserIdProvider),
+      );
+      setState(() => _callError = _callErrorMessage(error, stackTrace));
     }
+  }
+
+  Future<void> _retryCall() async {
+    await _callEngine.leave();
+    if (!mounted) return;
+    setState(() => _callError = null);
+    _joinCall();
   }
 
   void _startDurationTimer() {
@@ -80,12 +96,12 @@ class _InAppCallScreenState extends ConsumerState<InAppCallScreen> {
 
   String _callErrorMessage(Object error, StackTrace stackTrace) {
     if (error is StateError && error.message == 'agora-not-configured') {
-      return "Calling isn't set up yet — add your Agora App ID in agora_config.dart.";
+      return 'Voice calling is not available right now. Please try again later.';
     }
     if (error is StateError && error.message == 'microphone-permission-denied') {
       return 'Microphone permission is required to make calls.';
     }
-    return ErrorHandler.handle(error, stackTrace).message;
+    return 'We could not connect your call. This appears to be an issue on our end, and we are working to resolve it. Please try again shortly.';
   }
 
   /// Ending the call is just hanging up the phone, not finishing the job —
@@ -149,10 +165,18 @@ class _InAppCallScreenState extends ConsumerState<InAppCallScreen> {
                       style: AppTypography.heading1,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
                   const SizedBox(height: 8),
-                  Text(_connected ? _duration : 'Connecting…',
+                    Text(
+                      _callError ?? (_connected ? _duration : 'Connecting…'),
                       style: AppTypography.body.copyWith(
-                          color: AppColors.success),
+                        color: _callError == null
+                          ? AppColors.success
+                          : AppColors.primary),
+                      textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis, maxLines: 1),
+                    if (_callError != null) ...[
+                    const SizedBox(height: 16),
+                    AppButton(label: 'Try Again', onTap: _retryCall),
+                    ],
                 ],
               ),
             ),

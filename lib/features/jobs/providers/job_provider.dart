@@ -162,10 +162,18 @@ class JobNotifier extends StateNotifier<JobState> {
       await FirebaseFirestore.instance.collection('jobs').doc(jobId).update({
         'status': status.value,
         if (status == JobStatus.accepted) 'acceptedAt': FieldValue.serverTimestamp(),
+        if (status == JobStatus.inProgress) 'startedAt': FieldValue.serverTimestamp(),
         if (status == JobStatus.completed) 'completedAt': FieldValue.serverTimestamp(),
       });
       if (state.activeJob != null) {
-        state = state.copyWith(activeJob: state.activeJob!.copyWith(status: status));
+        state = state.copyWith(
+          activeJob: state.activeJob!.copyWith(
+            status: status,
+            startedAt: status == JobStatus.inProgress
+                ? DateTime.now()
+                : null,
+          ),
+        );
       }
     } catch (e) {
       state = state.copyWith(

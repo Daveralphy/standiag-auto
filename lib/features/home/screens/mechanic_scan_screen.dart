@@ -12,13 +12,14 @@ import '../../../core/constants/app_typography.dart';
 import '../../../core/navigation/route_names.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_button.dart';
+import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/health_gauge.dart';
+import '../../../shared/widget/notched_nav_bar.dart';
 import '../../../shared/widget/obd_device_picker_sheet.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import '../../jobs/providers/job_provider.dart';
 import '../../profile/providers/profile_provider.dart';
-import '../../profile/screens/mechanic_drawer_screen.dart';
 import '../../scan/providers/scan_provider.dart';
 
 class MechanicScanScreen extends ConsumerStatefulWidget {
@@ -30,8 +31,6 @@ class MechanicScanScreen extends ConsumerStatefulWidget {
 }
 
 class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   @override
   void initState() {
     super.initState();
@@ -55,9 +54,7 @@ class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
     final scanState = ref.watch(scanProvider);
 
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: AppColors.background,
-      drawer: const MechanicDrawerScreen(),
       body: Stack(
         children: [
           SafeArea(
@@ -65,7 +62,6 @@ class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppScreenHeader(
-                  scaffoldKey: _scaffoldKey,
                   title: AppStrings.homeMechanicScanTitle,
                   subtitle: AppStrings.homeMechanicScanSubtitle,
                   trailingIcon: Icons.history_rounded,
@@ -132,6 +128,33 @@ class _MechanicScanScreenState extends ConsumerState<MechanicScanScreen> {
                 ),
               ],
             ),
+          ),
+          NotchedNavBar(
+            activeIndex: -1,
+            isScanActive: true,
+            onScanTap: () {},
+            items: [
+              AppNavItem(
+                icon: Icons.home_rounded,
+                label: 'Home',
+                onTap: () => context.go(RouteNames.mechanicHome),
+              ),
+              AppNavItem(
+                icon: Icons.groups_rounded,
+                label: 'Users',
+                onTap: () => context.go(RouteNames.mechanicUsers),
+              ),
+              AppNavItem(
+                icon: Icons.history_rounded,
+                label: 'Jobs',
+                onTap: () => context.go(RouteNames.jobHistory),
+              ),
+              AppNavItem(
+                icon: Icons.person_rounded,
+                label: 'Profile',
+                onTap: () => context.go(RouteNames.mechanicProfileView),
+              ),
+            ],
           ),
         ],
       ),

@@ -1,6 +1,5 @@
 ﻿// Mechanic Post Call screen â€” after call ends, mechanic decides to accept or reject job.
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,8 +12,9 @@ import '../../../core/navigation/route_names.dart';
 import '../../../features/mechanics/providers/mechanics_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
-import '../../../shared/widget/app_nav_bar.dart';
 import '../../../shared/widget/app_map.dart';
+import '../../../shared/widget/app_nav_bar.dart';
+import '../../../shared/widget/notched_nav_bar.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/job_model.dart';
@@ -97,11 +97,6 @@ class _MechanicPostCallScreenState
               padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
                   AppSpacing.md, AppSpacing.pageHorizontal, 0),
               child: Row(children: [
-                AppAvatar(
-                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
-                  size: 36,
-                ),
-                const SizedBox(width: 10),
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -163,15 +158,18 @@ class _MechanicPostCallScreenState
             ]),
           ),
 
-          AppNavBar(
-            activeIndex: 2,
+          NotchedNavBar(
+            activeIndex: 1,
+            onScanTap: () => context.go(RouteNames.mechanicScan),
             items: [
-              AppNavItem(icon: Icons.qr_code_scanner_rounded, label: 'Scan',
-                  onTap: () => context.go(RouteNames.mechanicScan)),
               AppNavItem(icon: Icons.home_rounded, label: 'Home',
                   onTap: () => context.go(RouteNames.mechanicHome)),
               AppNavItem(icon: Icons.groups_rounded, label: 'Users',
                   onTap: () => context.go(RouteNames.mechanicUsers)),
+              AppNavItem(icon: Icons.history_rounded, label: 'Jobs',
+                  onTap: () => context.go(RouteNames.jobHistory)),
+              AppNavItem(icon: Icons.person_rounded, label: 'Profile',
+                  onTap: () => context.go(RouteNames.mechanicProfileView)),
             ],
           ),
         ],

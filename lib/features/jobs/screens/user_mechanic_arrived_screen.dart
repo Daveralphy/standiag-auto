@@ -3,6 +3,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,7 +20,6 @@ import '../../../shared/widget/notched_nav_bar.dart';
 import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/system_ui_style.dart';
 import 'package:latlong2/latlong.dart';
-import '../models/job_model.dart';
 import '../providers/job_provider.dart';
 
 class UserMechanicArrivedScreen extends ConsumerStatefulWidget {
@@ -37,11 +37,11 @@ class _UserMechanicArrivedScreenState
   void initState() {
     super.initState();
     SystemUiStyle.apply();
+    HapticFeedback.mediumImpact();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
   void _confirmStarted() {
-    ref.read(jobProvider.notifier).updateStatus(widget.jobId, JobStatus.inProgress);
     context.go(RouteNames.userJobInProgress, extra: widget.jobId);
   }
 
@@ -150,7 +150,7 @@ class _UserMechanicArrivedScreenState
                 ]),
               ),
               AppButton(
-                label: 'Confirm Job Started',
+                label: 'Confirm Mechanic Arrived',
                 onTap: _confirmStarted,
               ),
             ]),

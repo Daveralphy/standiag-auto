@@ -292,6 +292,46 @@ export const notifyNearbyMechanics = onDocumentCreated(
   }
 );
 
+// ─── Direct-call push notifications ─────────────────────────────────────
+
+/**
+ * Alerts the addressed mechanic when a car owner starts a direct call.
+ * Unlike the nearby-request trigger above, this watches jobs because a direct
+ * call creates a pending job rather than a broadcast service request.
+ */
+export const notifyMechanicOfDirectCall = onDocumentCreated(
+  "jobs/{jobId}",
+  async (event) => {
+    const job = event.data?.data() as {
+      status?: string;
+      mechanicId?: string;
+      issue?: string;
+    } | undefined;
+    if (!job || job.status !== "pending" || !job.mechanicId) return;
+
+    const mechanicDoc = await db
+      .collection("mechanics")
+      .doc(job.mechanicId)
+      .get();
+    const mechanic = mechanicDoc.data() as MechanicData | undefined;
+    if (!mechanic?.fcmToken) return;
+
+    await getMessaging().send({
+      token: mechanic.fcmToken,
+      notification: {
+        title: "Incoming call",
+        body: job.issue
+          ? `A car owner needs help: ${job.issue}`
+          : "A car owner is calling you.",
+      },
+      data: {
+        jobId: event.params.jobId,
+        type: "direct_call",
+      },
+    });
+  }
+);
+
 // ─── Cloudinary photo cleanup ────────────────────────────────────────────
 
 const cloudinaryApiKey = defineSecret("CLOUDINARY_API_KEY");

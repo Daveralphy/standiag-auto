@@ -49,6 +49,7 @@ class JobModel {
   final GeoPoint? mechanicLocation;
   final DateTime createdAt;
   final DateTime? acceptedAt;
+  final DateTime? startedAt;
   final DateTime? completedAt;
   final double? rating;
   final String? ratingComment;
@@ -78,6 +79,7 @@ class JobModel {
     this.mechanicLocation,
     required this.createdAt,
     this.acceptedAt,
+    this.startedAt,
     this.completedAt,
     this.rating,
     this.ratingComment,
@@ -104,6 +106,9 @@ class JobModel {
       acceptedAt: data['acceptedAt'] is Timestamp
           ? (data['acceptedAt'] as Timestamp).toDate()
           : null,
+          startedAt: data['startedAt'] is Timestamp
+            ? (data['startedAt'] as Timestamp).toDate()
+            : null,
       completedAt: data['completedAt'] is Timestamp
           ? (data['completedAt'] as Timestamp).toDate()
           : null,
@@ -129,6 +134,7 @@ class JobModel {
       if (mechanicLocation != null) 'mechanicLocation': mechanicLocation,
       'createdAt': Timestamp.fromDate(createdAt),
       if (acceptedAt != null) 'acceptedAt': Timestamp.fromDate(acceptedAt!),
+      if (startedAt != null) 'startedAt': Timestamp.fromDate(startedAt!),
       if (completedAt != null) 'completedAt': Timestamp.fromDate(completedAt!),
       if (rating != null) 'rating': rating,
       if (ratingComment != null) 'ratingComment': ratingComment,
@@ -139,7 +145,8 @@ class JobModel {
   }
 
   JobModel copyWith({JobStatus? status, double? rating, String? ratingComment,
-      DateTime? acceptedAt, DateTime? completedAt, GeoPoint? mechanicLocation,
+      DateTime? acceptedAt, DateTime? startedAt, DateTime? completedAt,
+      GeoPoint? mechanicLocation,
       DateTime? callAnsweredAt, DateTime? reviewedAt}) {
     return JobModel(
       id: id,
@@ -152,6 +159,7 @@ class JobModel {
       mechanicLocation: mechanicLocation ?? this.mechanicLocation,
       createdAt: createdAt,
       acceptedAt: acceptedAt ?? this.acceptedAt,
+      startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
       rating: rating ?? this.rating,
       ratingComment: ratingComment ?? this.ratingComment,

@@ -1,8 +1,11 @@
 ﻿// User Job In Progress screen â€” job is underway.
 // Map background, user nav bar Mechanics active, search icon top right.
 
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -32,11 +35,36 @@ class UserJobInProgressScreen extends ConsumerStatefulWidget {
 
 class _UserJobInProgressScreenState
     extends ConsumerState<UserJobInProgressScreen> {
+  Timer? _timer;
+  DateTime _now = DateTime.now();
+
   @override
   void initState() {
     super.initState();
     SystemUiStyle.apply();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
+    HapticFeedback.mediumImpact();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _elapsedTime(DateTime? startedAt) {
+    if (startedAt == null) return 'Starting timer...';
+    final elapsed = _now.difference(startedAt);
+    final totalSeconds = elapsed.isNegative ? 0 : elapsed.inSeconds;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    return hours > 0
+        ? '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}'
+        : '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -114,9 +142,17 @@ class _UserJobInProgressScreenState
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Job In Progress', style: AppTypography.heading3,
+                    Text(
+                      job?.status == JobStatus.inProgress
+                        ? 'Job In Progress'
+                        : 'Mechanic Arrived',
+                      style: AppTypography.heading3,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
-                    Text('Sit tight', style: AppTypography.body,
+                    Text(
+                      job?.status == JobStatus.inProgress
+                        ? 'Sit tight'
+                        : 'Waiting for the job to start',
+                      style: AppTypography.body,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
                   ],
                 )),
@@ -150,6 +186,14 @@ class _UserJobInProgressScreenState
                     Text('Working on ${job?.issue ?? "your vehicle"}',
                         style: AppTypography.caption,
                         overflow: TextOverflow.ellipsis, maxLines: 1),
+                    Text(
+                      job?.status == JobStatus.inProgress
+                        ? 'Duration ${_elapsedTime(job?.startedAt)}'
+                        : 'Waiting for mechanic to start',
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.primary),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1),
                   ],
                 )),
                 Container(
@@ -158,7 +202,10 @@ class _UserJobInProgressScreenState
                     color: AppColors.primarySubtle,
                     borderRadius: BorderRadius.circular(AppRadius.full),
                     border: Border.all(color: AppColors.primaryBorder)),
-                  child: Text('In Progress',
+                    child: Text(
+                      job?.status == JobStatus.inProgress
+                        ? 'In Progress'
+                        : 'Ready to start',
                       style: AppTypography.micro.copyWith(
                           color: AppColors.primary),
                       overflow: TextOverflow.ellipsis, maxLines: 1),

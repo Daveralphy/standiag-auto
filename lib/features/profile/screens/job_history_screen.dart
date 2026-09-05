@@ -94,14 +94,19 @@ class _JobHistoryScreenState extends ConsumerState<JobHistoryScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.pageHorizontal),
                       itemCount: 4,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (_, __) => const SizedBox(height: 11),
                       itemBuilder: (_, __) => const _JobHistoryCardSkeleton(),
                     )
-                  : ListView.separated(
+                    : history.isEmpty
+                      ? Center(
+                        child: Text('No completed jobs yet.',
+                          style: AppTypography.body),
+                      )
+                      : ListView.separated(
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.pageHorizontal),
                       itemCount: history.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          separatorBuilder: (_, __) => const SizedBox(height: 11),
                       itemBuilder: (_, i) {
                         final job = history[i];
                         return _JobHistoryCard(
@@ -110,6 +115,10 @@ class _JobHistoryScreenState extends ConsumerState<JobHistoryScreen> {
                           date: Formatters.relativeDate(
                               job.completedAt ?? job.createdAt),
                           rating: job.rating?.round() ?? 0,
+                          duration: job.startedAt != null && job.completedAt != null
+                            ? _formatDuration(
+                              job.completedAt!.difference(job.startedAt!))
+                            : null,
                         );
                       },
                     ),
@@ -126,12 +135,14 @@ class _JobHistoryCard extends StatelessWidget {
   final String subtitle;
   final String date;
   final int rating;
+  final String? duration;
 
   const _JobHistoryCard({
     required this.title,
     required this.subtitle,
     required this.date,
     required this.rating,
+    this.duration,
   });
 
   @override
@@ -140,7 +151,7 @@ class _JobHistoryCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.xl2),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.xl2),
         border: Border.all(color: AppColors.border)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
@@ -157,9 +168,23 @@ class _JobHistoryCard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(date, style: AppTypography.caption,
             overflow: TextOverflow.ellipsis, maxLines: 1),
+        if (duration != null)
+          Text('Duration: $duration',
+              style: AppTypography.caption,
+              overflow: TextOverflow.ellipsis, maxLines: 1),
       ]),
     );
   }
+}
+
+String _formatDuration(Duration duration) {
+  final totalSeconds = duration.inSeconds < 0 ? 0 : duration.inSeconds;
+  final hours = totalSeconds ~/ 3600;
+  final minutes = (totalSeconds % 3600) ~/ 60;
+  final seconds = totalSeconds % 60;
+  return hours > 0
+      ? '${hours}h ${minutes}m'
+      : '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
 }
 
 class _JobHistoryCardSkeleton extends StatelessWidget {
@@ -171,7 +196,7 @@ class _JobHistoryCardSkeleton extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.xl2),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.xl2),
         border: Border.all(color: AppColors.border),
       ),
       child: const Column(

@@ -261,15 +261,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: RouteNames.mechanicScan,
-                pageBuilder: (_, __) =>
-                    const NoTransitionPage(child: MechanicScanScreen()),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
                 path: RouteNames.mechanicHome,
                 pageBuilder: (_, __) =>
                     const NoTransitionPage(child: MechanicHomeScreen()),
@@ -285,7 +276,21 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouteNames.mechanicProfileView,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: MechanicProfileOwnScreen()),
+              ),
+            ],
+          ),
         ],
+      ),
+
+      GoRoute(
+        path: RouteNames.mechanicScan,
+        builder: (_, __) => const MechanicScanScreen(),
       ),
 
       GoRoute(
@@ -410,10 +415,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.userProfileEdit,
         builder: (_, __) => const UserProfileEditScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.mechanicProfileView,
-        builder: (_, __) => const MechanicProfileOwnScreen(),
       ),
       GoRoute(
         path: RouteNames.mechanicProfileEdit,

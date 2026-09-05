@@ -7,6 +7,7 @@ import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,7 +27,6 @@ import '../../jobs/providers/job_provider.dart';
 import '../../jobs/providers/service_request_provider.dart';
 import '../../mechanics/providers/mechanics_provider.dart';
 import '../../profile/providers/profile_provider.dart';
-import '../../profile/screens/mechanic_drawer_screen.dart';
 
 class MechanicHomeScreen extends ConsumerStatefulWidget {
   const MechanicHomeScreen({super.key});
@@ -36,8 +36,6 @@ class MechanicHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   @override
   void initState() {
     super.initState();
@@ -59,6 +57,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
       ref.listen(pendingJobForMechanicProvider(mechanicId), (previous, next) {
         final job = next.valueOrNull;
         if (job != null && previous?.valueOrNull?.id != job.id) {
+          HapticFeedback.mediumImpact();
           context.push(RouteNames.mechanicIncomingCall, extra: job.id);
         }
       });
@@ -68,14 +67,13 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
       ref.listen(acceptedJobForMechanicProvider(mechanicId), (previous, next) {
         final job = next.valueOrNull;
         if (job != null && previous?.valueOrNull?.id != job.id) {
+          HapticFeedback.heavyImpact();
           context.push(RouteNames.mechanicEnRoute, extra: job.id);
         }
       });
     }
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: AppColors.background,
-      drawer: const MechanicDrawerScreen(),
       body: Stack(
         children: [
           SafeArea(
@@ -83,7 +81,6 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppScreenHeader(
-                  scaffoldKey: _scaffoldKey,
                   showGreeting: true,
                   subtitle: 'Your Dashboard',
                   trailingIcon: Icons.notifications_outlined,
@@ -109,7 +106,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
 
                         // ─── Pending section ──────────────────────────────
                         Text(
-                          'PENDING',
+                          'Pending',
                           style: AppTypography.captionLarge,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -151,7 +148,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                         // ─── Nearby open requests — car owners who
                         // broadcast a search; quote to be considered ──────
                         Text(
-                          'NEARBY REQUESTS',
+                          'Nearby Requests',
                           style: AppTypography.captionLarge,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -203,7 +200,7 @@ class _MechanicHomeScreenState extends ConsumerState<MechanicHomeScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'ACTIVE',
+                                          'Active',
                                           style: AppTypography.captionLarge,
                                           overflow: TextOverflow.ellipsis,
                                           maxLines: 1,

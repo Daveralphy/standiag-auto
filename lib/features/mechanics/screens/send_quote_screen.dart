@@ -14,6 +14,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/profile/models/vehicle_model.dart';
+import '../../../features/profile/providers/profile_provider.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_button.dart';
@@ -83,6 +85,125 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
         );
     if (!mounted) return;
     context.pop();
+  }
+
+  Future<void> _showRequestDetails({
+    required BuildContext context,
+    required MechanicUser? owner,
+    required VehicleModel? vehicle,
+    required ServiceRequestModel request,
+  }) {
+    final ownerName = owner == null
+        ? 'Car Owner'
+        : '${owner.firstName} ${owner.lastName}'.trim();
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
+      ),
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageHorizontal,
+            AppSpacing.xl,
+            AppSpacing.pageHorizontal,
+            AppSpacing.xl,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderActive,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Request Details', style: AppTypography.heading2),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  AppAvatar(
+                    name: ownerName,
+                    imageUrl: owner?.profilePhoto,
+                    size: 52,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(ownerName, style: AppTypography.heading4),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _RequestDetailSection(
+                title: 'Vehicle',
+                child: vehicle == null
+                    ? Text('Vehicle details unavailable',
+                        style: AppTypography.body)
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (vehicle.photoUrl?.isNotEmpty == true) ...[
+                            ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.md),
+                              child: Image.network(
+                                vehicle.photoUrl!,
+                                width: double.infinity,
+                                height: 140,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  height: 140,
+                                  color: AppColors.borderSubtle,
+                                  child: Icon(
+                                    Icons.directions_car_rounded,
+                                    color: AppColors.textMuted,
+                                    size: 40,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          Text(vehicle.displayName,
+                              style: AppTypography.bodyLarge),
+                          const SizedBox(height: 4),
+                          Text(
+                            [
+                              vehicle.type,
+                              vehicle.fuelType,
+                              vehicle.colour,
+                              if (vehicle.plateNumber.isNotEmpty)
+                                vehicle.plateNumber,
+                            ].where((value) => value.isNotEmpty).join(' · '),
+                            style: AppTypography.bodySmall,
+                          ),
+                        ],
+                      ),
+              ),
+              const SizedBox(height: 14),
+              _RequestDetailSection(
+                title: 'Reported Problem',
+                child: Text(request.issue, style: AppTypography.body),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -169,6 +290,7 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
     final owner = ownerAsync.valueOrNull;
     final ownerName =
         owner != null ? '${owner.firstName} ${owner.lastName}'.trim() : 'Car Owner';
+    final vehicle = ref.watch(vehicleByIdProvider(request.vehicleId)).valueOrNull;
 
     double? distanceKm;
     if (mechanicLocation != null && request.carOwnerLocation != null) {
@@ -192,16 +314,23 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.xl2),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: AppColors.border),
+                GestureDetector(
+                  onTap: () => _showRequestDetails(
+                    context: context,
+                    owner: owner,
+                    vehicle: vehicle,
+                    request: request,
                   ),
-                  child: Row(
-                    children: [
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.xl2),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
                       AppAvatar(
                           name: ownerName, imageUrl: owner?.profilePhoto, size: 44),
                       const SizedBox(width: 12),
@@ -226,8 +355,16 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
                           ],
                         ),
                       ),
-                    ],
+                      ],
+                    ),
                   ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Tap the customer card to review their vehicle and request.',
+                  style: AppTypography.caption,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
                 const SizedBox(height: 24),
                 Text('Your Quote',
@@ -281,6 +418,34 @@ class _SendQuoteScreenState extends ConsumerState<SendQuoteScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _RequestDetailSection extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _RequestDetailSection({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl2),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppTypography.captionLarge),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
     );
   }
 }

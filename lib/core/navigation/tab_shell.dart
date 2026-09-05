@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/navigation/route_names.dart';
 import '../../features/scan/providers/scan_provider.dart';
 import '../../shared/widget/app_nav_bar.dart';
 import '../../shared/widget/notched_nav_bar.dart';
@@ -130,23 +131,29 @@ class MechanicTabShell extends StatelessWidget {
     return Stack(
       children: [
         navigationShell,
-        AppNavBar(
+        NotchedNavBar(
           activeIndex: navigationShell.currentIndex,
+          onScanTap: () => context.go(RouteNames.mechanicScan),
           items: [
-            AppNavItem(
-              icon: Icons.qr_code_scanner_rounded,
-              label: 'Scan',
-              onTap: () => navigationShell.goBranch(0),
-            ),
             AppNavItem(
               icon: Icons.home_rounded,
               label: 'Home',
-              onTap: () => navigationShell.goBranch(1),
+              onTap: () => navigationShell.goBranch(0),
             ),
             AppNavItem(
               icon: Icons.groups_rounded,
               label: 'Users',
+              onTap: () => navigationShell.goBranch(1),
+            ),
+            AppNavItem(
+              icon: Icons.history_rounded,
+              label: 'Jobs',
               onTap: () => navigationShell.goBranch(2),
+            ),
+            AppNavItem(
+              icon: Icons.person_rounded,
+              label: 'Profile',
+              onTap: () => navigationShell.goBranch(3),
             ),
           ],
         ),

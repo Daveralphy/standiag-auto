@@ -1,6 +1,7 @@
 // Displays the live tracking map while the mechanic is en route.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
@@ -31,6 +32,7 @@ class _UserTrackingScreenState extends ConsumerState<UserTrackingScreen> {
   void initState() {
     super.initState();
     SystemUiStyle.apply();
+    HapticFeedback.mediumImpact();
     ref.read(jobProvider.notifier).watchActiveJob(widget.jobId);
   }
 
@@ -50,6 +52,11 @@ class _UserTrackingScreenState extends ConsumerState<UserTrackingScreen> {
     final mechanicLocation = job?.mechanicLocation != null
         ? LatLng(job!.mechanicLocation!.latitude, job.mechanicLocation!.longitude)
         : const LatLng(6.5290, 3.3830);
+    final distanceKm = const Distance().as(
+        LengthUnit.Kilometer,
+        userLocation,
+        mechanicLocation,
+      );
 
     return Scaffold(
       backgroundColor: AppColors.mapBackground,
@@ -156,6 +163,14 @@ class _UserTrackingScreenState extends ConsumerState<UserTrackingScreen> {
                         Text(
                           job?.issue ?? '',
                           style: AppTypography.caption,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        Text(
+                          '${distanceKm.toStringAsFixed(1)} km away',
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.primary,
+                          ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),

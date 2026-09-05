@@ -19,7 +19,6 @@ import '../../../shared/widget/app_avatar.dart';
 import '../../../shared/widget/app_map.dart';
 import '../../../shared/widget/app_screen_header.dart';
 import '../../../shared/widget/system_ui_style.dart';
-import '../../profile/screens/mechanic_drawer_screen.dart';
 
 class MechanicUsersScreen extends ConsumerStatefulWidget {
   const MechanicUsersScreen({super.key});
@@ -29,7 +28,6 @@ class MechanicUsersScreen extends ConsumerStatefulWidget {
 }
 
 class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   String _searchQuery = '';
@@ -77,9 +75,7 @@ class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
             return name.contains(_searchQuery.trim().toLowerCase());
           }).toList();
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: AppColors.mapBackground,
-      drawer: const MechanicDrawerScreen(),
       body: Stack(
         children: [
           AppMap(
@@ -104,7 +100,6 @@ class _MechanicUsersScreenState extends ConsumerState<MechanicUsersScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     AppScreenHeader(
-                      scaffoldKey: _scaffoldKey,
                       title: 'Nearby Users',
                       subtitle: 'Car owners near you',
                       trailingIcon: Icons.search_rounded,
