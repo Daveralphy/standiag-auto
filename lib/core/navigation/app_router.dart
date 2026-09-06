@@ -279,6 +279,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: RouteNames.jobHistory,
+                pageBuilder: (_, __) =>
+                    const NoTransitionPage(child: JobHistoryScreen()),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: RouteNames.mechanicProfileView,
                 pageBuilder: (_, __) =>
                     const NoTransitionPage(child: MechanicProfileOwnScreen()),
