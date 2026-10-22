@@ -1,18 +1,23 @@
 name: Flutter checks
 
-on:
-  pull_request:
-    branches: [main]
+'on':
   push:
-    branches: [main, refactor/redesign-foundation]
+    branches:
+      - refactor/redesign-foundation
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: flutter-checks-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   flutter:
+    name: Analyze and test Flutter app
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
