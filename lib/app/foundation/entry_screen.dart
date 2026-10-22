@@ -18,12 +18,23 @@ class _EntryScreenState extends State<EntryScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  late final Stream<User?> _authStateChanges;
+
   bool _isCreatingAccount = false;
   bool _isSubmitting = false;
   bool _isSendingReset = false;
   bool _obscurePassword = true;
   String? _errorMessage;
   String? _statusMessage;
+  bool _isSigningOut = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Reuse one stream for the lifetime of this screen. Recreating it in
+    // build() would resubscribe whenever any form state changes.
+    _authStateChanges = FirebaseAuth.instance.authStateChanges();
+  }
 
   @override
   void dispose() {
@@ -67,6 +78,28 @@ class _EntryScreenState extends State<EntryScreen> {
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    if (_isSigningOut) return;
+    setState(() => _isSigningOut = true);
+    try {
+      await FirebaseAuth.instance.signOut();
+    } on FirebaseAuthException {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'We could not sign you out. Please try again.';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'We could not sign you out. Please try again.';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isSigningOut = false);
     }
   }
 
@@ -162,7 +195,7 @@ class _EntryScreenState extends State<EntryScreen> {
     final colors = theme.colorScheme;
 
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: _authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _AuthUnavailableScreen(
@@ -184,7 +217,8 @@ class _EntryScreenState extends State<EntryScreen> {
         if (user != null) {
           return _SignedInPlaceholder(
             email: user.email ?? 'Signed in',
-            onSignOut: () => FirebaseAuth.instance.signOut(),
+            onSignOut: _signOut,
+            isSigningOut: _isSigningOut,
           );
         }
 
@@ -446,10 +480,12 @@ class _SignedInPlaceholder extends StatelessWidget {
   const _SignedInPlaceholder({
     required this.email,
     required this.onSignOut,
+    required this.isSigningOut,
   });
 
   final String email;
   final Future<void> Function() onSignOut;
+  final bool isSigningOut;
 
   @override
   Widget build(BuildContext context) {
@@ -489,8 +525,14 @@ class _SignedInPlaceholder extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   OutlinedButton(
-                    onPressed: onSignOut,
-                    child: const Text('Sign out'),
+                    onPressed: isSigningOut ? null : onSignOut,
+                    child: isSigningOut
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Sign out'),
                   ),
                 ],
               ),
