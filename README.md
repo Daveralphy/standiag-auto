@@ -31,19 +31,24 @@ Additional dependencies will be added only when the rebuilt product needs them.
 ## Local setup
 
 1. Install the Flutter SDK compatible with the Dart constraint in `pubspec.yaml`.
-2. Configure Firebase for the platforms you intend to run and generate `lib/firebase_options.dart`.
-3. Supply any required platform Firebase configuration locally. Never commit private keys or production secrets.
-4. Run:
+2. In Firebase Console, open **Project settings → General** and copy the project's **Web API key**. Firebase client API keys identify the project; never use an Admin SDK service-account key in the app.
+3. Fetch packages and run the app with the key supplied at runtime:
 
    ```sh
    flutter pub get
+   flutter run -d chrome --dart-define=FIREBASE_API_KEY=YOUR_FIREBASE_WEB_API_KEY
+   ```
+
+   For Android, use the same define when building/running. Android-specific Firebase configuration and platform tooling may also be required for some Firebase services. Enable Email/Password under Firebase Authentication → Sign-in method before testing sign-in or account creation.
+4. Verify changes with:
+
+   ```sh
    dart format lib test
    flutter analyze
    flutter test
-   flutter run
    ```
 
-Some of these commands may currently report issues while the rebuild is in progress. Do not treat the legacy app as a finished product.
+If the Firebase configuration is missing, the app shows a setup screen instead of crashing during startup. Do not commit service-account keys, signing credentials, or other privileged secrets.
 
 ## Development rules
 
@@ -53,4 +58,6 @@ Some of these commands may currently report issues while the rebuild is in progr
 - Do not retain a feature merely because legacy code exists.
 - Keep UI styling in the shared theme and use `Theme.of(context)` in widgets.
 - Implement and verify light and dark appearances together.
+- Design for narrow phone widths first, then adapt to larger phones, tablets, and desktop. Avoid fixed widths where content can wrap or constrain itself.
+- Account for keyboard insets, safe areas, long text, and accessibility text scaling.
 - Do not claim a feature, test, or build works unless it has actually been verified.
