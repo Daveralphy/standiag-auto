@@ -1,53 +1,64 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
-/// Firebase client configuration supplied at build/run time.
+/// Firebase client configuration injected at build time.
 ///
-/// Firebase client API keys are configuration values, not Admin SDK secrets.
-/// Pass the project's web API key with --dart-define=FIREBASE_API_KEY=... .
-/// Keep service-account keys and other privileged credentials out of the app.
+/// These values identify a Firebase client app. Never put service-account
+/// credentials, private keys, or privileged server secrets in a Flutter app.
 abstract final class DefaultFirebaseOptions {
-  static const String _apiKey = String.fromEnvironment('FIREBASE_API_KEY');
-
-  static const FirebaseOptions _android = FirebaseOptions(
-    apiKey: _apiKey,
-    appId: '1:625237396713:android:01cac950a4b6ab67b93478',
-    messagingSenderId: '625237396713',
-    projectId: 'standiag-auto',
+  static const _apiKey = String.fromEnvironment('FIREBASE_API_KEY');
+  static const _projectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+  static const _senderId = String.fromEnvironment(
+    'FIREBASE_MESSAGING_SENDER_ID',
   );
-
-  static const FirebaseOptions _ios = FirebaseOptions(
-    apiKey: _apiKey,
-    appId: '1:625237396713:ios:584a19c3d7de0019b93478',
-    messagingSenderId: '625237396713',
-    projectId: 'standiag-auto',
+  static const _webAppId = String.fromEnvironment('FIREBASE_APP_ID_WEB');
+  static const _androidAppId = String.fromEnvironment(
+    'FIREBASE_APP_ID_ANDROID',
   );
-
-  static const FirebaseOptions _web = FirebaseOptions(
-    apiKey: _apiKey,
-    appId: '1:625237396713:web:7b220ba8bf77ce6bb93478',
-    messagingSenderId: '625237396713',
-    projectId: 'standiag-auto',
-  );
+  static const _iosAppId = String.fromEnvironment('FIREBASE_APP_ID_IOS');
+  static const _macosAppId = String.fromEnvironment('FIREBASE_APP_ID_MACOS');
 
   static FirebaseOptions get currentPlatform {
-    if (_apiKey.isEmpty) {
+    final appId = switch (defaultTargetPlatform) {
+      TargetPlatform.android => _androidAppId,
+      TargetPlatform.iOS => _iosAppId,
+      TargetPlatform.macOS => _macosAppId,
+      TargetPlatform.windows || TargetPlatform.linux => '',
+      TargetPlatform.fuchsia => '',
+    };
+
+    final effectiveAppId = kIsWeb ? _webAppId : appId;
+    final missing = <String>[
+      if (_apiKey.isEmpty) 'FIREBASE_API_KEY',
+      if (_projectId.isEmpty) 'FIREBASE_PROJECT_ID',
+      if (_senderId.isEmpty) 'FIREBASE_MESSAGING_SENDER_ID',
+      if (effectiveAppId.isEmpty)
+        kIsWeb
+            ? 'FIREBASE_APP_ID_WEB'
+            : switch (defaultTargetPlatform) {
+                TargetPlatform.android => 'FIREBASE_APP_ID_ANDROID',
+                TargetPlatform.iOS => 'FIREBASE_APP_ID_IOS',
+                TargetPlatform.macOS => 'FIREBASE_APP_ID_MACOS',
+                TargetPlatform.windows || TargetPlatform.linux =>
+                  'a supported Firebase platform (Android, iOS, web, or macOS)',
+                TargetPlatform.fuchsia => 'a supported Firebase platform',
+              },
+    ];
+
+    if (missing.isNotEmpty) {
       throw StateError(
-        'Firebase is not configured. Run the app with '
-        '--dart-define=FIREBASE_API_KEY=YOUR_FIREBASE_WEB_API_KEY. '
-        'Find the client API key in the Firebase project settings.',
+        'Firebase client configuration is incomplete. Missing: '
+        '${missing.join(', ')}. Supply these values with --dart-define. '
+        'Get the client app values from Firebase Console → Project settings. '
+        'Do not use a service-account key.',
       );
     }
 
-    if (kIsWeb) return _web;
-
-    return switch (defaultTargetPlatform) {
-      TargetPlatform.android => _android,
-      TargetPlatform.iOS || TargetPlatform.macOS => _ios,
-      TargetPlatform.windows || TargetPlatform.linux => _web,
-      TargetPlatform.fuchsia => throw UnsupportedError(
-          'Standiag Auto does not support Fuchsia.',
-        ),
-    };
+    return FirebaseOptions(
+      apiKey: _apiKey,
+      appId: effectiveAppId,
+      messagingSenderId: _senderId,
+      projectId: _projectId,
+    );
   }
 }
