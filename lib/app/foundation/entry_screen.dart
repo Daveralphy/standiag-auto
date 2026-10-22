@@ -303,7 +303,7 @@ class _EntryScreenState extends State<EntryScreen> {
             email: user.email ?? _emailController.text.trim(),
             onResend: _resendVerificationEmail,
             onCheckVerification: _checkVerificationStatus,
-            isSending: _isSendingReset,
+            isSending: _isSendingReset || _isSubmitting,
             errorMessage: _errorMessage,
             statusMessage: _statusMessage,
           );
