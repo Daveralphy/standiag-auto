@@ -159,6 +159,8 @@ class _EntryScreenState extends State<EntryScreen> {
         return;
       }
       await user.reload();
+      if (!mounted) return;
+
       final refreshedUser = FirebaseAuth.instance.currentUser;
       if (refreshedUser?.emailVerified == true) {
         setState(() {
