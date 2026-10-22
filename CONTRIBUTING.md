@@ -1,212 +1,53 @@
-# CONTRIBUTING.md — StanDiag Auto
+# Contributing
 
-How to set up the project, add new screens, and follow the conventions of this codebase.
+Standiag Auto is being rebuilt from a clean application foundation. Keep contributions focused on the agreed product rather than extending legacy features by default.
 
----
+## Before changing code
 
-## Initial Setup
+1. Confirm the change belongs to an approved customer or mechanic workflow.
+2. Check existing Firestore usage, security rules, and Cloud Functions before changing persisted fields or backend contracts.
+3. Search for references before removing a file, provider, route, dependency, asset, or test.
+4. Prefer a small, coherent change over compatibility layers for abandoned code.
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/Daveralphy/standiag-auto.git
-cd standiag-auto
+## Architecture
+
+- Keep the app entry point and global Material theme in the new `lib/app/` foundation.
+- Use Material 3 and shared theme tokens. Do not introduce a second theme system or mutable global color state.
+- Keep UI, domain logic, and Firebase access separated as features are introduced.
+- Add dependencies only when a real, implemented use case requires them.
+- Keep credentials and generated Firebase configuration out of source control.
+
+## UI and accessibility
+
+- Build light and dark modes together.
+- Use responsive layouts, semantic controls, and readable contrast.
+- Avoid speculative screens and placeholder features unless they are explicitly part of the current task.
+- Shared patterns should use reusable components instead of page-specific copies.
+
+## Data safety
+
+- Treat the current Firestore database as potentially containing real user data.
+- Verify collections, field names, security rules, deployed functions, and migration needs before modifying a data contract.
+- Never delete production data or weaken security rules as part of routine UI work.
+- Do not assume an old feature is required just because its schema exists.
+
+## Verification
+
+Run the relevant commands when the local environment is configured:
+
+```sh
+dart format lib test
+flutter analyze
+flutter test
+flutter build apk --debug
 ```
 
-### 2. Install Flutter Dependencies
-```bash
-flutter pub get
-```
+Report which checks were run and their actual outcomes. If Firebase configuration or another environment dependency blocks verification, state that clearly.
 
-### 3. Firebase Setup
-- Create a new Firebase project at https://console.firebase.google.com
-- Enable **Authentication** (Email/Password + Phone)
-- Enable **Firestore Database**
-- Enable **Firebase Storage**
-- Enable **Firebase Crashlytics**
-- Download `google-services.json` → place in `android/app/`
-- Download `GoogleService-Info.plist` → place in `ios/Runner/`
+## Git workflow
 
-> These files are in `.gitignore`. Never commit them.
-
-### 4. Google Maps Setup
-- Enable the Google Maps SDK for Android and iOS in Google Cloud Console
-- Add your API key to `android/app/src/main/AndroidManifest.xml`
-- Add your API key to `ios/Runner/AppDelegate.swift`
-
-### 5. Agora Setup
-- Create an Agora project at https://console.agora.io
-- Copy your App ID
-- Add it to your environment config (never hardcode in source)
-
-### 6. Run the App
-```bash
-flutter run
-```
-
----
-
-## Adding a New Screen
-
-### Step 1: Check README.md
-Confirm the screen file name is listed in the repository file structure in `README.md`.
-If it is not listed, the screen should not be created without updating `README.md` first.
-
-### Step 2: Check the HTML Reference
-Open the corresponding HTML file in `/design/`.
-Read it completely. Identify every element, color, font, spacing, icon, and interaction.
-
-### Step 3: Check for Reusable Widgets
-Before building any widget, check `/lib/shared/widgets/` for existing components.
-Use existing components before building new ones.
-
-### Step 4: Create the File
-Create the file in the correct feature folder with the exact name from `README.md`.
-
-### Step 5: File Structure Template
-Every screen file follows this structure:
-```dart
-/// One-line description of what this screen does and who sees it.
-
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-// ... other imports
-
-class ScreenNameScreen extends ConsumerWidget {
-  const ScreenNameScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Watch providers here
-    // Return the screen layout
-  }
-}
-
-// Private sub-widgets below, each with a brief doc comment
-```
-
----
-
-## Naming Conventions
-
-| Thing | Convention | Example |
-|---|---|---|
-| Screen files | `feature_description_screen.dart` | `user_job_in_progress_screen.dart` |
-| Widget files | `feature_widget_name.dart` | `mechanic_card_small.dart` |
-| Provider files | `feature_provider.dart` | `job_provider.dart` |
-| Model files | `model_name_model.dart` | `job_model.dart` |
-| Classes | PascalCase | `UserJobInProgressScreen` |
-| Variables | camelCase | `currentJobStatus` |
-| Constants | camelCase in const class | `AppColors.primary` |
-| Route names | kebab-case strings | `'/user/job-in-progress'` |
-
----
-
-## Code Conventions
-
-### Colors
-Never use a hex string in a widget. Always use `AppColors`:
-```dart
-// Wrong
-color: Color(0xFFE8281E)
-
-// Right
-color: AppColors.primary
-```
-
-### Text Styles
-Never define text styles inline. Always use `AppTypography`:
-```dart
-// Wrong
-style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)
-
-// Right
-style: AppTypography.heading3
-```
-
-### Spacing
-Never use raw numbers for padding or gaps. Always use `AppSpacing`:
-```dart
-// Wrong
-padding: EdgeInsets.all(18)
-SizedBox(height: 12)
-
-// Right
-padding: EdgeInsets.all(AppSpacing.lg)
-SizedBox(height: AppSpacing.md)
-```
-
-### Text Overflow
-Every `Text` widget must handle overflow:
-```dart
-Text(
-  someValue,
-  overflow: TextOverflow.ellipsis,
-  maxLines: 1,
-)
-```
-
-### Text in Rows
-Every `Text` inside a `Row` must be wrapped:
-```dart
-Row(
-  children: [
-    Expanded(
-      child: Text(
-        value,
-        overflow: TextOverflow.ellipsis,
-      ),
-    ),
-    // other widgets
-  ],
-)
-```
-
-### Error Handling
-Never use try/catch and print the error:
-```dart
-// Wrong
-try {
-  await someOperation();
-} catch (e) {
-  print(e);
-}
-
-// Right
-try {
-  await someOperation();
-} catch (e, stack) {
-  ErrorHandler.handle(e, stack);
-}
-```
-
----
-
-## Commit Message Format
-
-```
-type(feature): short description
-
-Examples:
-feat(auth): add user signup step one screen
-fix(jobs): resolve job status not updating in real time
-chore(deps): update firebase_core to 2.x
-style(home): adjust mechanic card spacing to match design
-```
-
-Types: `feat`, `fix`, `chore`, `style`, `docs`, `refactor`, `test`
-
----
-
-## Before Submitting Code
-
-Checklist:
-- [ ] Screen matches HTML reference exactly (colors, layout, typography, icons)
-- [ ] No hardcoded colors, sizes, or strings
-- [ ] All `Text` widgets have overflow handling
-- [ ] No unbounded containers
-- [ ] Skeleton loading implemented for data-dependent sections
-- [ ] Error states handled and routed through `ErrorHandler`
-- [ ] No unused imports
-- [ ] No `print()` statements
-- [ ] All image assets confirmed to exist in `/assets/images/`
-- [ ] All stream subscriptions disposed on widget disposal
+- Create a focused feature branch.
+- Never push directly to `main`.
+- Use clear commit messages.
+- Open a pull request with a concise summary, verification results, and any data-contract risks.
+- Do not merge while required checks or review are outstanding.
