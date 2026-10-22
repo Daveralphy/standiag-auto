@@ -18,7 +18,7 @@ class _EntryScreenState extends State<EntryScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  late final Stream<User?> _authStateChanges;
+  late Stream<User?> _authStateChanges;
 
   bool _isCreatingAccount = false;
   bool _isSubmitting = false;
@@ -199,7 +199,9 @@ class _EntryScreenState extends State<EntryScreen> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _AuthUnavailableScreen(
-            onRetry: () => setState(() {}),
+            onRetry: () => setState(
+              () => _authStateChanges = FirebaseAuth.instance.authStateChanges(),
+            ),
           );
         }
 
@@ -219,6 +221,7 @@ class _EntryScreenState extends State<EntryScreen> {
             email: user.email ?? 'Signed in',
             onSignOut: _signOut,
             isSigningOut: _isSigningOut,
+            errorMessage: _errorMessage,
           );
         }
 
@@ -481,11 +484,13 @@ class _SignedInPlaceholder extends StatelessWidget {
     required this.email,
     required this.onSignOut,
     required this.isSigningOut,
+    required this.errorMessage,
   });
 
   final String email;
   final Future<void> Function() onSignOut;
   final bool isSigningOut;
+  final String? errorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -523,6 +528,10 @@ class _SignedInPlaceholder extends StatelessWidget {
                     'available yet.',
                     textAlign: TextAlign.center,
                   ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    _InlineMessage(message: errorMessage!, isError: true),
+                  ],
                   const SizedBox(height: 24),
                   OutlinedButton(
                     onPressed: isSigningOut ? null : onSignOut,
