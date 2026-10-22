@@ -1,9 +1,8 @@
 // Defines every color used in StanDiag Auto.
 // Never use a raw hex color anywhere in the app — always reference this class.
-// Dark values are derived directly from the HTML design files in /design/.
-// Light values were derived from the dark palette (no light mockups exist):
-// backgrounds/text/borders inverted, brand red and semantic colors kept
-// identical since they already read fine on both backgrounds.
+// Shared Standiag Auto brand palette for both light and dark themes.
+// Brand burgundy/red stays consistent across themes; surfaces, text, borders,
+// and navigation adapt to the selected brightness.
 //
 // Every field below is a getter, not a constant, so it can reflect whichever
 // theme is currently active — set once per frame by StanDiagApp via
