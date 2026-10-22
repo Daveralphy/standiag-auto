@@ -27,5 +27,37 @@ void main() {
 
     expect(find.text('One setup step left'), findsOneWidget);
     expect(find.textContaining('FIREBASE_API_KEY'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('setup screen remains usable at a narrow phone width', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 640);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const StanDiagApp(startupError: 'Firebase configuration missing'),
+    );
+
+    expect(find.text('One setup step left'), findsOneWidget);
+    expect(find.textContaining('FIREBASE_API_KEY'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('setup guidance respects the system dark theme', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.dark,
+        home: StanDiagApp(startupError: 'Firebase configuration missing'),
+      ),
+    );
+
+    expect(find.text('One setup step left'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
