@@ -1,65 +1,56 @@
-# StanDiag Auto
+# Standiag Auto
 
-Your mechanic, on demand.
+Standiag Auto is being rebuilt as an on-demand car-repair marketplace that helps customers find mechanics and workshops and helps providers manage repair work.
 
-StanDiag Auto connects car owners with nearby mechanics in real time. Car owners describe an issue, get matched with a verified mechanic nearby, call them in-app, and rate the job afterward. Mechanics receive incoming requests, negotiate, accept or reject jobs, navigate to the car owner, and complete jobs. Both roles share one app; the experience splits after the profile-type picker on first launch.
+## Project status
 
-## Features
+This repository is in a fresh rebuild. The existing application is legacy reference material, not the architecture that the new product must preserve. Features are being reintroduced only when they are part of the agreed product and their data contracts or integrations have been verified.
 
-- **Car owners** — OBD-II vehicle diagnostics via Bluetooth, mechanic search by radius, in-app voice calls, live job tracking, ratings, vehicle and service history, a credits-based payment model.
-- **Mechanics** — incoming job requests, live location sharing while en route, job history, a profile with expertise tags and ratings.
-- Shared account features: phone/email verification, credits and purchase history, settings (language, appearance, privacy, notifications), password management, account deletion.
+## Product experiences
 
-## Tech stack
+### Customers
+- Home
+- Explore
+- My Repairs
+- Profile
 
-- **Flutter** / Dart
-- **Riverpod** for state management
-- **GoRouter** for navigation
-- **Firebase** — Auth, Firestore, Storage, Crashlytics
-- **Agora** for in-app voice calls
-- **Google Maps** for location and tracking
-- **Hive** for local persistent caching
+### Mechanics and workshops
+- Home
+- Jobs
+- Earnings
+- Profile
 
-## Getting started
+## Technology
 
-### 1. Install dependencies
-```bash
-flutter pub get
-```
+- Flutter / Dart
+- Firebase Authentication and Cloud Firestore for identity and persisted data
+- Material 3 with light and dark themes from the beginning
 
-### 2. Firebase setup
-- Create a Firebase project at https://console.firebase.google.com
-- Enable Authentication (Email/Password + Phone), Firestore, Storage, and Crashlytics
-- Download `google-services.json` into `android/app/`
-- Download `GoogleService-Info.plist` into `ios/Runner/`
+Additional dependencies will be added only when the rebuilt product needs them.
 
-These files are gitignored and must never be committed.
+## Local setup
 
-### 3. Google Maps
-- Enable the Maps SDK for Android and iOS in Google Cloud Console
-- Add your API key to `android/app/src/main/AndroidManifest.xml` and `ios/Runner/AppDelegate.swift`
+1. Install the Flutter SDK compatible with the Dart constraint in `pubspec.yaml`.
+2. Configure Firebase for the platforms you intend to run and generate `lib/firebase_options.dart`.
+3. Supply any required platform Firebase configuration locally. Never commit private keys or production secrets.
+4. Run:
 
-### 4. Agora
-- Create a project at https://console.agora.io and add your App ID to your environment config (never hardcode it in source)
+   ```sh
+   flutter pub get
+   dart format lib test
+   flutter analyze
+   flutter test
+   flutter run
+   ```
 
-### 5. Run
-```bash
-flutter run
-```
+Some of these commands may currently report issues while the rebuild is in progress. Do not treat the legacy app as a finished product.
 
-## Project structure
+## Development rules
 
-```
-lib/
-├── core/           # constants, navigation, error handling, caching, utils
-├── features/       # one folder per feature area (auth, home, jobs, mechanics,
-│                   # profile, credits, settings, scan, onboarding), each with
-│                   # its own screens/, providers/, and models/
-└── shared/         # widgets and providers used across multiple features
-```
-
-Further reading:
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — data model, provider ownership, caching strategy, navigation map
-- [`DESIGN.md`](DESIGN.md) — colors, typography, spacing, and component specs
-- [`ERRORS.md`](ERRORS.md) — the full error-message reference shown to users
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — setup, conventions, and how to add a new screen
+- Work on a feature branch; do not push directly to `main`.
+- Follow [CONTRIBUTING.md](CONTRIBUTING.md).
+- Verify whether persisted Firestore data, security rules, or deployed Cloud Functions depend on a field before changing it.
+- Do not retain a feature merely because legacy code exists.
+- Keep UI styling in the shared theme and use `Theme.of(context)` in widgets.
+- Implement and verify light and dark appearances together.
+- Do not claim a feature, test, or build works unless it has actually been verified.
