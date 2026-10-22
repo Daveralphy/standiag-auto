@@ -7,12 +7,16 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Keep Firebase initialization as the verified integration boundary.
-  // Feature-specific Firebase services will be reintroduced only when their
-  // replacement flows are implemented.
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  Object? startupError;
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (error) {
+    // A missing local Firebase API key or platform setup should show a clear
+    // configuration screen rather than a blank screen or uncaught exception.
+    startupError = error;
+  }
 
-  runApp(const StanDiagApp());
+  runApp(StanDiagApp(startupError: startupError));
 }
