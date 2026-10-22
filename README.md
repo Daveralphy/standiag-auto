@@ -48,7 +48,7 @@ This repository is in a fresh rebuild. The previous application is legacy refere
      --dart-define=FIREBASE_APP_ID_WEB=YOUR_WEB_APP_ID
    ```
 
-   For Android or iOS, provide that platform's app ID instead of the web app ID. Enable **Email/Password** in Firebase Console → Authentication → Sign-in method before testing account creation or sign-in. Configure authorized domains for web authentication as needed.
+   For Android or iOS, provide that platform's app ID instead of the web app ID. Enable **Email/Password** in Firebase Console → Authentication → Sign-in method before testing account creation or sign-in. New accounts must verify their email before entering the signed-in workspace. Configure authorized domains for web authentication as needed.
 4. Verify changes:
 
    ```sh
