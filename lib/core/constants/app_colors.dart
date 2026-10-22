@@ -139,11 +139,11 @@ class AppColorPalette {
         mapRoadSecondary = const Color(0xFF141B22),
         mapBuilding = const Color(0xFF111820),
         mapPark = const Color(0xFF0D1A10),
-        primary = const Color(0xFFE8281E),
-        primaryLight = const Color(0xFFF03328),
-        primaryDark = const Color(0xFFC41F16),
-        primarySubtle = const Color(0x14E8281E), // 8% opacity
-        primaryBorder = const Color(0x33E8281E), // 20% opacity
+        primary = const Color(0xFF7A0E14),
+        primaryLight = const Color(0xFFDC2626),
+        primaryDark = const Color(0xFF5A0A0F),
+        primarySubtle = const Color(0x147A0E14), // 8% opacity
+        primaryBorder = const Color(0x337A0E14), // 20% opacity
         textPrimary = const Color(0xFFFFFFFF),
         textSecondary = const Color(0xB3FFFFFF), // 70% white
         textMuted = const Color(0x66FFFFFF), // 40% white
@@ -151,7 +151,7 @@ class AppColorPalette {
         textDisabled = const Color(0x33FFFFFF), // 20% white
         textTag = const Color(0x59FFFFFF), // 35% white
         success = const Color(0xFF4CAF50),
-        successSubtle = const Color(0x14E8281E), // matches design
+        successSubtle = const Color(0x1422C55E), // matches design
         amber = const Color(0xFFF59E0B),
         warning = const Color(0xFFFFC107),
         blue = const Color(0xFF3B82F6),
@@ -161,11 +161,11 @@ class AppColorPalette {
         borderActive = const Color(0x1AFFFFFF), // 10% opacity
         navBarBackground = const Color(0xE10E0E0E), // 88% opacity
         navBarBorder = const Color(0x14FFFFFF), // 8% opacity
-        navBarActiveGlow = const Color(0x40E8281E), // 25% opacity
+        navBarActiveGlow = const Color(0x407A0E14), // 25% opacity
         primaryButtonGradient = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF03328), Color(0xFFC41F16)],
+          colors: [Color(0xFFDC2626), Color(0xFF5A0A0F)],
         ),
         creditsCardGradient = const LinearGradient(
           begin: Alignment.topLeft,
@@ -183,11 +183,11 @@ class AppColorPalette {
         mapRoadSecondary = const Color(0xFFF0F1F3),
         mapBuilding = const Color(0xFFE8EAED),
         mapPark = const Color(0xFFDCEEDC),
-        primary = const Color(0xFFE8281E),
-        primaryLight = const Color(0xFFF03328),
-        primaryDark = const Color(0xFFC41F16),
-        primarySubtle = const Color(0x14E8281E), // 8% opacity — reads on either bg
-        primaryBorder = const Color(0x33E8281E), // 20% opacity
+        primary = const Color(0xFF7A0E14),
+        primaryLight = const Color(0xFFDC2626),
+        primaryDark = const Color(0xFF5A0A0F),
+        primarySubtle = const Color(0x147A0E14), // 8% opacity — reads on either bg
+        primaryBorder = const Color(0x337A0E14), // 20% opacity
         textPrimary = const Color(0xFF121212),
         textSecondary = const Color(0xB3121212), // 70%
         textMuted = const Color(0x66121212), // 40%
@@ -195,7 +195,7 @@ class AppColorPalette {
         textDisabled = const Color(0x33121212), // 20%
         textTag = const Color(0x59121212), // 35%
         success = const Color(0xFF4CAF50),
-        successSubtle = const Color(0x14E8281E), // matches design
+        successSubtle = const Color(0x1422C55E), // matches design
         amber = const Color(0xFFF59E0B),
         warning = const Color(0xFFFFC107),
         blue = const Color(0xFF3B82F6),
@@ -205,11 +205,11 @@ class AppColorPalette {
         borderActive = const Color(0x1A121212), // 10% opacity
         navBarBackground = const Color(0xE1FAFAFA), // 88% opacity
         navBarBorder = const Color(0x14121212), // 8% opacity
-        navBarActiveGlow = const Color(0x40E8281E), // 25% opacity
+        navBarActiveGlow = const Color(0x407A0E14), // 25% opacity
         primaryButtonGradient = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF03328), Color(0xFFC41F16)],
+          colors: [Color(0xFFDC2626), Color(0xFF5A0A0F)],
         ),
         // Deliberately kept dark even in light mode — a "hero" balance card
         // that pops against a light background, same idea many finance apps
