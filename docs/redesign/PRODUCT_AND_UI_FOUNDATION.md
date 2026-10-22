@@ -40,24 +40,28 @@ Do not add a general-purpose customer/mechanic inbox to the main navigation. Com
 - Status colours must communicate state consistently and remain distinguishable in both themes.
 - Screen designs are approved individually before implementation. Do not implement speculative screen content without agreement.
 
-## Architecture and cleanup rules
+## Fresh-start implementation and cleanup rules
 
-- Preserve schemas/models that are read or written by live features, Firestore, Cloud Functions, local cache, or persisted user data.
-- Before deleting a model, field, route, provider, dependency, asset, or Cloud Function, search for every reference and check serialized data, backend contracts, and deep links.
-- Remove code only after confirming it is unused and not part of a persisted or external contract. Avoid broad destructive cleanup based on filenames alone.
-- Keep business logic and data access out of presentation widgets. Reuse existing providers/services when their behavior is sound.
-- Do not invent live data. Empty, loading, error, unavailable, and populated states must all be designed.
-- Keep user and mechanic workflows role-specific, but share the same design tokens and reusable UI primitives.
-- Keep changes on a feature branch and review via pull request. Do not push redesign changes directly to `main`.
+Treat the current application code as a legacy reference, not as the architecture we must preserve. A feature that exists in the repository is not automatically a required feature, and a provider/model is not automatically worth keeping just because it is referenced by unfinished code.
+
+- Start with a clean application structure around the approved product and main screens. Reuse existing code only when it is understood, working, and genuinely accelerates the new implementation.
+- Retain schemas and fields only when they are required by an agreed product capability, existing persisted customer data that must remain compatible, or a verified external integration. Record the reason each retained schema is needed.
+- Identify unfinished, duplicated, dead, and broken features; remove them from the new architecture rather than building more screens on top of them.
+- Before deleting schemas or data contracts, check actual Firestore collections, persisted Hive data, Cloud Functions, payment integrations, and migration requirements. If a schema is not required, retire it deliberately instead of keeping it merely for backward compatibility.
+- Replace legacy navigation and providers where they obstruct a clean design. Do not preserve a flawed architecture just to avoid rewriting it.
+- Keep presentation, business rules, and data access separated in the new implementation. Use shared design tokens and components for consistent light/dark mode.
+- Do not invent live data or claim a feature works unless it is implemented and verified.
+- Work on a feature branch and review via pull request. Do not push redesign changes directly to `main`.
 
 ## Implementation sequence
 
-1. Establish brand tokens and verify light/dark theme behavior.
-2. Audit existing routes, screen implementations, models, providers, services, Firestore rules, Cloud Functions and tests.
-3. Map existing features to the approved screen families; identify keep/refactor/retire candidates with reference checks.
-4. Build shared UI primitives and role-specific navigation without breaking existing routes or schema contracts.
-5. Implement one approved screen at a time, beginning with customer Home, then Explore, My Repairs, Profile, followed by mechanic Home, Jobs, Earnings and Profile.
-6. Run formatting, static analysis, tests, and build checks; document any environment-dependent checks that cannot run.
+1. Confirm the approved product scope and main screen families.
+2. Inventory existing files into **reuse**, **rewrite**, **retain as data contract**, and **remove**. Flag any schema whose real-world use cannot yet be confirmed.
+3. Establish the new app shell, routing, theme system, typography, spacing, reusable controls, and light/dark surfaces.
+4. Rebuild customer Home, Explore, My Repairs, and Profile; then mechanic Home, Jobs, Earnings, and Profile.
+5. Reintroduce only the required domain models and backend integrations as each approved flow needs them.
+6. Remove the legacy code that is no longer referenced by the new implementation, then check dependencies and assets for unused items.
+7. Run formatting, static analysis, tests, and builds. Clearly report checks that could not be executed.
 
 ## Current known constraints
 
