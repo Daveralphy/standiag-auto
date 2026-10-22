@@ -33,7 +33,7 @@ class _EntryScreenState extends State<EntryScreen> {
     super.initState();
     // Reuse one stream for the lifetime of this screen. Recreating it in
     // build() would resubscribe whenever any form state changes.
-    _authStateChanges = FirebaseAuth.instance.authStateChanges();
+    _authStateChanges = FirebaseAuth.instance.userChanges();
   }
 
   @override
@@ -56,10 +56,11 @@ class _EntryScreenState extends State<EntryScreen> {
     try {
       final auth = FirebaseAuth.instance;
       if (_isCreatingAccount) {
-        await auth.createUserWithEmailAndPassword(
+        final credential = await auth.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
+        await credential.user?.sendEmailVerification();
       } else {
         await auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
@@ -100,6 +101,87 @@ class _EntryScreenState extends State<EntryScreen> {
       }
     } finally {
       if (mounted) setState(() => _isSigningOut = false);
+    }
+  }
+
+  Future<void> _resendVerificationEmail() async {
+    if (_isSendingReset) return;
+    setState(() {
+      _isSendingReset = true;
+      _errorMessage = null;
+      _statusMessage = null;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _errorMessage = 'Your session has expired. Please sign in again.';
+        });
+        return;
+      }
+      await user.sendEmailVerification();
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'A new verification email has been requested.';
+        });
+      }
+    } on FirebaseAuthException catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = _friendlyAuthError(error.code));
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _errorMessage =
+              'We could not send the verification email. Please try again.';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isSendingReset = false);
+    }
+  }
+
+  Future<void> _checkVerificationStatus() async {
+    if (_isSubmitting) return;
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+      _statusMessage = null;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _errorMessage = 'Your session has expired. Please sign in again.';
+        });
+        return;
+      }
+      await user.reload();
+      final refreshedUser = FirebaseAuth.instance.currentUser;
+      if (refreshedUser?.emailVerified == true) {
+        setState(() {
+          _statusMessage = 'Email verified. Loading your account…';
+        });
+      } else {
+        setState(() {
+          _statusMessage = 'Your email is not verified yet. Open the link '
+              'in your email, then check again.';
+        });
+      }
+    } on FirebaseAuthException catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = _friendlyAuthError(error.code));
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'We could not check verification yet. Try again.';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -200,7 +282,7 @@ class _EntryScreenState extends State<EntryScreen> {
         if (snapshot.hasError) {
           return _AuthUnavailableScreen(
             onRetry: () => setState(
-              () => _authStateChanges = FirebaseAuth.instance.authStateChanges(),
+              () => _authStateChanges = FirebaseAuth.instance.userChanges(),
             ),
           );
         }
@@ -216,6 +298,17 @@ class _EntryScreenState extends State<EntryScreen> {
         }
 
         final user = snapshot.data;
+        if (user != null && !user.emailVerified) {
+          return _EmailVerificationScreen(
+            email: user.email ?? _emailController.text.trim(),
+            onResend: _resendVerificationEmail,
+            onCheckVerification: _checkVerificationStatus,
+            isSending: _isSendingReset,
+            errorMessage: _errorMessage,
+            statusMessage: _statusMessage,
+          );
+        }
+
         if (user != null) {
           return _SignedInPlaceholder(
             email: user.email ?? 'Signed in',
@@ -396,6 +489,94 @@ class _EntryScreenState extends State<EntryScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _EmailVerificationScreen extends StatelessWidget {
+  const _EmailVerificationScreen({
+    required this.email,
+    required this.onResend,
+    required this.onCheckVerification,
+    required this.isSending,
+    required this.errorMessage,
+    required this.statusMessage,
+  });
+
+  final String email;
+  final Future<void> Function() onResend;
+  final Future<void> Function() onCheckVerification;
+  final bool isSending;
+  final String? errorMessage;
+  final String? statusMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Icon(
+                    Icons.mark_email_unread_outlined,
+                    size: 56,
+                    color: colors.primary,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Verify your email',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Open the verification link we sent you. You must verify '
+                    'your email before continuing.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  SelectableText(email, textAlign: TextAlign.center),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 20),
+                    _InlineMessage(message: errorMessage!, isError: true),
+                  ],
+                  if (statusMessage != null) ...[
+                    const SizedBox(height: 12),
+                    _InlineMessage(message: statusMessage!, isError: false),
+                  ],
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: isSending ? null : onCheckVerification,
+                    child: isSending
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('I have verified my email'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: isSending ? null : onResend,
+                    child: const Text('Resend verification email'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
