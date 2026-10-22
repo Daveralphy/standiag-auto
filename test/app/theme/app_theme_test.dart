@@ -25,8 +25,8 @@ void main() {
       const StanDiagApp(startupError: 'Firebase configuration missing'),
     );
 
-    expect(find.text('One setup step left'), findsOneWidget);
-    expect(find.textContaining('FIREBASE_API_KEY'), findsOneWidget);
+    expect(find.text('Complete app setup'), findsOneWidget);
+    expect(find.textContaining('Firebase client values'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -42,8 +42,8 @@ void main() {
       const StanDiagApp(startupError: 'Firebase configuration missing'),
     );
 
-    expect(find.text('One setup step left'), findsOneWidget);
-    expect(find.textContaining('FIREBASE_API_KEY'), findsOneWidget);
+    expect(find.text('Complete app setup'), findsOneWidget);
+    expect(find.textContaining('Firebase client values'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -55,7 +55,7 @@ void main() {
       const StanDiagApp(startupError: 'Firebase configuration missing'),
     );
 
-    expect(find.text('One setup step left'), findsOneWidget);
+    expect(find.text('Complete app setup'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
