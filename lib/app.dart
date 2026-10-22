@@ -22,13 +22,17 @@ class StanDiagApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       home: startupError == null
           ? const EntryScreen()
-          : const _FirebaseSetupScreen(),
+          : _StartupIssueScreen(
+              isConfigurationIssue: startupError is StateError,
+            ),
     );
   }
 }
 
-class _FirebaseSetupScreen extends StatelessWidget {
-  const _FirebaseSetupScreen();
+class _StartupIssueScreen extends StatelessWidget {
+  const _StartupIssueScreen({required this.isConfigurationIssue});
+
+  final bool isConfigurationIssue;
 
   @override
   Widget build(BuildContext context) {
@@ -45,36 +49,45 @@ class _FirebaseSetupScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    Icons.settings_suggest_outlined,
+                    isConfigurationIssue
+                        ? Icons.settings_suggest_outlined
+                        : Icons.cloud_off_outlined,
                     size: 44,
                     color: theme.colorScheme.primary,
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'One setup step left',
+                    isConfigurationIssue
+                        ? 'Complete app setup'
+                        : 'Unable to start Standiag Auto',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Standiag Auto needs its Firebase client configuration '
-                    'before sign-in can run. This is a setup issue, not an '
-                    'account error.',
-                  ),
-                  const SizedBox(height: 20),
-                  SelectableText(
-                    'Run with --dart-define=FIREBASE_API_KEY=YOUR_FIREBASE_WEB_API_KEY',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Text(
-                    'Use the Web API key from Firebase Console → Project '
-                    'settings → General. Never use a service-account key here.',
-                    style: theme.textTheme.bodySmall,
+                    isConfigurationIssue
+                        ? 'Standiag Auto needs Firebase client configuration '
+                            'before sign-in can run. This is a setup issue, '
+                            'not an account error.'
+                        : 'The app could not initialize its required service. '
+                            'Check your connection and Firebase platform '
+                            'configuration, then try again.',
                   ),
+                  if (isConfigurationIssue) ...[
+                    const SizedBox(height: 20),
+                    SelectableText(
+                      'Supply the Firebase client values using --dart-define. '
+                      'See README.md for the required platform-specific values.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Use client app configuration from Firebase Console. '
+                      'Never use a service-account key in the app.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                 ],
               ),
             ),
