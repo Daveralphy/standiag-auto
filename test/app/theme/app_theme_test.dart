@@ -22,7 +22,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const StanDiagApp(startupError: 'Firebase configuration missing'),
+      StanDiagApp(startupError: StateError('Firebase configuration missing')),
     );
 
     expect(find.text('Complete app setup'), findsOneWidget);
@@ -39,7 +39,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      const StanDiagApp(startupError: 'Firebase configuration missing'),
+      StanDiagApp(startupError: StateError('Firebase configuration missing')),
     );
 
     expect(find.text('Complete app setup'), findsOneWidget);
@@ -52,7 +52,7 @@ void main() {
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
 
     await tester.pumpWidget(
-      const StanDiagApp(startupError: 'Firebase configuration missing'),
+      StanDiagApp(startupError: StateError('Firebase configuration missing')),
     );
 
     expect(find.text('Complete app setup'), findsOneWidget);
