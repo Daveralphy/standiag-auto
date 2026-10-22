@@ -48,13 +48,11 @@ void main() {
   });
 
   testWidgets('setup guidance respects the system dark theme', (tester) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+
     await tester.pumpWidget(
-      const MaterialApp(
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.dark,
-        home: StanDiagApp(startupError: 'Firebase configuration missing'),
-      ),
+      const StanDiagApp(startupError: 'Firebase configuration missing'),
     );
 
     expect(find.text('One setup step left'), findsOneWidget);
