@@ -759,6 +759,7 @@ export const acceptServiceQuote = onCall(async (request) => {
       status?: string;
       jobId?: string;
       acceptedMechanicId?: string;
+      targetMechanicId?: string;
     };
 
     if (serviceRequest.carOwnerId !== uid) {
