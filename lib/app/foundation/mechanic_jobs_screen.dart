@@ -139,7 +139,6 @@ class MechanicIncomingRequestsScreen extends StatelessWidget {
               stream: FirebaseFirestore.instance
                   .collection('serviceRequests')
                   .where('targetMechanicId', isEqualTo: uid)
-                  .where('status', isEqualTo: 'open')
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -148,7 +147,9 @@ class MechanicIncomingRequestsScreen extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                final docs = [...?snapshot.data?.docs];
+                final docs = [...?snapshot.data?.docs]
+                    .where((doc) => (doc.data()['status'] as String? ?? 'open') == 'open')
+                    .toList();
                 docs.sort((a, b) {
                   final ad = a.data()['createdAt'];
                   final bd = b.data()['createdAt'];
