@@ -179,7 +179,7 @@ class _NotificationState extends StatelessWidget {
   );
 }
 
-class AccountSettingsScreen extends StatelessWidget {
+class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({
     super.key,
     required this.email,
@@ -190,31 +190,227 @@ class AccountSettingsScreen extends StatelessWidget {
   final String roleLabel;
 
   @override
+  State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
+}
+
+class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
+  bool _sendingReset = false;
+  String? _feedback;
+  bool _feedbackIsError = false;
+
+  Future<void> _sendPasswordReset() async {
+    final address = widget.email.trim();
+    if (address.isEmpty || _sendingReset) return;
+    setState(() {
+      _sendingReset = true;
+      _feedback = null;
+    });
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: address);
+      if (!mounted) return;
+      setState(() {
+        _feedback = 'If an account can be reset with this email, a password reset message will be sent. Check your inbox and spam folder.';
+        _feedbackIsError = false;
+      });
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _feedback = switch (error.code) {
+          'invalid-email' => 'The saved email address is not valid. Sign out and sign in with the correct account.',
+          'network-request-failed' => 'Check your internet connection and try again.',
+          'too-many-requests' => 'Too many attempts. Please wait before trying again.',
+          _ => 'We could not start the password reset. Please try again later.',
+        };
+        _feedbackIsError = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _feedback = 'We could not start the password reset. Please try again later.';
+        _feedbackIsError = true;
+      });
+    } finally {
+      if (mounted) setState(() => _sendingReset = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) => _SupportScaffold(
-        title: 'Account settings',
-        subtitle: 'Review the account you are currently signed in with.',
-        icon: Icons.manage_accounts_outlined,
-        child: Column(
-          children: [
-            _DetailTile(
-              icon: Icons.email_outlined,
-              title: 'Email address',
-              detail: email.isEmpty ? 'No email address available' : email,
-            ),
-            const SizedBox(height: 12),
-            _DetailTile(
-              icon: Icons.badge_outlined,
-              title: 'Account type',
-              detail: roleLabel,
-            ),
-            const SizedBox(height: 16),
-            const _Notice(
-              text:
-                  'Profile editing, password and security controls will be added here when their account workflows are connected. Your account details are not editable from this preview.',
-            ),
-          ],
+    title: 'Account settings',
+    subtitle: 'Review your account details and security options.',
+    icon: Icons.manage_accounts_outlined,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _DetailTile(
+          icon: Icons.email_outlined,
+          title: 'Email address',
+          detail: widget.email.isEmpty ? 'No email address available' : widget.email,
         ),
-      );
+        const SizedBox(height: 12),
+        _DetailTile(
+          icon: Icons.badge_outlined,
+          title: 'Account type',
+          detail: widget.roleLabel,
+        ),
+        const SizedBox(height: 20),
+        Text('Security', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.lock_reset_rounded),
+            title: const Text('Reset password'),
+            subtitle: const Text('Send a password reset email to your account address.'),
+            trailing: _sendingReset
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.chevron_right_rounded),
+            onTap: _sendingReset || widget.email.trim().isEmpty ? null : _sendPasswordReset,
+          ),
+        ),
+        if (_feedback != null) ...[
+          const SizedBox(height: 12),
+          _FeedbackPanel(message: _feedback!, isError: _feedbackIsError),
+        ],
+        const SizedBox(height: 20),
+        Text('Information', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 8),
+        Card(
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.privacy_tip_outlined),
+                title: const Text('Privacy policy'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => const LegalInfoScreen(kind: LegalInfoKind.privacy),
+                )),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.gavel_outlined),
+                title: const Text('Terms of service'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => const LegalInfoScreen(kind: LegalInfoKind.terms),
+                )),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.info_outline_rounded),
+                title: const Text('About Standiag Auto'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => const LegalInfoScreen(kind: LegalInfoKind.about),
+                )),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const _Notice(
+          text: 'Account deletion is not available here yet because it requires a secure backend workflow that removes related data consistently.',
+        ),
+      ],
+    ),
+  );
+}
+
+enum LegalInfoKind { privacy, terms, about }
+
+class LegalInfoScreen extends StatelessWidget {
+  const LegalInfoScreen({super.key, required this.kind});
+  final LegalInfoKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = switch (kind) {
+      LegalInfoKind.privacy => 'Privacy policy',
+      LegalInfoKind.terms => 'Terms of service',
+      LegalInfoKind.about => 'About Standiag Auto',
+    };
+    final icon = switch (kind) {
+      LegalInfoKind.privacy => Icons.privacy_tip_outlined,
+      LegalInfoKind.terms => Icons.gavel_outlined,
+      LegalInfoKind.about => Icons.info_outline_rounded,
+    };
+    final sections = switch (kind) {
+      LegalInfoKind.privacy => const <(String, String)>[
+        ('Account information', 'Standiag Auto uses account and profile information to provide sign-in, customer vehicle management, mechanic applications and repair-related features.'),
+        ('Vehicle and repair information', 'Information you submit about vehicles and repair requests is used to support the services you request and to show relevant updates to your account.'),
+        ('Access and security', 'Access to account and repair records is controlled by application authentication and database security rules. Do not submit passwords or payment secrets in profile fields or repair descriptions.'),
+        ('Questions and requests', 'A verified privacy contact and data-retention procedure must be published by the app owner before this draft can be treated as the final privacy policy.'),
+      ],
+      LegalInfoKind.terms => const <(String, String)>[
+        ('Using the service', 'Use accurate information and only create vehicle records and repair requests that you are authorised to submit.'),
+        ('Mechanic approval', 'Submitting a mechanic application does not guarantee approval. Access to mechanic features depends on review and the approved account record.'),
+        ('Quotes and repairs', 'Repair scope, pricing, timing, cancellations and disputes must be confirmed through the supported application workflow. Do not assume an unconfirmed quote is an accepted agreement.'),
+        ('Publication status', 'These are preliminary product terms, not an approved legal agreement. The app owner must review and publish final terms before production use.'),
+      ],
+      LegalInfoKind.about => const <(String, String)>[
+        ('A simpler way to manage car care', 'Standiag Auto is being built to help vehicle owners manage vehicle information, find mechanics and follow repair requests, while giving approved mechanics a place to review assigned work.'),
+        ('Availability', 'Some workflows are still under development. Payment totals, account deletion and certain repair actions remain unavailable until their trusted backend services are completed.'),
+      ],
+    };
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(children: [
+              Icon(icon, size: 30, color: Theme.of(context).colorScheme.onPrimaryContainer),
+              const SizedBox(width: 14),
+              Expanded(child: Text(title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800))),
+            ]),
+          ),
+          const SizedBox(height: 14),
+          if (kind != LegalInfoKind.about)
+            const _FeedbackPanel(
+              message: 'DRAFT — this content needs owner/legal review before production publication.',
+              isError: true,
+            ),
+          const SizedBox(height: 8),
+          for (final section in sections) ...[
+            const SizedBox(height: 14),
+            Text(section.$1, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            Text(section.$2, style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.5)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _FeedbackPanel extends StatelessWidget {
+  const _FeedbackPanel({required this.message, required this.isError});
+  final String message;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isError ? colors.errorContainer : colors.secondaryContainer,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+          color: isError ? colors.onErrorContainer : colors.onSecondaryContainer),
+        const SizedBox(width: 10),
+        Expanded(child: Text(message, style: TextStyle(
+          color: isError ? colors.onErrorContainer : colors.onSecondaryContainer,
+        ))),
+      ]),
+    );
+  }
 }
 
 class HelpSupportScreen extends StatelessWidget {
