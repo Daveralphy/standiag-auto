@@ -602,44 +602,6 @@ class _HeroPanel extends StatelessWidget {
   }
 }
 
-class _MetricRow extends StatelessWidget {
-  const _MetricRow({required this.items});
-  final List<(String, String)> items;
-  @override
-  Widget build(BuildContext context) => Row(
-    children: items
-        .map(
-          (item) => Expanded(
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 8,
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      item.$1,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.$2,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        )
-        .toList(),
-  );
-}
-
 class _ActionTile extends StatelessWidget {
   const _ActionTile({
     required this.icon,
