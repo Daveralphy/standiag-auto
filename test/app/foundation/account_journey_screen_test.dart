@@ -35,12 +35,12 @@ void main() {
     await tester.tap(find.text('Apply as a mechanic'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Workshop address'), findsOneWidget);
-    await tester.tap(find.text('Review application details'));
+    expect(find.text('Base address or service area'), findsOneWidget);
+    await tester.tap(find.text('Submit for review'));
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Complete all fields and enter a valid, non-negative number of years.'),
+      find.textContaining('Complete all required fields.'),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
