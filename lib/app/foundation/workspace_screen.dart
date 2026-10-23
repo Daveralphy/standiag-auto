@@ -7,6 +7,7 @@ import 'vehicles_screen.dart';
 import 'mechanic_discovery_screen.dart';
 import 'support_pages.dart';
 import 'repair_detail_screen.dart';
+import 'mechanic_jobs_screen.dart';
 
 /// First pass of the role-specific workspace shell. Data remains clearly
 /// illustrative until each screen is connected to its verified data contract.
@@ -403,23 +404,31 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
-  Widget _jobs(BuildContext context) => const _SectionPage(
-    title: 'Job requests',
-    subtitle: 'Review customer requests and keep work moving.',
-    icon: Icons.assignment_outlined,
-    emptyTitle: 'No job requests',
-    emptyMessage:
-        'Eligible requests will appear here after mechanic approval and backend connection.',
-  );
+  Widget _jobs(BuildContext context) {
+    if (Firebase.apps.isEmpty) {
+      return const _SectionPage(
+        title: 'Job requests',
+        subtitle: 'Review customer requests and keep work moving.',
+        icon: Icons.assignment_outlined,
+        emptyTitle: 'No job requests',
+        emptyMessage: 'Connect Firebase to load jobs assigned to your mechanic account.',
+      );
+    }
+    return const MechanicJobsScreen();
+  }
 
-  Widget _earnings(BuildContext context) => const _SectionPage(
-    title: 'Earnings',
-    subtitle: 'Keep track of completed work and payouts.',
-    icon: Icons.account_balance_wallet_outlined,
-    emptyTitle: 'Earnings will appear here',
-    emptyMessage:
-        'Verified job and payment records will be shown here once connected.',
-  );
+  Widget _earnings(BuildContext context) {
+    if (Firebase.apps.isEmpty) {
+      return const _SectionPage(
+        title: 'Earnings',
+        subtitle: 'Keep track of completed work and payouts.',
+        icon: Icons.account_balance_wallet_outlined,
+        emptyTitle: 'Earnings will appear here',
+        emptyMessage: 'Connect Firebase to load completed job records.',
+      );
+    }
+    return const MechanicEarningsScreen();
+  }
 
   Widget _profile(BuildContext context) => ListView(
     padding: const EdgeInsets.all(20),
