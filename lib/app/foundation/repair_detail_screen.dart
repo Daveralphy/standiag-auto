@@ -86,6 +86,17 @@ class RepairDetailScreen extends StatelessWidget {
                   ),
                 ),
               ],
+              if (status == 'open' || status == 'pending') ...[
+                const SizedBox(height: 20),
+                OutlinedButton.icon(
+                  onPressed: () => _cancelRequest(context, snapshot.data!.reference),
+                  icon: const Icon(Icons.cancel_outlined),
+                  label: const Text('Cancel repair request'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               Text('Mechanic responses', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
@@ -171,6 +182,60 @@ class RepairDetailScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _cancelRequest(
+    BuildContext context,
+    DocumentReference<Map<String, dynamic>> requestRef,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cancel this repair request?'),
+        content: const Text('The mechanic will no longer be expected to respond to this request. This action cannot be undone from the app.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Keep request'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            child: const Text('Cancel request'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await requestRef.update({
+        'status': 'cancelled',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Repair request cancelled.')),
+        );
+      }
+    } on FirebaseException catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.code == 'permission-denied'
+                ? 'You are not allowed to cancel this request.'
+                : 'Could not cancel the request. Please try again.'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not cancel the request. Please try again.')),
+        );
+      }
+    }
   }
 
   static String _formatDate(DateTime value) {
