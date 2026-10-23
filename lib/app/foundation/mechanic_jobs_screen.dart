@@ -152,7 +152,12 @@ class _MechanicJobsScreenState extends State<MechanicJobsScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text('Vehicle reference: ${doc.data()['vehicleId'] ?? 'Not available'}', style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          _vehicleLabel(doc.data()),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Row(
                           children: [
@@ -179,6 +184,21 @@ class _MechanicJobsScreenState extends State<MechanicJobsScreen> {
         if (selected) setState(() => _selectedFilter = value);
       },
     );
+  }
+
+  static String _vehicleLabel(Map<String, dynamic> job) {
+    final rawDetails = job['vehicleDetails'];
+    if (rawDetails is Map) {
+      final details = Map<String, dynamic>.from(rawDetails);
+      final year = (details['year'] ?? '').toString().trim();
+      final make = (details['make'] ?? '').toString().trim();
+      final model = (details['model'] ?? '').toString().trim();
+      final name = [year, make, model]
+          .where((part) => part.isNotEmpty)
+          .join(' ');
+      if (name.isNotEmpty) return 'Vehicle: $name';
+    }
+    return 'Vehicle details available in job';
   }
 
   static String _dateLabel(dynamic value) {
