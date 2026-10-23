@@ -782,7 +782,7 @@ export const transitionMechanicJob = onCall(async (request) => {
 
     const transition = JOB_TRANSITIONS[action];
     nextStatus = transition.next;
-    const update: Record<string, unknown> = {
+    const update: Record<string, string | Timestamp> = {
       status: transition.next,
       updatedAt: Timestamp.now(),
       lastUpdatedBy: uid,
