@@ -757,15 +757,19 @@ export const acceptServiceQuote = onCall(async (request) => {
       carOwnerLocation?: GeoPoint;
       status?: string;
       jobId?: string;
+      acceptedMechanicId?: string;
     };
 
     if (serviceRequest.carOwnerId !== uid) {
       throw new HttpsError("permission-denied", "Only the customer who created this request can accept a quote.");
     }
 
-    // Idempotency: if the request already points to a job, never create a
-    // second one, even if the client retries after a network timeout.
+    // Idempotency: only the quote that originally won may resolve as a
+    // successful retry. Never imply a competing quote was accepted.
     if (serviceRequest.jobId) {
+      if (serviceRequest.acceptedMechanicId !== mechanicId) {
+        throw new HttpsError("failed-precondition", "Another quote has already been accepted for this request.");
+      }
       resultJobId = serviceRequest.jobId;
       alreadyAccepted = true;
       return;
