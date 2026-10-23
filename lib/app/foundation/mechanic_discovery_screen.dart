@@ -82,7 +82,12 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                     final matchesExpertise = _selectedExpertise == 'All services' ||
                         expertiseList.any((item) => item.trim().toLowerCase() == _selectedExpertise.toLowerCase());
                     return matchesQuery && matchesExpertise;
-                  }).toList();
+                  }).toList()
+                    ..sort((a, b) {
+                      final aName = (a.data()['workshopName'] as String? ?? 'Independent mechanic').trim().toLowerCase();
+                      final bName = (b.data()['workshopName'] as String? ?? 'Independent mechanic').trim().toLowerCase();
+                      return aName.compareTo(bName);
+                    });
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
