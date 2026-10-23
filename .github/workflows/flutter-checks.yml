@@ -1,9 +1,8 @@
 name: Flutter checks
 
+# Run only when explicitly requested after a coherent batch of changes.
+# This prevents a workflow run for every small commit during active development.
 'on':
-  push:
-    branches:
-      - refactor/redesign-foundation
   workflow_dispatch:
 
 permissions:
