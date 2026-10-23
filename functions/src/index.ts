@@ -183,6 +183,21 @@ export const verifySignupOtp = onCall(async (request) => {
   return { success: true };
 });
 
+async function persistNotification(input: {
+  userId: string;
+  title: string;
+  body: string;
+  type: string;
+  requestId?: string;
+  jobId?: string;
+}): Promise<void> {
+  await db.collection("notifications").add({
+    ...input,
+    isRead: false,
+    createdAt: Timestamp.now(),
+  });
+}
+
 // ─── Nearby-mechanic push notifications ─────────────────────────────────
 
 const EARTH_RADIUS_KM = 6371;
@@ -238,6 +253,16 @@ export const notifyNearbyMechanics = onDocumentCreated(
       const target = targetDoc.data() as MechanicData | undefined;
       if (!target?.fcmToken) return;
 
+      await persistNotification({
+        userId: request.targetMechanicId,
+        title: "You've been requested directly",
+        body: request.issue
+          ? `A car owner needs help: ${request.issue}`
+          : "A car owner has requested you directly.",
+        type: "service_request",
+        requestId: event.params.requestId,
+      });
+
       await getMessaging().send({
         token: target.fcmToken,
         notification: {
@@ -271,6 +296,15 @@ export const notifyNearbyMechanics = onDocumentCreated(
         if (km > radiusKm) continue;
       }
       tokens.push(mechanic.fcmToken);
+      await persistNotification({
+        userId: doc.id,
+        title: "New service request nearby",
+        body: request.issue
+          ? `A car owner needs help: ${request.issue}`
+          : "A car owner near you needs a mechanic.",
+        type: "service_request",
+        requestId: event.params.requestId,
+      });
     }
 
     if (tokens.length === 0) return;
@@ -321,6 +355,16 @@ export const notifyMechanicOfDirectCall = onDocumentCreated(
       .get();
     const mechanic = mechanicDoc.data() as MechanicData | undefined;
     if (!mechanic?.fcmToken) return;
+
+    await persistNotification({
+      userId: job.mechanicId,
+      title: "Incoming call",
+      body: job.issue
+        ? `A car owner needs help: ${job.issue}`
+        : "A car owner is calling you.",
+      type: "direct_call",
+      jobId: event.params.jobId,
+    });
 
     await getMessaging().send({
       token: mechanic.fcmToken,
