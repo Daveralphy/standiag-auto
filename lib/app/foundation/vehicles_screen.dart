@@ -123,6 +123,46 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
     plate.dispose();
   }
 
+  Future<void> _showVehicleDetails(Map<String, dynamic> vehicle) async {
+    final name = '${vehicle['year'] ?? ''} ${vehicle['make'] ?? ''} ${vehicle['model'] ?? ''}'.trim();
+    final rows = <(String, String)>[
+      ('Make', vehicle['make']?.toString() ?? 'Not provided'),
+      ('Model', vehicle['model']?.toString() ?? 'Not provided'),
+      ('Year', vehicle['year']?.toString() ?? 'Not provided'),
+      ('Type', vehicle['type']?.toString() ?? 'Not provided'),
+      ('Colour', vehicle['colour']?.toString() ?? 'Not provided'),
+      ('Fuel', vehicle['fuelType']?.toString() ?? 'Not provided'),
+      ('Plate number', (vehicle['plateNumber'] as String?)?.trim().isNotEmpty == true
+          ? vehicle['plateNumber'] as String
+          : 'Not provided'),
+    ];
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(name.isEmpty ? 'Vehicle details' : name),
+        content: SizedBox(
+          width: 380,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: rows.map((row) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(width: 110, child: Text(row.$1, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))),
+                  Expanded(child: Text(row.$2, style: const TextStyle(fontWeight: FontWeight.w600))),
+                ],
+              ),
+            )).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
   Future<void> _editVehicle(
     String vehicleId,
     Map<String, dynamic> vehicle,
@@ -323,13 +363,16 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                   trailing: PopupMenuButton<String>(
                     tooltip: 'Vehicle actions',
                     onSelected: (action) {
-                      if (action == 'edit') {
+                      if (action == 'details') {
+                        _showVehicleDetails(data);
+                      } else if (action == 'edit') {
                         _editVehicle(docs[index].id, data);
                       } else if (action == 'delete') {
                         _deleteVehicle(docs[index].id, name.isEmpty ? 'this vehicle' : name);
                       }
                     },
                     itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'details', child: ListTile(leading: Icon(Icons.info_outline_rounded), title: Text('View details'), contentPadding: EdgeInsets.zero, dense: true)),
                       PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit_outlined), title: Text('Edit'), contentPadding: EdgeInsets.zero, dense: true)),
                       PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete_outline_rounded), title: Text('Remove'), contentPadding: EdgeInsets.zero, dense: true)),
                     ],
