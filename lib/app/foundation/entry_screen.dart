@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'account_journey_screen.dart';
+
 /// Authentication boundary for the fresh application foundation.
 ///
 /// Keep this screen focused on sign-in and account access. Role-specific
@@ -312,7 +314,7 @@ class _EntryScreenState extends State<EntryScreen> {
         }
 
         if (user != null) {
-          return _SignedInPlaceholder(
+          return AccountJourneyScreen(
             email: user.email ?? 'Signed in',
             onSignOut: _signOut,
             isSigningOut: _isSigningOut,
