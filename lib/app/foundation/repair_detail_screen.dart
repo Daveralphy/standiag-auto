@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 
 /// Customer-facing detail view for an existing service request.
-/// It deliberately does not accept quotes or mutate request status until a
-/// trusted, transactional acceptance contract is available.
 class RepairDetailScreen extends StatelessWidget {
   const RepairDetailScreen({super.key, required this.requestId});
 
@@ -164,6 +163,18 @@ class RepairDetailScreen extends StatelessWidget {
                                 const SizedBox(height: 6),
                                 Text(note),
                               ],
+                              if ((status == 'open' || status == 'pending') &&
+                                  (quoteStatus == 'pending' || quoteStatus == 'submitted' || quoteStatus == 'open')) ...[
+                                const SizedBox(height: 14),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton.icon(
+                                    onPressed: () => _acceptQuote(context, quote.id),
+                                    icon: const Icon(Icons.check_circle_outline_rounded),
+                                    label: const Text('Accept quote'),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -173,15 +184,67 @@ class RepairDetailScreen extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 8),
-              Text(
-                'Quote acceptance is not available in this screen yet. We will connect it only when the backend can accept one quote and create the corresponding job atomically.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-              ),
             ],
           );
         },
       ),
     );
+  }
+
+  Future<void> _acceptQuote(BuildContext context, String mechanicId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Accept this quote?'),
+        content: const Text('This will create a repair job and decline the other quotes for this request. You cannot select a different quote afterward.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Review quotes'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Accept quote'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('acceptServiceQuote')
+          .call<Map<String, dynamic>>({
+        'requestId': requestId,
+        'mechanicId': mechanicId,
+      });
+      final jobId = result.data['jobId'] as String?;
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(jobId == null
+                ? 'Quote accepted and job created.'
+                : 'Quote accepted. Job reference: $jobId'),
+          ),
+        );
+      }
+    } on FirebaseFunctionsException catch (error) {
+      if (!context.mounted) return;
+      final message = switch (error.code) {
+        'permission-denied' => 'Only the customer who created this request can accept a quote.',
+        'not-found' => 'This quote or repair request is no longer available.',
+        'failed-precondition' => error.message ?? 'This request is no longer open for quote acceptance.',
+        'unauthenticated' => 'Please sign in again to accept this quote.',
+        _ => 'Could not accept this quote. Please check your connection and try again.',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not accept this quote. Please try again.')),
+        );
+      }
+    }
   }
 
   Future<void> _cancelRequest(
