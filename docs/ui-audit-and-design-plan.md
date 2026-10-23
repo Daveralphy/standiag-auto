@@ -38,7 +38,7 @@ The complete screen inventory, visual direction, navigation map, shared componen
 - [x] Mechanic workspace shell exists
 - [x] Build a read-only incoming direct-request list and request details
 - [x] Build a real assigned-jobs list and read-only job details
-- [ ] Implement accept/decline and job lifecycle actions using verified backend rules
+- [x] Add callable-backed accept/decline and sequential job lifecycle actions; rules and Functions remain source-only until deployment
 - [x] Build completed-job listing and completed-job count from real job records
 - [ ] Build monetary earnings and payouts from verified payment records
 - [ ] Add mechanic profile editing and workshop details
@@ -89,3 +89,12 @@ A screen is not considered complete merely because it renders. Its actions, back
 - [x] Fix vehicle add-form controller cleanup on cancel.
 - [x] Add mechanic profile details screen and connect it from the profile tab.
 - [ ] Add focused tests for the new flows and validate locally before the next batch.
+
+
+## Job lifecycle implementation update
+- [x] Add `transitionMechanicJob` callable with assigned-mechanic verification, allowed state transitions, server timestamps, and customer notifications.
+- [x] Connect mechanic job detail UI to accept/decline, en-route, arrival, start-work, and completion actions with confirmation and error feedback.
+- [x] Restrict direct client job updates in `firestore.rules` to narrowly scoped non-lifecycle fields and require newly client-created jobs to start as pending.
+- [ ] Run Flutter analysis/tests and Functions TypeScript build after pulling the latest branch commits.
+- [ ] Deploy Functions and Firestore rules together only after local validation and explicit deployment approval; this work has not been deployed.
+- [ ] Add automated tests for lifecycle transition rejection, ownership checks, and concurrent status changes.
