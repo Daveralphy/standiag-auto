@@ -1,12 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 
 import '../../features/jobs/models/job_model.dart';
 
-/// Real, read-only job inbox for an approved mechanic.
-/// Lifecycle mutations are intentionally excluded until the server-side
-/// transition contract is verified and can reject invalid transitions.
+/// Job inbox and progress screens for an approved mechanic.
 class MechanicJobsScreen extends StatelessWidget {
   const MechanicJobsScreen({super.key});
 
@@ -403,8 +402,15 @@ class MechanicJobDetailScreen extends StatelessWidget {
             _TimelineEntry(title: 'Work started', date: _timestamp(startedAt), complete: startedAt is Timestamp),
             _TimelineEntry(title: 'Completed', date: _timestamp(completedAt), complete: completedAt is Timestamp),
             const SizedBox(height: 16),
+            if (FirebaseAuth.instance.currentUser?.uid == data['mechanicId'])
+              _MechanicJobActions(
+                jobId: snapshot.data!.id,
+                mechanicId: data['mechanicId'] as String? ?? '',
+                status: status,
+              ),
+            const SizedBox(height: 12),
             Text(
-              'Job status changes will be enabled here after the trusted backend transition rules are verified. This screen currently displays the saved job record only.',
+              'Job updates are validated by the server. Only the assigned mechanic can perform the next allowed action.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
@@ -515,3 +521,147 @@ class _JobsState extends StatelessWidget {
     ),
   );
 }
+
+class _MechanicJobActions extends StatefulWidget {
+  const _MechanicJobActions({
+    required this.jobId,
+    required this.mechanicId,
+    required this.status,
+  });
+
+  final String jobId;
+  final String mechanicId;
+  final JobStatus status;
+
+  @override
+  State<_MechanicJobActions> createState() => _MechanicJobActionsState();
+}
+
+class _MechanicJobActionsState extends State<_MechanicJobActions> {
+  bool _busy = false;
+
+  static const Map<JobStatus, List<(String, String, String)>> _actions = {
+    JobStatus.pending: [
+      ('accept', 'Accept job', 'Accept this repair job?'),
+      ('reject', 'Decline job', 'Decline this repair job?'),
+    ],
+    JobStatus.accepted: [
+      ('start_travel', 'On my way', 'Confirm that you are travelling to the customer?'),
+    ],
+    JobStatus.enRoute: [
+      ('arrive', 'I have arrived', 'Confirm that you have arrived?'),
+    ],
+    JobStatus.arrived: [
+      ('start_work', 'Start work', 'Confirm that you are starting the repair?'),
+    ],
+    JobStatus.inProgress: [
+      ('complete', 'Mark completed', 'Confirm that the repair work is complete?'),
+    ],
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = _actions[widget.status] ?? const <(String, String, String)>[];
+    if (actions.isEmpty) return const SizedBox.shrink();
+
+    return Card(
+      margin: const EdgeInsets.only(top: 18),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Next step', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            const Text('Choose the action that matches the real job progress.'),
+            const SizedBox(height: 12),
+            for (final action in actions)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: action.$1 == 'reject'
+                    ? OutlinedButton.icon(
+                        onPressed: _busy ? null : () => _runAction(action),
+                        icon: const Icon(Icons.close_rounded),
+                        label: Text(action.$2),
+                      )
+                    : FilledButton.icon(
+                        onPressed: _busy ? null : () => _runAction(action),
+                        icon: Icon(_iconFor(action.$1)),
+                        label: Text(action.$2),
+                      ),
+              ),
+            if (_busy) const Center(child: Padding(
+              padding: EdgeInsets.all(8),
+              child: CircularProgressIndicator(),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _iconFor(String action) {
+    switch (action) {
+      case 'accept': return Icons.check_circle_outline_rounded;
+      case 'start_travel': return Icons.directions_car_rounded;
+      case 'arrive': return Icons.location_on_outlined;
+      case 'start_work': return Icons.handyman_outlined;
+      case 'complete': return Icons.task_alt_rounded;
+      default: return Icons.arrow_forward_rounded;
+    }
+  }
+
+  Future<void> _runAction((String, String, String) action) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(action.$2),
+        content: Text(action.$3),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Go back'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await FirebaseFunctions.instance.httpsCallable('transitionMechanicJob').call({
+        'jobId': widget.jobId,
+        'action': action.$1,
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${action.$2} successful.')),
+        );
+      }
+    } on FirebaseFunctionsException catch (error) {
+      if (mounted) {
+        final message = switch (error.code) {
+          'permission-denied' => 'Only the assigned mechanic can update this job.',
+          'failed-precondition' => 'This job has changed or that action is no longer available. Refresh and try again.',
+          'not-found' => 'This job could not be found.',
+          'unauthenticated' => 'Please sign in again to update this job.',
+          _ => error.message ?? 'Could not update the job. Please try again.',
+        };
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not update the job. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+}
+
