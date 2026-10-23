@@ -123,6 +123,149 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
     plate.dispose();
   }
 
+  Future<void> _editVehicle(
+    String vehicleId,
+    Map<String, dynamic> vehicle,
+  ) async {
+    final make = TextEditingController(text: vehicle['make'] as String? ?? '');
+    final model = TextEditingController(text: vehicle['model'] as String? ?? '');
+    final year = TextEditingController(text: vehicle['year']?.toString() ?? '');
+    final colour = TextEditingController(text: vehicle['colour'] as String? ?? '');
+    final plate = TextEditingController(text: vehicle['plateNumber'] as String? ?? '');
+    final formKey = GlobalKey<FormState>();
+    var type = vehicle['type'] as String? ?? 'Car';
+    var fuelType = vehicle['fuelType'] as String? ?? 'Petrol';
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit vehicle'),
+          content: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _VehicleField(controller: make, label: 'Make', hint: 'Toyota'),
+                    const SizedBox(height: 10),
+                    _VehicleField(controller: model, label: 'Model', hint: 'Corolla'),
+                    const SizedBox(height: 10),
+                    _VehicleField(
+                      controller: year,
+                      label: 'Year',
+                      hint: '2020',
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        final parsed = int.tryParse(value?.trim() ?? '');
+                        if (parsed == null || parsed < 1950 || parsed > DateTime.now().year + 1) {
+                          return 'Enter a valid year';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      value: ['Car', 'SUV', 'Van', 'Truck', 'Motorcycle', 'Other'].contains(type) ? type : 'Other',
+                      decoration: const InputDecoration(labelText: 'Vehicle type'),
+                      items: const ['Car', 'SUV', 'Van', 'Truck', 'Motorcycle', 'Other'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                      onChanged: (value) => setDialogState(() => type = value ?? type),
+                    ),
+                    const SizedBox(height: 10),
+                    _VehicleField(controller: colour, label: 'Colour', hint: 'Silver'),
+                    const SizedBox(height: 10),
+                    _VehicleField(controller: plate, label: 'Plate number (optional)', hint: 'ABC-123XY', requiredField: false),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      value: ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'LPG', 'Other'].contains(fuelType) ? fuelType : 'Other',
+                      decoration: const InputDecoration(labelText: 'Fuel type'),
+                      items: const ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'LPG', 'Other'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                      onChanged: (value) => setDialogState(() => fuelType = value ?? fuelType),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Save changes'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved == true && mounted) {
+      try {
+        await FirebaseFirestore.instance.collection('vehicles').doc(vehicleId).update({
+          'make': make.text.trim(),
+          'model': model.text.trim(),
+          'year': year.text.trim(),
+          'type': type,
+          'colour': colour.text.trim(),
+          'plateNumber': plate.text.trim(),
+          'fuelType': fuelType,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vehicle updated.')));
+        }
+      } on FirebaseException catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(error.code == 'permission-denied'
+                ? 'You do not have permission to edit this vehicle.'
+                : 'Could not update the vehicle. Please try again.'),
+          ));
+        }
+      }
+    }
+    make.dispose();
+    model.dispose();
+    year.dispose();
+    colour.dispose();
+    plate.dispose();
+  }
+
+  Future<void> _deleteVehicle(String vehicleId, String vehicleName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove this vehicle?'),
+        content: Text('Remove $vehicleName from your garage? Existing repair records may still refer to it.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Keep vehicle')),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await FirebaseFirestore.instance.collection('vehicles').doc(vehicleId).delete();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vehicle removed.')));
+      }
+    } on FirebaseException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(error.code == 'permission-denied'
+              ? 'You do not have permission to remove this vehicle.'
+              : 'Could not remove the vehicle. Please try again.'),
+        ));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final uid = _uid;
@@ -166,8 +309,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                   .where((value) => value.trim().isNotEmpty)
                   .join(' • ');
               return Card(
+                clipBehavior: Clip.antiAlias,
                 child: ListTile(
-                  contentPadding: const EdgeInsets.all(14),
+                  contentPadding: const EdgeInsets.fromLTRB(14, 8, 4, 8),
                   leading: Container(
                     width: 52, height: 52,
                     decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(15)),
@@ -176,6 +320,20 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                   title: Text(name.isEmpty ? 'Vehicle' : name, style: const TextStyle(fontWeight: FontWeight.w800)),
                   subtitle: Text([detail, data['plateNumber'] as String? ?? ''].where((v) => v.trim().isNotEmpty).join('\n')),
                   isThreeLine: detail.isNotEmpty && (data['plateNumber'] as String? ?? '').isNotEmpty,
+                  trailing: PopupMenuButton<String>(
+                    tooltip: 'Vehicle actions',
+                    onSelected: (action) {
+                      if (action == 'edit') {
+                        _editVehicle(docs[index].id, data);
+                      } else if (action == 'delete') {
+                        _deleteVehicle(docs[index].id, name.isEmpty ? 'this vehicle' : name);
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit_outlined), title: Text('Edit'), contentPadding: EdgeInsets.zero, dense: true)),
+                      PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete_outline_rounded), title: Text('Remove'), contentPadding: EdgeInsets.zero, dense: true)),
+                    ],
+                  ),
                 ),
               );
             },
