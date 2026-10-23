@@ -167,7 +167,26 @@ service cloud.firestore {
     match /serviceRequests/{requestId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() &&
-          request.resource.data.carOwnerId == request.auth.uid;
+          request.resource.data.keys().hasOnly([
+            'carOwnerId', 'issue', 'vehicleId', 'radiusKm',
+            'targetMechanicId', 'status', 'createdAt'
+          ]) &&
+          request.resource.data.keys().hasAll([
+            'carOwnerId', 'issue', 'vehicleId', 'radiusKm', 'status', 'createdAt'
+          ]) &&
+          request.resource.data.carOwnerId == request.auth.uid &&
+          request.resource.data.status == 'open' &&
+          request.resource.data.issue is string &&
+          request.resource.data.issue.size() >= 8 &&
+          request.resource.data.issue.size() <= 1000 &&
+          request.resource.data.vehicleId is string &&
+          request.resource.data.vehicleId.size() > 0 &&
+          request.resource.data.radiusKm is number &&
+          request.resource.data.radiusKm > 0 &&
+          request.resource.data.radiusKm <= 100 &&
+          (!('targetMechanicId' in request.resource.data) ||
+            (request.resource.data.targetMechanicId is string &&
+             request.resource.data.targetMechanicId.size() > 0));
       // Customers may only cancel an unresolved request from the client.
       // Matching, job links, and reopening a request are server-owned state.
       allow update: if isSignedIn() &&
