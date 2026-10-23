@@ -413,7 +413,9 @@ class MechanicJobDetailScreen extends StatelessWidget {
     ),
   );
 
-  static String timestampLabel(dynamic value) => _timestamp(value);\n\n  static String _timestamp(dynamic value) {
+  static String timestampLabel(dynamic value) => _timestamp(value);
+
+  static String _timestamp(dynamic value) {
     if (value is! Timestamp) return 'Not recorded';
     final date = value.toDate().toLocal();
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
