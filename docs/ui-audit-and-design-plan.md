@@ -76,3 +76,9 @@ Do not generate or add these assets yet. First confirm the final screens and dim
 ## Definition of done
 
 A screen is not considered complete merely because it renders. Its actions, backend permissions, loading/error/empty states, responsive layout, and relevant tests must also be checked. An unfinished capability must be labelled honestly and must not be represented as a working action.
+
+
+## Shared screens progress
+- [x] Notifications inbox UI and linked destinations added; backend persistence is source-only until Functions are deployed.
+- [x] Account settings includes password reset and privacy/terms/about destinations.
+- [ ] Validate Dart and Functions builds locally.
