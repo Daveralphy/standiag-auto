@@ -719,6 +719,126 @@ export const paystackWebhook = onRequest(
   }
 );
 
+// ─── Atomic quote acceptance ─────────────────────────────────────────────
+
+/**
+ * Accepts exactly one quote for an open service request and creates its job
+ * in the same transaction. Repeated calls return the already-created job,
+ * while competing quote acceptances are rejected by the request status check.
+ */
+export const acceptServiceQuote = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const requestId = request.data?.requestId;
+  const mechanicId = request.data?.mechanicId;
+  if (typeof requestId !== "string" || !requestId.trim() ||
+      typeof mechanicId !== "string" || !mechanicId.trim()) {
+    throw new HttpsError("invalid-argument", "Request and quote references are required.");
+  }
+
+  const requestRef = db.collection("serviceRequests").doc(requestId);
+  const quoteRef = requestRef.collection("quotes").doc(mechanicId);
+  const jobRef = db.collection("jobs").doc();
+
+  let resultJobId = "";
+  let alreadyAccepted = false;
+  await db.runTransaction(async (transaction) => {
+    const requestSnap = await transaction.get(requestRef);
+    if (!requestSnap.exists) {
+      throw new HttpsError("not-found", "This repair request could not be found.");
+    }
+    const serviceRequest = requestSnap.data() as {
+      carOwnerId?: string;
+      issue?: string;
+      vehicleId?: string;
+      carOwnerLocation?: GeoPoint;
+      status?: string;
+      jobId?: string;
+    };
+
+    if (serviceRequest.carOwnerId !== uid) {
+      throw new HttpsError("permission-denied", "Only the customer who created this request can accept a quote.");
+    }
+
+    // Idempotency: if the request already points to a job, never create a
+    // second one, even if the client retries after a network timeout.
+    if (serviceRequest.jobId) {
+      resultJobId = serviceRequest.jobId;
+      alreadyAccepted = true;
+      return;
+    }
+    if (!["open", "pending"].includes(serviceRequest.status ?? "open")) {
+      throw new HttpsError("failed-precondition", "This request is no longer open for quote acceptance.");
+    }
+
+    const quoteSnap = await transaction.get(quoteRef);
+    if (!quoteSnap.exists) {
+      throw new HttpsError("not-found", "This mechanic's quote could not be found.");
+    }
+    const quote = quoteSnap.data() as { status?: string; price?: number; note?: string };
+    if (quote.status && !["pending", "submitted", "open"].includes(quote.status)) {
+      throw new HttpsError("failed-precondition", "This quote is no longer available.");
+    }
+    if (typeof quote.price !== "number" || !Number.isFinite(quote.price) || quote.price < 0) {
+      throw new HttpsError("failed-precondition", "This quote does not have a valid price.");
+    }
+
+    const quotesQuery = requestRef.collection("quotes");
+    const quotesSnap = await transaction.get(quotesQuery);
+    if (quotesSnap.docs.some((doc) => doc.id !== mechanicId && doc.data().status === "accepted")) {
+      throw new HttpsError("failed-precondition", "Another quote has already been accepted.");
+    }
+
+    const now = Timestamp.now();
+    transaction.create(jobRef, {
+      carOwnerId: uid,
+      mechanicId,
+      vehicleId: serviceRequest.vehicleId ?? "",
+      issue: serviceRequest.issue ?? "Repair request",
+      status: "pending",
+      ...(serviceRequest.carOwnerLocation ? { carOwnerLocation: serviceRequest.carOwnerLocation } : {}),
+      acceptedQuotePrice: quote.price,
+      acceptedQuoteNote: typeof quote.note === "string" ? quote.note : "",
+      serviceRequestId: requestId,
+      createdAt: now,
+      updatedAt: now,
+    });
+    transaction.update(requestRef, {
+      status: "matched",
+      jobId: jobRef.id,
+      acceptedMechanicId: mechanicId,
+      updatedAt: now,
+    });
+    for (const doc of quotesSnap.docs) {
+      transaction.update(doc.ref, {
+        status: doc.id === mechanicId ? "accepted" : "declined",
+        updatedAt: now,
+      });
+    }
+    resultJobId = jobRef.id;
+  });
+
+  if (!alreadyAccepted) {
+    try {
+      await persistNotification({
+        userId: mechanicId,
+        title: "Your quote was accepted",
+        body: "The customer accepted your repair quote. Open Standiag Auto to review the job.",
+        type: "quote_accepted",
+        requestId,
+        jobId: resultJobId,
+      });
+    } catch (error) {
+      console.error("Quote accepted but mechanic notification could not be saved.", error);
+    }
+  }
+
+  return { success: true, jobId: resultJobId, alreadyAccepted };
+});
+
 // ─── Trusted mechanic job lifecycle ─────────────────────────────────────
 
 const JOB_TRANSITIONS: Record<string, { next: string; timestamp?: string }> = {
