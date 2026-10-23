@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../..//features/jobs/models/job_model.dart';
+import '../../features/jobs/models/job_model.dart';
 
 /// Real, read-only job inbox for an approved mechanic.
 /// Lifecycle mutations are intentionally excluded until the server-side
@@ -125,6 +125,91 @@ class MechanicJobsScreen extends StatelessWidget {
   }
 }
 
+class MechanicEarningsScreen extends StatelessWidget {
+  const MechanicEarningsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return const _JobsState(icon: Icons.lock_outline_rounded, title: 'Sign in to view earnings', message: 'Your completed work is linked to your mechanic account.');
+    }
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('jobs').where('mechanicId', isEqualTo: uid).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const _JobsState(icon: Icons.cloud_off_outlined, title: 'Earnings unavailable', message: 'Check your connection and try again.');
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snapshot.data?.docs ?? [];
+        final completed = docs.where((doc) =>
+          JobStatusExtension.fromString(doc.data()['status'] as String? ?? 'pending') == JobStatus.completed
+        ).toList();
+        completed.sort((a, b) {
+          final ad = a.data()['completedAt'];
+          final bd = b.data()['completedAt'];
+          final at = ad is Timestamp ? ad.millisecondsSinceEpoch : 0;
+          final bt = bd is Timestamp ? bd.millisecondsSinceEpoch : 0;
+          return bt.compareTo(at);
+        });
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          children: [
+            Text('Earnings', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            Text('A record of completed jobs assigned to your account.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 18),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Row(children: [
+                  Container(
+                    width: 52, height: 52,
+                    decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(15)),
+                    child: Icon(Icons.task_alt_rounded, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('${completed.length}', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
+                    const Text('Completed jobs recorded'),
+                  ])),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(14)),
+              child: const Text('Payment amounts and payout history are not shown because the current job record does not provide a verified payment amount or payout status.'),
+            ),
+            const SizedBox(height: 22),
+            Text('Completed work', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 10),
+            if (completed.isEmpty)
+              const _JobsState(icon: Icons.account_balance_wallet_outlined, title: 'No completed jobs yet', message: 'Completed work will appear here when a job is marked completed.')
+            else
+              for (final doc in completed)
+                Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.build_outlined)),
+                    title: Text(doc.data()['issue'] as String? ?? 'Repair job', maxLines: 2, overflow: TextOverflow.ellipsis),
+                    subtitle: Text('Completed: ${MechanicJobDetailScreen.timestampLabel(doc.data()['completedAt'])}'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                      builder: (_) => MechanicJobDetailScreen(jobId: doc.id),
+                    )),
+                  ),
+                ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class MechanicJobDetailScreen extends StatelessWidget {
   const MechanicJobDetailScreen({super.key, required this.jobId});
 
@@ -194,7 +279,7 @@ class MechanicJobDetailScreen extends StatelessWidget {
     ),
   );
 
-  static String _timestamp(dynamic value) {
+  static String timestampLabel(dynamic value) => _timestamp(value);\n\n  static String _timestamp(dynamic value) {
     if (value is! Timestamp) return 'Not recorded';
     final date = value.toDate().toLocal();
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
