@@ -741,6 +741,7 @@ export const acceptServiceQuote = onCall(async (request) => {
 
   const requestRef = db.collection("serviceRequests").doc(requestId);
   const quoteRef = requestRef.collection("quotes").doc(mechanicId);
+  const mechanicRef = db.collection("mechanics").doc(mechanicId);
   const jobRef = db.collection("jobs").doc();
 
   let resultJobId = "";
@@ -778,7 +779,18 @@ export const acceptServiceQuote = onCall(async (request) => {
       throw new HttpsError("failed-precondition", "This request is no longer open for quote acceptance.");
     }
 
-    const quoteSnap = await transaction.get(quoteRef);
+    const [quoteSnap, mechanicSnap] = await Promise.all([
+      transaction.get(quoteRef),
+      transaction.get(mechanicRef),
+    ]);
+    if (!mechanicSnap.exists ||
+        mechanicSnap.data()?.approvedAt == null ||
+        mechanicSnap.data()?.isVisible !== true) {
+      throw new HttpsError("failed-precondition", "This mechanic is no longer approved and visible.");
+    }
+    if (serviceRequest.targetMechanicId && serviceRequest.targetMechanicId !== mechanicId) {
+      throw new HttpsError("permission-denied", "This quote does not belong to the mechanic selected for this request.");
+    }
     if (!quoteSnap.exists) {
       throw new HttpsError("not-found", "This mechanic's quote could not be found.");
     }
