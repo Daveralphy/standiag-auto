@@ -51,6 +51,13 @@ import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 
+export {
+  saveCustomerProfile,
+  submitMechanicApplication,
+  listMechanicApplications,
+  reviewMechanicApplication,
+} from "./onboarding";
+
 initializeApp();
 const db = getFirestore();
 
