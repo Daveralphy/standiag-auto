@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'repair_detail_screen.dart';
+import 'mechanic_jobs_screen.dart';
 
 /// Shared, responsive destinations for workspace actions that must never be
 /// decorative or lead nowhere while their full backend workflows are built.
@@ -6,12 +11,172 @@ class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const _SupportScaffold(
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const _SupportScaffold(
         title: 'Notifications',
         subtitle: 'Important updates about your account and repairs.',
         icon: Icons.notifications_none_rounded,
-        child: _EmptyNotifications(),
+        child: _Notice(text: 'Sign in to see notifications for your account.'),
       );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Notifications')),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('notifications')
+            .where('userId', isEqualTo: user.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return _NotificationState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Notifications unavailable',
+              message: 'Check your connection and try again.',
+              action: FilledButton.icon(
+                onPressed: () => Navigator.of(context).pushReplacement(
+                  MaterialPageRoute<void>(builder: (_) => const NotificationsScreen()),
+                ),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final docs = [...?snapshot.data?.docs];
+          docs.sort((a, b) {
+            final ad = a.data()['createdAt'];
+            final bd = b.data()['createdAt'];
+            final at = ad is Timestamp ? ad.millisecondsSinceEpoch : 0;
+            final bt = bd is Timestamp ? bd.millisecondsSinceEpoch : 0;
+            return bt.compareTo(at);
+          });
+          if (docs.isEmpty) {
+            return const _SupportScaffold(
+              title: 'Notifications',
+              subtitle: 'Important updates about your account and repairs.',
+              icon: Icons.notifications_none_rounded,
+              child: _EmptyNotifications(),
+            );
+          }
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+            children: [
+              Text('Your updates', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 6),
+              Text('Updates sent to your account appear here.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 16),
+              for (final doc in docs)
+                Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  color: (doc.data()['isRead'] == true)
+                      ? null
+                      : Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.42),
+                  clipBehavior: Clip.antiAlias,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      child: Icon(_notificationIcon(doc.data()['type'] as String?)),
+                    ),
+                    title: Text(
+                      doc.data()['title'] as String? ?? 'Account update',
+                      style: TextStyle(fontWeight: doc.data()['isRead'] == true ? FontWeight.w500 : FontWeight.w800),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Text(doc.data()['body'] as String? ?? doc.data()['message'] as String? ?? 'Open to view this update.'),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => _openNotification(context, doc.id, doc.data()),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  static IconData _notificationIcon(String? type) {
+    switch (type) {
+      case 'repair':
+      case 'service_request':
+        return Icons.car_repair_rounded;
+      case 'job':
+        return Icons.assignment_outlined;
+      case 'payment':
+        return Icons.account_balance_wallet_outlined;
+      case 'account':
+        return Icons.person_outline_rounded;
+      default:
+        return Icons.notifications_none_rounded;
+    }
+  }
+
+  static Future<void> _openNotification(
+    BuildContext context,
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      if (data['isRead'] != true) {
+        await FirebaseFirestore.instance.collection('notifications').doc(id).update({
+          'isRead': true,
+          'readAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } on FirebaseException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not mark this notification as read.')),
+        );
+      }
+    }
+    if (!context.mounted) return;
+    final requestId = data['requestId'] as String?;
+    final jobId = data['jobId'] as String?;
+    if (requestId != null && requestId.isNotEmpty) {
+      Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => RepairDetailScreen(requestId: requestId),
+      ));
+    } else if (jobId != null && jobId.isNotEmpty) {
+      Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => MechanicJobDetailScreen(jobId: jobId),
+      ));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This notification has no linked screen yet.')),
+      );
+    }
+  }
+}
+
+class _NotificationState extends StatelessWidget {
+  const _NotificationState({required this.icon, required this.title, required this.message, this.action});
+  final IconData icon;
+  final String title;
+  final String message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 46, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 14),
+        Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 8),
+        Text(message, textAlign: TextAlign.center),
+        if (action != null) ...[const SizedBox(height: 16), action!],
+      ]),
+    ),
+  );
 }
 
 class AccountSettingsScreen extends StatelessWidget {
