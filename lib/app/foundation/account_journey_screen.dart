@@ -110,6 +110,15 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
             email: widget.email,
             role: WorkspaceRole.customer,
             onSignOut: widget.onSignOut,
+            onApplyMechanic: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => AccountJourneyScreen(
+                  email: widget.email,
+                  onSignOut: widget.onSignOut,
+                  isSigningOut: widget.isSigningOut,
+                ),
+              ),
+            ),
           ),
         ),
       );
