@@ -125,6 +125,139 @@ class MechanicJobsScreen extends StatelessWidget {
   }
 }
 
+class MechanicIncomingRequestsScreen extends StatelessWidget {
+  const MechanicIncomingRequestsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Incoming requests')),
+      body: uid == null
+          ? const _JobsState(icon: Icons.lock_outline_rounded, title: 'Sign in to view requests', message: 'Incoming requests are linked to your mechanic account.')
+          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance
+                  .collection('serviceRequests')
+                  .where('targetMechanicId', isEqualTo: uid)
+                  .where('status', isEqualTo: 'open')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const _JobsState(icon: Icons.cloud_off_outlined, title: 'Requests unavailable', message: 'Check your connection and try again.');
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final docs = [...?snapshot.data?.docs];
+                docs.sort((a, b) {
+                  final ad = a.data()['createdAt'];
+                  final bd = b.data()['createdAt'];
+                  final at = ad is Timestamp ? ad.millisecondsSinceEpoch : 0;
+                  final bt = bd is Timestamp ? bd.millisecondsSinceEpoch : 0;
+                  return bt.compareTo(at);
+                });
+                if (docs.isEmpty) {
+                  return const _JobsState(
+                    icon: Icons.inbox_outlined,
+                    title: 'No direct requests',
+                    message: 'Requests sent specifically to your mechanic profile will appear here. Nearby broadcast requests need a verified eligibility and response flow before they can be shown.',
+                  );
+                }
+                return ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    Text('Requests sent to you', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 6),
+                    Text('Review the issue and vehicle details before responding.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    const SizedBox(height: 16),
+                    for (final doc in docs)
+                      Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                            builder: (_) => MechanicRequestDetailScreen(requestId: doc.id),
+                          )),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(doc.data()['issue'] as String? ?? 'Repair request', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                                const SizedBox(height: 8),
+                                Text('Vehicle reference: ${doc.data()['vehicleId'] ?? 'Not available'}', style: Theme.of(context).textTheme.bodySmall),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(child: Text('Open request', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.primary))),
+                                    const Icon(Icons.chevron_right_rounded),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+    );
+  }
+}
+
+class MechanicRequestDetailScreen extends StatelessWidget {
+  const MechanicRequestDetailScreen({super.key, required this.requestId});
+  final String requestId;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Request details')),
+    body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('serviceRequests').doc(requestId).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return const _JobsState(icon: Icons.cloud_off_outlined, title: 'Request unavailable', message: 'Check your connection and try again.');
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData || !snapshot.data!.exists) return const _JobsState(icon: Icons.search_off_rounded, title: 'Request not found', message: 'This request may have been removed.');
+        final data = snapshot.data!.data()!;
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid == null || data['targetMechanicId'] != uid) {
+          return const _JobsState(icon: Icons.lock_outline_rounded, title: 'Request not assigned to you', message: 'Only the mechanic selected by the customer can view this direct request.');
+        }
+        final createdAt = data['createdAt'];
+        return ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(22)),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Icon(Icons.assignment_outlined, size: 32),
+                const SizedBox(height: 14),
+                Text('INCOMING REQUEST', style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: 1.1)),
+                const SizedBox(height: 8),
+                Text(data['issue'] as String? ?? 'Repair request', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 12),
+                _JobStatusPill(status: data['status'] as String? ?? 'open'),
+              ]),
+            ),
+            const SizedBox(height: 20),
+            _JobDetailRow(label: 'Vehicle reference', value: data['vehicleId'] as String? ?? 'Not available'),
+            _JobDetailRow(label: 'Request reference', value: snapshot.data!.id),
+            _JobDetailRow(label: 'Submitted', value: MechanicJobDetailScreen.timestampLabel(createdAt)),
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(14)),
+              child: const Text('Responding to requests is not enabled yet. The current data contract does not provide a verified accept/decline transaction for this request.'),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
 class MechanicEarningsScreen extends StatelessWidget {
   const MechanicEarningsScreen({super.key});
 
