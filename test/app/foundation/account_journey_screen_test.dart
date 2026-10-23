@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:standiag_auto/app/foundation/account_journey_screen.dart';
+import 'package:standiag_auto/app/foundation/mechanic_application_status_screen.dart';
 import 'package:standiag_auto/app/theme/app_theme.dart';
 
 void main() {
@@ -81,4 +82,17 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+  testWidgets('already-applied mechanic opens the dedicated status screen', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildScreen());
+
+    await tester.tap(find.text('Already applied as a mechanic?'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MechanicApplicationStatusScreen), findsOneWidget);
+    expect(find.text('Check application status'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
 }
