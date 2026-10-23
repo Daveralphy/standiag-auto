@@ -169,7 +169,18 @@ Existing models or legacy collections alone do not prove these screens are produ
 - Narrow phone, larger phone and tablet checks.
 - Final button/route audit.
 
-## 7. Current implementation checkpoint
+## 7. Implementation progress after the baseline
+
+- [x] Added a customer repair-request details screen with saved request facts, quote responses, loading/error/empty states, and a clear explanation that quote acceptance is not yet wired to a trusted transaction.
+- [x] Connected customer repair cards to their detail screen.
+- [x] Added mechanic assigned-job list and read-only job details with a saved-status timeline.
+- [x] Added an earnings view based on actual completed-job records; monetary totals remain unavailable until a verified payment/payout contract exists.
+- [x] Added a direct incoming-request list and details for requests targeted to the signed-in mechanic; broadcast request eligibility and response actions remain unimplemented.
+- [x] Added customer profile editing through the existing server callable.
+- [x] Removed placeholder mechanic metrics that implied live zero values.
+- [ ] Add widget tests for the new detail/list screens and validate all changes locally.
+
+## 8. Current implementation checkpoint
 
 At commit `66bcb947f937d1bd3ecb0044ca7bce99fba5e00f`, the user confirmed:
 - `flutter analyze`: no issues.
