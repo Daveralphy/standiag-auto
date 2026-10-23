@@ -801,8 +801,8 @@ export const transitionMechanicJob = onCall(async (request) => {
         userId: job.carOwnerId,
         title: nextStatus === "rejected" ? "Mechanic declined the job" : "Job status updated",
         body: job.issue
-          ? `Your repair job "${job.issue}" is now ${nextStatus.replaceAll("_", " ")}.`
-          : `Your repair job is now ${nextStatus.replaceAll("_", " ")}.`,
+          ? `Your repair job "${job.issue}" is now ${nextStatus.replace(/_/g, " ")}.`
+          : `Your repair job is now ${nextStatus.replace(/_/g, " ")}.`,
         type: "job_status",
         jobId,
       });
