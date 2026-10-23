@@ -168,8 +168,13 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isSignedIn() &&
           request.resource.data.carOwnerId == request.auth.uid;
+      // Customers may only cancel an unresolved request from the client.
+      // Matching, job links, and reopening a request are server-owned state.
       allow update: if isSignedIn() &&
-          resource.data.carOwnerId == request.auth.uid;
+          resource.data.carOwnerId == request.auth.uid &&
+          resource.data.status in ['open', 'pending'] &&
+          request.resource.data.status == 'cancelled' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
 
       // Quote selection and job creation are server-owned transactions.
       // Mechanics can write only their own quote; customers cannot directly
