@@ -259,6 +259,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             subtitle: 'See and respond to customer requests',
             onTap: () => setState(() => _selectedIndex = 1),
           ),
+          _ActionTile(
+            icon: Icons.inbox_outlined,
+            title: 'Incoming direct requests',
+            subtitle: 'Review requests sent specifically to you',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MechanicIncomingRequestsScreen(),
+              ),
+            ),
+          ),
         ],
         const SizedBox(height: 12),
         _InfoBanner(
