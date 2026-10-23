@@ -156,7 +156,6 @@ class NotificationsScreen extends StatelessWidget {
     final isJobUpdate = {
       'quote_accepted',
       'direct_call',
-      'job_status',
     }.contains(type);
     if (jobId != null && jobId.isNotEmpty && (isJobUpdate || requestId == null || requestId.isEmpty)) {
       Navigator.of(context).push(MaterialPageRoute<void>(
