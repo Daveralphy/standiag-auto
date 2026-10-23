@@ -246,16 +246,198 @@ class MechanicRequestDetailScreen extends StatelessWidget {
             _JobDetailRow(label: 'Request reference', value: snapshot.data!.id),
             _JobDetailRow(label: 'Submitted', value: MechanicJobDetailScreen.timestampLabel(createdAt)),
             const SizedBox(height: 18),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(14)),
-              child: const Text('Responding to requests is not enabled yet. The current data contract does not provide a verified accept/decline transaction for this request.'),
-            ),
+            if ((data['status'] as String? ?? 'open') == 'open') ...[
+              _QuoteSubmissionForm(requestId: requestId, mechanicId: uid),
+            ] else ...[
+              const Card(child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('This request is no longer open for quotes.'),
+              )),
+            ],
           ],
         );
       },
     ),
   );
+}
+
+
+class _QuoteSubmissionForm extends StatefulWidget {
+  const _QuoteSubmissionForm({required this.requestId, required this.mechanicId});
+  final String requestId;
+  final String mechanicId;
+
+  @override
+  State<_QuoteSubmissionForm> createState() => _QuoteSubmissionFormState();
+}
+
+class _QuoteSubmissionFormState extends State<_QuoteSubmissionForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _priceController = TextEditingController();
+  final _noteController = TextEditingController();
+  bool _busy = false;
+  bool _loaded = false;
+  bool _quoteExists = false;
+  String? _quoteStatus;
+
+  @override
+  void dispose() {
+    _priceController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final requestRef = FirebaseFirestore.instance.collection('serviceRequests').doc(widget.requestId);
+    final quoteRef = requestRef.collection('quotes').doc(widget.mechanicId);
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: requestRef.snapshots(),
+      builder: (context, requestSnapshot) {
+        final requestData = requestSnapshot.data?.data();
+        final isOpen = requestData != null &&
+            ['open', 'pending'].contains(requestData['status']) &&
+            requestData['targetMechanicId'] == widget.mechanicId;
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: quoteRef.snapshots(),
+          builder: (context, quoteSnapshot) {
+            if (quoteSnapshot.hasData && !_loaded) {
+              _loaded = true;
+              final data = quoteSnapshot.data!.data();
+              _quoteExists = quoteSnapshot.data!.exists;
+              _quoteStatus = data?['status'] as String?;
+              if (data != null) {
+                _priceController.text = data['price'] is num ? (data['price'] as num).toString() : '';
+                _noteController.text = data['note'] as String? ?? '';
+              }
+            }
+            final resolved = ['accepted', 'declined', 'expired'].contains(_quoteStatus);
+            final canSubmit = isOpen && !resolved && !requestSnapshot.hasError && !quoteSnapshot.hasError;
+            return Card(
+              margin: const EdgeInsets.only(top: 18),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(_quoteExists ? 'Update your quote' : 'Send a quote',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 6),
+                      const Text('Enter your proposed price in Nigerian naira and add useful details for the customer.'),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: _priceController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(labelText: 'Price (₦)', prefixText: '₦ '),
+                        validator: (value) {
+                          final price = double.tryParse((value ?? '').trim());
+                          if (price == null || !price.isFinite || price < 0 || price > 1000000000) {
+                            return 'Enter a valid price between ₦0 and ₦1,000,000,000.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _noteController,
+                        minLines: 2,
+                        maxLines: 4,
+                        maxLength: 500,
+                        decoration: const InputDecoration(labelText: 'Note (optional)', hintText: 'Explain what the price includes'),
+                        validator: (value) => (value?.trim().length ?? 0) > 500 ? 'Keep the note under 500 characters.' : null,
+                      ),
+                      if (!isOpen) ...[
+                        const SizedBox(height: 6),
+                        Text('This request is closed or is not assigned to your account.',
+                            style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                      ] else if (resolved) ...[
+                        const SizedBox(height: 6),
+                        const Text('This quote has already been resolved and can no longer be changed.'),
+                      ],
+                      if (requestSnapshot.hasError || quoteSnapshot.hasError)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text('Could not verify request status. Refresh before submitting.'),
+                        ),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: !canSubmit || _busy ? null : _submit,
+                        icon: _busy
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.send_rounded),
+                        label: Text(_busy ? 'Submitting…' : (_quoteExists ? 'Update quote' : 'Submit quote')),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _busy = true);
+    try {
+      final requestRef = FirebaseFirestore.instance.collection('serviceRequests').doc(widget.requestId);
+      final quoteRef = requestRef.collection('quotes').doc(widget.mechanicId);
+      final request = await requestRef.get();
+      final data = request.data();
+      if (!request.exists || data == null ||
+          !['open', 'pending'].contains(data['status']) ||
+          data['targetMechanicId'] != widget.mechanicId) {
+        throw StateError('closed');
+      }
+      final existing = await quoteRef.get();
+      final existingStatus = existing.data()?['status'] as String?;
+      if (['accepted', 'declined', 'expired'].contains(existingStatus)) {
+        throw StateError('resolved');
+      }
+      final price = double.parse(_priceController.text.trim());
+      await quoteRef.set({
+        'price': price,
+        'note': _noteController.text.trim(),
+        'status': 'pending',
+        if (!existing.exists) 'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (mounted) {
+        setState(() {
+          _quoteExists = true;
+          _quoteStatus = 'pending';
+          _loaded = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Your quote was submitted. The customer can now review it.')),
+        );
+      }
+    } on StateError catch (error) {
+      if (mounted) {
+        final message = error.message == 'resolved'
+            ? 'This quote has already been accepted or declined and cannot be changed.'
+            : 'This request is no longer open or is not assigned to your account.';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } on FirebaseException catch (error) {
+      if (mounted) {
+        final message = error.code == 'permission-denied'
+            ? 'Your account is not allowed to quote on this request, or the request has closed.'
+            : 'Could not submit your quote. Check your connection and try again.';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not submit your quote. Please try again.')),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 }
 
 class MechanicEarningsScreen extends StatelessWidget {
