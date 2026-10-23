@@ -9,6 +9,7 @@ import 'support_pages.dart';
 import 'repair_detail_screen.dart';
 import 'mechanic_jobs_screen.dart';
 import 'customer_profile_screen.dart';
+import 'mechanic_profile_screen.dart';
 
 /// First pass of the role-specific workspace shell. Data remains clearly
 /// illustrative until each screen is connected to its verified data contract.
@@ -485,6 +486,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => const CustomerProfileScreen(),
+            ),
+          ),
+        ),
+      if (!_isCustomer)
+        _ActionTile(
+          icon: Icons.handyman_outlined,
+          title: 'Mechanic profile',
+          subtitle: 'View your workshop details and expertise',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const MechanicProfileScreen(),
             ),
           ),
         ),
