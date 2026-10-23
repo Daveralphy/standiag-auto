@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'repair_detail_screen.dart';
 import 'mechanic_jobs_screen.dart';
@@ -12,6 +13,14 @@ class NotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Firebase.apps.isEmpty) {
+      return const _SupportScaffold(
+        title: 'Notifications',
+        subtitle: 'Important updates about your account and repairs.',
+        icon: Icons.notifications_none_rounded,
+        child: _NotificationNotConnected(),
+      );
+    }
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return const _SupportScaffold(
@@ -527,6 +536,27 @@ class _SupportScaffold extends StatelessWidget {
           ),
         ),
       );
+}
+
+class _NotificationNotConnected extends StatelessWidget {
+  const _NotificationNotConnected();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+    ),
+    child: Column(children: [
+      Icon(Icons.cloud_off_outlined, size: 42, color: Theme.of(context).colorScheme.onSurfaceVariant),
+      const SizedBox(height: 12),
+      Text('Notifications need a connection', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+      const SizedBox(height: 6),
+      const Text('Connect Firebase to load notifications for your account.', textAlign: TextAlign.center),
+    ]),
+  );
 }
 
 class _EmptyNotifications extends StatelessWidget {
