@@ -127,10 +127,20 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           onPressed: () => setState(() => _selectedIndex = 1),
         ),
         const SizedBox(height: 24),
-        Row(
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 6,
           children: [
-            Expanded(child: Text(_isCustomer ? 'Quick actions' : 'Work overview', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
-            const Text('DEMO DATA', style: TextStyle(fontSize: 10, letterSpacing: 1.1, fontWeight: FontWeight.w800)),
+            Text(
+              _isCustomer ? 'Quick actions' : 'Work overview',
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const Text(
+              'DEMO DATA',
+              style: TextStyle(fontSize: 10, letterSpacing: 1.1, fontWeight: FontWeight.w800),
+            ),
           ],
         ),
         const SizedBox(height: 12),
