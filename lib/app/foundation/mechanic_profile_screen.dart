@@ -13,7 +13,7 @@ class MechanicProfileScreen extends StatelessWidget {
     if (uid == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Mechanic profile')),
-        body: _MechanicProfileState(
+        body: const _MechanicProfileState(
           icon: Icons.lock_outline_rounded,
           title: 'Sign in to view your profile',
           message: 'Your mechanic profile is linked to your account.',
