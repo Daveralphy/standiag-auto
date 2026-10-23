@@ -639,7 +639,12 @@ class MechanicJobDetailScreen extends StatelessWidget {
             const SizedBox(height: 22),
             Text('Job information', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            _JobVehicleReference(vehicleId: data['vehicleId'] as String? ?? ''),
+            _JobVehicleReference(
+              vehicleId: data['vehicleId'] as String? ?? '',
+              vehicleDetails: data['vehicleDetails'] is Map
+                  ? Map<String, dynamic>.from(data['vehicleDetails'] as Map)
+                  : null,
+            ),
             _JobDetailRow(label: 'Job reference', value: snapshot.data!.id),
             _JobDetailRow(label: 'Created', value: _timestamp(createdAt)),
             const SizedBox(height: 22),
@@ -735,42 +740,40 @@ class _JobStatusPill extends StatelessWidget {
 }
 
 class _JobVehicleReference extends StatelessWidget {
-  const _JobVehicleReference({required this.vehicleId});
+  const _JobVehicleReference({
+    required this.vehicleId,
+    required this.vehicleDetails,
+  });
 
   final String vehicleId;
+  final Map<String, dynamic>? vehicleDetails;
 
   @override
   Widget build(BuildContext context) {
-    if (vehicleId.isEmpty) {
-      return const _JobDetailRow(label: 'Vehicle', value: 'Not linked');
+    final data = vehicleDetails;
+    if (data == null) {
+      return _JobDetailRow(
+        label: 'Vehicle',
+        value: vehicleId.isEmpty
+            ? 'Not linked'
+            : 'Details unavailable for this older job',
+      );
     }
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('vehicles').doc(vehicleId).snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError || (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData)) {
-          return const _JobDetailRow(label: 'Vehicle', value: 'Vehicle details unavailable');
-        }
-        if (!snapshot.hasData || !snapshot.data!.exists) {
-          return const _JobDetailRow(label: 'Vehicle', value: 'Saved vehicle not found');
-        }
-        final data = snapshot.data!.data()!;
-        final year = (data['year'] ?? '').toString().trim();
-        final make = (data['make'] ?? '').toString().trim();
-        final model = (data['model'] ?? '').toString().trim();
-        final name = [year, make, model].where((part) => part.isNotEmpty).join(' ');
-        final details = [
-          data['type'],
-          data['colour'],
-          data['plateNumber'],
-        ].whereType<String>().map((part) => part.trim()).where((part) => part.isNotEmpty).join(' • ');
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _JobDetailRow(label: 'Vehicle', value: name.isEmpty ? 'Saved vehicle' : name),
-            if (details.isNotEmpty) _JobDetailRow(label: 'Vehicle details', value: details),
-          ],
-        );
-      },
+    final year = (data['year'] ?? '').toString().trim();
+    final make = (data['make'] ?? '').toString().trim();
+    final model = (data['model'] ?? '').toString().trim();
+    final name = [year, make, model].where((part) => part.isNotEmpty).join(' ');
+    final details = [
+      data['type'],
+      data['colour'],
+      data['plateNumber'],
+    ].whereType<String>().map((part) => part.trim()).where((part) => part.isNotEmpty).join(' • ');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _JobDetailRow(label: 'Vehicle', value: name.isEmpty ? 'Saved vehicle' : name),
+        if (details.isNotEmpty) _JobDetailRow(label: 'Vehicle details', value: details),
+      ],
     );
   }
 }
