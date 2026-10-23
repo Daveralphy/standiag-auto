@@ -189,7 +189,15 @@ Existing models or legacy collections alone do not prove these screens are produ
 - [x] Added widget coverage for the legal information screens and updated support page expectations for Firebase-unconfigured mode.
 - [ ] Validate Dart tests and TypeScript build locally before proceeding; notification persistence requires a future approved Functions deployment to be live.
 
-## 9. Current implementation checkpoint
+## 9. Latest implementation progress
+
+- [x] Added customer cancellation for open/pending repair requests with a confirmation step and Firebase error feedback.
+- [x] Fixed add-vehicle form controller cleanup when the user cancels before saving.
+- [x] Added a mechanic profile screen showing saved workshop name, service area, phone, experience, expertise, and approval/visibility state without exposing unsafe client-side approval controls.
+- [x] Connected the mechanic profile screen from the workspace profile tab.
+- [ ] Add focused tests for cancellation and mechanic profile data states, then validate Flutter and Functions builds locally.
+
+## 10. Current implementation checkpoint
 
 At commit `66bcb947f937d1bd3ecb0044ca7bce99fba5e00f`, the user confirmed:
 - `flutter analyze`: no issues.
