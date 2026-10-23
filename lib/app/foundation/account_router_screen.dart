@@ -29,7 +29,17 @@ class AccountRouterScreen extends StatelessWidget {
       future: _loadAccount(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return _AccountLoadError(onRetry: () => (context as Element).markNeedsBuild());
+          return _AccountLoadError(onRetry: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (_) => AccountRouterScreen(
+                uid: uid,
+                email: email,
+                onSignOut: onSignOut,
+                isSigningOut: isSigningOut,
+                errorMessage: errorMessage,
+              ),
+            ),
+          ));
         }
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
