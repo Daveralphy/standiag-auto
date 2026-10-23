@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'vehicles_screen.dart';
 import 'mechanic_discovery_screen.dart';
@@ -150,9 +151,29 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
-  Widget _explore(BuildContext context) => const MechanicDiscoveryScreen();
+  Widget _explore(BuildContext context) {
+    if (Firebase.apps.isEmpty) {
+      return const _SectionPage(
+        title: 'Find a mechanic',
+        subtitle: 'Search approved mechanics by expertise and service area.',
+        icon: Icons.travel_explore_rounded,
+        emptyTitle: 'Mechanics will show up here',
+        emptyMessage: 'Connect Firebase to load approved mechanic profiles.',
+      );
+    }
+    return const MechanicDiscoveryScreen();
+  }
 
   Widget _repairs(BuildContext context) {
+    if (Firebase.apps.isEmpty) {
+      return const _SectionPage(
+        title: 'My repairs',
+        subtitle: 'Your service requests and repair progress in one place.',
+        icon: Icons.car_repair_rounded,
+        emptyTitle: 'No repairs yet',
+        emptyMessage: 'Connect Firebase to load your repair requests.',
+      );
+    }
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       return const _SectionPage(
