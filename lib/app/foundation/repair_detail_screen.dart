@@ -111,7 +111,7 @@ class RepairDetailScreen extends StatelessWidget {
                       child: Center(child: CircularProgressIndicator()),
                     );
                   }
-                  final quotes = quoteSnapshot.data?.docs ?? [];
+                  final quotes = [...?quoteSnapshot.data?.docs];
                   if (quotes.isEmpty) {
                     return const _RepairState(
                       icon: Icons.hourglass_empty_rounded,
