@@ -16,6 +16,7 @@ class MechanicDiscoveryScreen extends StatefulWidget {
 class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
   final _searchController = TextEditingController();
   String _query = '';
+  String _selectedExpertise = 'All services';
   String? _submittingMechanicId;
 
   @override
@@ -63,27 +64,66 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                 builder: (context, snapshot) {
                   if (snapshot.hasError) return const _DiscoveryState(icon: Icons.cloud_off_outlined, title: 'Mechanics are unavailable', message: 'Check your connection and try again.');
                   if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                  final docs = (snapshot.data?.docs ?? []).where((doc) {
+                  final allDocs = snapshot.data?.docs ?? [];
+                  final expertiseOptions = allDocs
+                      .expand((doc) => (doc.data()['expertise'] as List? ?? []).whereType<String>())
+                      .map((item) => item.trim())
+                      .where((item) => item.isNotEmpty)
+                      .toSet()
+                      .toList()
+                    ..sort();
+                  final docs = allDocs.where((doc) {
                     final data = doc.data();
-                    final expertise = (data['expertise'] as List? ?? []).whereType<String>().join(' ');
+                    final expertiseList = (data['expertise'] as List? ?? []).whereType<String>().toList();
+                    final expertise = expertiseList.join(' ');
                     final name = data['workshopName'] as String? ?? '';
                     final area = data['workshopAddress'] as String? ?? '';
-                    return '$expertise $name $area'.toLowerCase().contains(_query);
+                    final matchesQuery = '$expertise $name $area'.toLowerCase().contains(_query);
+                    final matchesExpertise = _selectedExpertise == 'All services' ||
+                        expertiseList.any((item) => item.trim().toLowerCase() == _selectedExpertise.toLowerCase());
+                    return matchesQuery && matchesExpertise;
                   }).toList();
 
-                  if (docs.isEmpty) {
-                    return _DiscoveryState(
-                      icon: Icons.travel_explore_rounded,
-                      title: _query.isEmpty ? 'No approved mechanics yet' : 'No matching mechanics',
-                      message: _query.isEmpty ? 'Approved mechanics will appear here when they join Standiag Auto.' : 'Try a different service or location keyword.',
-                    );
-                  }
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                    itemCount: docs.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final doc = docs[index];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (expertiseOptions.isNotEmpty)
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                          child: Row(
+                            children: [
+                              'All services',
+                              ...expertiseOptions,
+                            ].map((option) => Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(option),
+                                selected: _selectedExpertise == option,
+                                onSelected: (selected) {
+                                  if (selected) setState(() => _selectedExpertise = option);
+                                },
+                              ),
+                            )).toList(),
+                          ),
+                        ),
+                      Expanded(
+                        child: docs.isEmpty
+                            ? _DiscoveryState(
+                                icon: Icons.travel_explore_rounded,
+                                title: allDocs.isEmpty
+                                    ? 'No approved mechanics yet'
+                                    : 'No matching mechanics',
+                                message: allDocs.isEmpty
+                                    ? 'Approved mechanics will appear here when they join Standiag Auto.'
+                                    : 'Try another service, clear the service filter, or search a different location keyword.',
+                              )
+                            : ListView.separated(
+                                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                                itemCount: docs.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  final doc = docs[index];
                       final data = doc.data();
                       final expertise = (data['expertise'] as List? ?? []).whereType<String>().toList();
                       final workshop = data['workshopName'] as String?;
@@ -141,7 +181,10 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                           ),
                         ),
                       );
-                    },
+                                },
+                              ),
+                      ),
+                    ],
                   );
                 },
               ),
