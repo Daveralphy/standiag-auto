@@ -27,7 +27,8 @@ The complete screen inventory, visual direction, navigation map, shared componen
 - [x] Repair requests can be started from mechanic discovery
 - [x] Repair request list reads the customer's requests
 - [x] Add vehicle details, edit, and delete actions to the vehicle list
-- [ ] Add repair-request detail and status history screens
+- [x] Add repair-request detail and quote-response display screen
+- [ ] Add trusted quote acceptance and complete status history
 - [ ] Ensure vehicle selection is explicit when a customer has multiple vehicles
 - [ ] Verify cancellation and repeat-request rules with the backend
 - [ ] Replace any demo metrics or copy that implies data is live when it is not
@@ -35,9 +36,11 @@ The complete screen inventory, visual direction, navigation map, shared componen
 ### 3. Mechanic experience
 - [x] Mechanic application and review status flow exists
 - [x] Mechanic workspace shell exists
-- [ ] Build a real incoming-requests list and request details
+- [x] Build a read-only incoming direct-request list and request details
+- [x] Build a real assigned-jobs list and read-only job details
 - [ ] Implement accept/decline and job lifecycle actions using verified backend rules
-- [ ] Build completed jobs and earnings from real job/payment records
+- [x] Build completed-job listing and completed-job count from real job records
+- [ ] Build monetary earnings and payouts from verified payment records
 - [ ] Add mechanic profile editing and workshop details
 - [ ] Confirm all job and payout states are permission-safe
 
@@ -46,7 +49,8 @@ The complete screen inventory, visual direction, navigation map, shared componen
 - [x] Account settings destination displays current account details
 - [x] Help and support destination contains expandable FAQs
 - [ ] Connect notifications to a defined notification data contract
-- [ ] Add real account editing and password/security actions
+- [x] Add customer profile editing through the existing callable
+- [ ] Add shared password/security controls and mechanic profile editing
 - [ ] Configure official support contact details before adding a contact action
 - [ ] Add privacy, terms, and account deletion flows where required
 
@@ -54,7 +58,7 @@ The complete screen inventory, visual direction, navigation map, shared componen
 - [ ] Every visible action has a destination or an explicit disabled state with a reason
 - [ ] Loading, empty, permission-denied, offline, and retry states are consistent
 - [ ] Responsive checks cover narrow phones, larger phones, and tablets
-- [ ] Add widget tests for each major screen and navigation edge
+- [ ] Add widget tests for new repair, mechanic job, incoming request, earnings and profile screens
 - [ ] Run `flutter analyze` and `flutter test` locally after each implementation batch
 - [ ] Perform configured Firebase end-to-end tests before considering the product ready
 
