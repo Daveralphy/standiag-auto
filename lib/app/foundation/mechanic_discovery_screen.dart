@@ -89,8 +89,10 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                       final workshop = data['workshopName'] as String?;
                       final title = workshop != null && workshop.trim().isNotEmpty ? workshop : 'Independent mechanic';
                       final area = data['workshopAddress'] as String? ?? 'Service area not provided';
-                      final years = data['yearsOfExperience'] as num? ?? 0;
-                      final rating = data['rating'] as num? ?? 0;
+                      final years = data['yearsOfExperience'] as num?;
+                      final rating = data['rating'] as num?;
+                      final hasRating = rating != null && rating > 0;
+                      final hasExperience = years != null && years > 0;
                       return Card(
                         clipBehavior: Clip.antiAlias,
                         child: Padding(
@@ -113,7 +115,14 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                                       const SizedBox(height: 4),
                                       Text(area, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                                       const SizedBox(height: 5),
-                                      Text('★ ${rating.toStringAsFixed(1)}  •  ${years.toInt()} years experience', style: Theme.of(context).textTheme.labelMedium),
+                                      if (hasRating || hasExperience)
+                                        Text(
+                                          [
+                                            if (hasRating) '★ ${rating.toStringAsFixed(1)}',
+                                            if (hasExperience) '${years.toInt()} years experience',
+                                          ].join('  •  '),
+                                          style: Theme.of(context).textTheme.labelMedium,
+                                        ),
                                     ]),
                                   ),
                                 ],
