@@ -473,11 +473,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     ],
   );
 
-  void _showNotice(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
 }
 
 class _StatusPill extends StatelessWidget {
