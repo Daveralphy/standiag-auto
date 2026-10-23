@@ -780,10 +780,19 @@ export const acceptServiceQuote = onCall(async (request) => {
       throw new HttpsError("failed-precondition", "This request is no longer open for quote acceptance.");
     }
 
-    const [quoteSnap, mechanicSnap] = await Promise.all([
+    const vehicleId = serviceRequest.vehicleId;
+    if (typeof vehicleId !== "string" || !vehicleId.trim()) {
+      throw new HttpsError("failed-precondition", "This request is not linked to a saved vehicle.");
+    }
+    const vehicleRef = db.collection("vehicles").doc(vehicleId);
+    const [quoteSnap, mechanicSnap, vehicleSnap] = await Promise.all([
       transaction.get(quoteRef),
       transaction.get(mechanicRef),
+      transaction.get(vehicleRef),
     ]);
+    if (!vehicleSnap.exists || vehicleSnap.data()?.ownerId !== uid) {
+      throw new HttpsError("failed-precondition", "The saved vehicle for this request is no longer available.");
+    }
     if (!mechanicSnap.exists ||
         mechanicSnap.data()?.approvedAt == null ||
         mechanicSnap.data()?.isVisible !== true) {
@@ -811,10 +820,18 @@ export const acceptServiceQuote = onCall(async (request) => {
     }
 
     const now = Timestamp.now();
+    const vehicle = vehicleSnap.data()!;
+    const vehicleDetails = Object.fromEntries(
+      ["year", "make", "model", "type", "colour", "plateNumber", "fuelType"]
+        .filter((key) => typeof vehicle[key] === "string" || typeof vehicle[key] === "number")
+        .map((key) => [key, String(vehicle[key]).trim()]),
+    );
+
     transaction.create(jobRef, {
       carOwnerId: uid,
       mechanicId,
-      vehicleId: serviceRequest.vehicleId ?? "",
+      vehicleId,
+      vehicleDetails,
       issue: serviceRequest.issue ?? "Repair request",
       status: "pending",
       ...(serviceRequest.carOwnerLocation ? { carOwnerLocation: serviceRequest.carOwnerLocation } : {}),
