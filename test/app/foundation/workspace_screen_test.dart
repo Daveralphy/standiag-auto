@@ -48,7 +48,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Job requests'), findsOneWidget);
-    expect(find.textContaining('after mechanic approval'), findsOneWidget);
+    expect(find.textContaining('Connect Firebase to load jobs assigned to your mechanic account.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
