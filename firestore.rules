@@ -22,11 +22,23 @@ service cloud.firestore {
     }
 
     // ─── Users ──────────────────────────────────────────────────────────
-    // Any signed-in user can read a profile (names/photos shown across the
-    // app), but only edit their own.
+    // Clients may edit ordinary profile fields only. Role, credits, account
+    // verification and administrative fields are server-managed.
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow write: if isSelf(userId);
+      allow create: if isSelf(userId) &&
+        request.resource.data.keys().hasOnly([
+          'uid', 'email', 'firstName', 'lastName', 'username', 'phone',
+          'address', 'profilePhoto', 'createdAt', 'isFirstTime'
+        ]) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.email == request.auth.token.email;
+      allow update: if isSelf(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'firstName', 'lastName', 'username', 'phone', 'address',
+          'profilePhoto', 'isFirstTime', 'updatedAt'
+        ]);
+      allow delete: if false;
     }
 
     // ─── Username lookup ────────────────────────────────────────────────
@@ -44,11 +56,26 @@ service cloud.firestore {
     }
 
     // ─── Mechanics ──────────────────────────────────────────────────────
-    // Same shape as users: browsable by anyone signed in, editable only by
-    // the mechanic themselves (including their own fcmToken field).
+    // Approval and visibility are server-managed. An approved mechanic may
+    // update only device/location fields; an applicant cannot create a
+    // public mechanic record or approve themselves.
     match /mechanics/{mechanicId} {
-      allow read: if isSignedIn();
-      allow write: if isSelf(mechanicId);
+      allow read: if isSignedIn() &&
+        (isSelf(mechanicId) || resource.data.isVisible == true);
+      allow create, delete: if false;
+      allow update: if isSelf(mechanicId) &&
+        resource.data.approvedAt != null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'fcmToken', 'location'
+        ]);
+    }
+
+    // ─── Mechanic applications ──────────────────────────────────────────
+    // Private application details are readable by the applicant. All writes
+    // and admin queue access go through verified callable functions.
+    match /mechanicApplications/{applicantId} {
+      allow read: if isSelf(applicantId);
+      allow write: if false;
     }
 
     // ─── Vehicles ───────────────────────────────────────────────────────
