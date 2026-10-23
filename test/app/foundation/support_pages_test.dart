@@ -9,7 +9,13 @@ void main() {
         const MaterialApp(home: NotificationsScreen()),
       );
 
-      expect(find.text('Notifications'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('Notifications'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('You are all caught up'), findsOneWidget);
       expect(find.textContaining('account or repair updates'), findsOneWidget);
     });
@@ -26,7 +32,13 @@ void main() {
         ),
       );
 
-      expect(find.text('Account settings'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('Account settings'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('driver@example.com'), findsOneWidget);
       expect(find.text('Customer'), findsOneWidget);
       expect(find.text('Profile editing, password and security controls will be added here when their account workflows are connected. Your account details are not editable from this preview.'), findsOneWidget);
