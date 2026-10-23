@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'vehicles_screen.dart';
 import 'mechanic_discovery_screen.dart';
@@ -150,13 +152,85 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Widget _explore(BuildContext context) => const MechanicDiscoveryScreen();
 
-  Widget _repairs(BuildContext context) => const _SectionPage(
-    title: 'My repairs',
-    subtitle: 'Your service requests and repair progress in one place.',
-    icon: Icons.car_repair_rounded,
-    emptyTitle: 'No repairs yet',
-    emptyMessage: 'When you request a repair, its updates will appear here.',
-  );
+  Widget _repairs(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return const _SectionPage(
+        title: 'My repairs',
+        subtitle: 'Your service requests and repair progress in one place.',
+        icon: Icons.car_repair_rounded,
+        emptyTitle: 'Sign in to view repairs',
+        emptyMessage: 'Your repair requests are linked to your account.',
+      );
+    }
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('serviceRequests')
+          .where('carOwnerId', isEqualTo: uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const _SectionPage(
+            title: 'My repairs',
+            subtitle: 'Your service requests and repair progress in one place.',
+            icon: Icons.cloud_off_outlined,
+            emptyTitle: 'Could not load repairs',
+            emptyMessage: 'Check your connection and try again.',
+          );
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = [...?snapshot.data?.docs];
+        docs.sort((a, b) {
+          final aDate = a.data()['createdAt'];
+          final bDate = b.data()['createdAt'];
+          final aTime = aDate is Timestamp ? aDate.millisecondsSinceEpoch : 0;
+          final bTime = bDate is Timestamp ? bDate.millisecondsSinceEpoch : 0;
+          return bTime.compareTo(aTime);
+        });
+        if (docs.isEmpty) {
+          return const _SectionPage(
+            title: 'My repairs',
+            subtitle: 'Your service requests and repair progress in one place.',
+            icon: Icons.car_repair_rounded,
+            emptyTitle: 'No repairs yet',
+            emptyMessage: 'When you request a repair, its updates will appear here.',
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          children: [
+            Text('My repairs', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            const Text('Follow your requests and mechanic responses.'),
+            const SizedBox(height: 18),
+            for (final doc in docs)
+              Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Expanded(child: Text((doc.data()['issue'] as String? ?? 'Repair request'), style: const TextStyle(fontWeight: FontWeight.w800))),
+                        const SizedBox(width: 8),
+                        _StatusPill(status: doc.data()['status'] as String? ?? 'open'),
+                      ]),
+                      const SizedBox(height: 8),
+                      Text('Vehicle ID: ${doc.data()['vehicleId'] ?? 'Not linked'}', style: Theme.of(context).textTheme.bodySmall),
+                      const SizedBox(height: 4),
+                      Text('Request ID: ${doc.id}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 
   Widget _jobs(BuildContext context) => const _SectionPage(
     title: 'Job requests',
@@ -200,6 +274,27 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   void _showNotice(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status});
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = status.replaceAll('_', ' ');
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSecondaryContainer,
+        fontWeight: FontWeight.w700,
+      )),
+    );
   }
 }
 
