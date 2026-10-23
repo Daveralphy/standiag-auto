@@ -200,12 +200,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const Text(
-              'DEMO DATA',
-              style: TextStyle(
-                fontSize: 10,
+            Text(
+              _isCustomer ? 'GET STARTED' : 'YOUR WORK',
+              style: theme.textTheme.labelSmall?.copyWith(
                 letterSpacing: 1.1,
                 fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -233,12 +233,23 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             onTap: () => setState(() => _selectedIndex = 2),
           ),
         ] else ...[
-          const _MetricRow(
-            items: [
-              ('0', 'New requests'),
-              ('0', 'Active jobs'),
-              ('₦0', 'This week'),
-            ],
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Your assigned jobs and completed work are listed in the Jobs and Earnings tabs. Only saved job records are shown.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           _ActionTile(
@@ -251,8 +262,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         const SizedBox(height: 12),
         _InfoBanner(
           text: _isCustomer
-              ? 'Your real vehicles, bookings and repair history will appear once these screens are connected to your account data.'
-              : 'Mechanic job access depends on administrator approval. This preview does not grant provider access.',
+              ? 'Your vehicles and repair requests are linked to your account. Use the shortcuts above to manage your garage and follow repair updates.'
+              : 'Your job list and completed work are loaded from your assigned job records. Payment totals appear only when a verified payment record is available.',
         ),
       ],
     );
