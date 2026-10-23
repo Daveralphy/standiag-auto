@@ -145,7 +145,8 @@ service cloud.firestore {
           (resource.data.carOwnerId == request.auth.uid ||
            resource.data.mechanicId == request.auth.uid);
       allow create: if isSignedIn() &&
-          request.resource.data.carOwnerId == request.auth.uid;
+          request.resource.data.carOwnerId == request.auth.uid &&
+          request.resource.data.status == 'pending';
       allow update: if isSignedIn() && (
         (resource.data.carOwnerId == request.auth.uid &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
