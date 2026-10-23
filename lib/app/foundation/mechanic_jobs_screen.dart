@@ -431,9 +431,11 @@ class _QuoteSubmissionFormState extends State<_QuoteSubmissionForm> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not submit your quote. Please try again.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not submit your quote. Please try again.')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
