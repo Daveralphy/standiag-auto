@@ -718,3 +718,93 @@ export const paystackWebhook = onRequest(
     res.status(200).send("OK");
   }
 );
+
+// ─── Trusted mechanic job lifecycle ─────────────────────────────────────
+
+const JOB_TRANSITIONS: Record<string, { next: string; timestamp?: string }> = {
+  accept: { next: "accepted", timestamp: "acceptedAt" },
+  reject: { next: "rejected", timestamp: "rejectedAt" },
+  start_travel: { next: "en_route", timestamp: "enRouteAt" },
+  arrive: { next: "arrived", timestamp: "arrivedAt" },
+  start_work: { next: "in_progress", timestamp: "startedAt" },
+  complete: { next: "completed", timestamp: "completedAt" },
+};
+
+const ALLOWED_JOB_ACTIONS: Record<string, string[]> = {
+  pending: ["accept", "reject"],
+  accepted: ["start_travel"],
+  en_route: ["arrive"],
+  arrived: ["start_work"],
+  in_progress: ["complete"],
+};
+
+/**
+ * Applies one legal job transition after verifying the caller is the assigned
+ * mechanic. The transaction checks the current status and writes the status,
+ * timestamp and audit fields atomically; clients cannot choose their own
+ * next status or timestamps.
+ */
+export const transitionMechanicJob = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const jobId = request.data?.jobId;
+  const action = request.data?.action;
+  if (typeof jobId !== "string" || !jobId.trim()) {
+    throw new HttpsError("invalid-argument", "jobId is required.");
+  }
+  if (typeof action !== "string" || !JOB_TRANSITIONS[action]) {
+    throw new HttpsError("invalid-argument", "Unknown job action.");
+  }
+
+  const jobRef = db.collection("jobs").doc(jobId);
+  let nextStatus = "";
+  await db.runTransaction(async (transaction) => {
+    const snap = await transaction.get(jobRef);
+    if (!snap.exists) {
+      throw new HttpsError("not-found", "This job could not be found.");
+    }
+    const job = snap.data() as {
+      mechanicId?: string;
+      status?: string;
+      carOwnerId?: string;
+      issue?: string;
+    };
+    if (job.mechanicId !== uid) {
+      throw new HttpsError("permission-denied", "Only the assigned mechanic can update this job.");
+    }
+    const currentStatus = job.status ?? "pending";
+    if (!(ALLOWED_JOB_ACTIONS[currentStatus] ?? []).includes(action)) {
+      throw new HttpsError("failed-precondition", "This action is not available for the current job status.");
+    }
+
+    const transition = JOB_TRANSITIONS[action];
+    nextStatus = transition.next;
+    const update: Record<string, unknown> = {
+      status: transition.next,
+      updatedAt: Timestamp.now(),
+      lastUpdatedBy: uid,
+    };
+    if (transition.timestamp) update[transition.timestamp] = Timestamp.now();
+    transaction.update(jobRef, update);
+  });
+
+  const jobSnap = await jobRef.get();
+  const job = jobSnap.data() as { carOwnerId?: string; issue?: string } | undefined;
+  if (job?.carOwnerId) {
+    await persistNotification({
+      userId: job.carOwnerId,
+      title: nextStatus === "rejected" ? "Mechanic declined the job" : "Job status updated",
+      body: job.issue
+        ? `Your repair job "${job.issue}" is now ${nextStatus.replaceAll("_", " ")}.`
+        : `Your repair job is now ${nextStatus.replaceAll("_", " ")}.`,
+      type: "job_status",
+      jobId,
+    });
+  }
+
+  return { success: true, status: nextStatus };
+});
+
