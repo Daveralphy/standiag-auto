@@ -11,8 +11,8 @@ class MechanicProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Mechanic profile')),
+      return Scaffold(
+        appBar: AppBar(title: const Text('Mechanic profile')),
         body: _MechanicProfileState(
           icon: Icons.lock_outline_rounded,
           title: 'Sign in to view your profile',
