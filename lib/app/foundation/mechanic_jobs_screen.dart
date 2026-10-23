@@ -6,8 +6,15 @@ import 'package:flutter/material.dart';
 import '../../features/jobs/models/job_model.dart';
 
 /// Job inbox and progress screens for an approved mechanic.
-class MechanicJobsScreen extends StatelessWidget {
+class MechanicJobsScreen extends StatefulWidget {
   const MechanicJobsScreen({super.key});
+
+  @override
+  State<MechanicJobsScreen> createState() => _MechanicJobsScreenState();
+}
+
+class _MechanicJobsScreenState extends State<MechanicJobsScreen> {
+  int _selectedFilter = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +69,14 @@ class MechanicJobsScreen extends StatelessWidget {
           JobStatusExtension.fromString(doc.data()['status'] as String? ?? 'pending') == JobStatus.completed
         ).length;
 
+        final filteredDocs = docs.where((doc) {
+          final status = JobStatusExtension.fromString(doc.data()['status'] as String? ?? 'pending');
+          if (_selectedFilter == 1) return status != JobStatus.completed && status != JobStatus.rejected;
+          if (_selectedFilter == 2) return status == JobStatus.completed;
+          if (_selectedFilter == 3) return status == JobStatus.rejected;
+          return true;
+        }).toList();
+
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
@@ -76,8 +91,47 @@ class MechanicJobsScreen extends StatelessWidget {
                 Expanded(child: _SummaryCard(label: 'Completed', value: '$completed', icon: Icons.task_alt_rounded)),
               ],
             ),
-            const SizedBox(height: 20),
-            for (final doc in docs)
+            const SizedBox(height: 18),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _jobFilterChip('All', 0),
+                  const SizedBox(width: 8),
+                  _jobFilterChip('Active', 1),
+                  const SizedBox(width: 8),
+                  _jobFilterChip('Completed', 2),
+                  const SizedBox(width: 8),
+                  _jobFilterChip('Rejected', 3),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (filteredDocs.isEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Icon(Icons.filter_list_off_rounded, size: 34,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 10),
+                      Text(
+                        _selectedFilter == 1 ? 'No active jobs' :
+                        _selectedFilter == 2 ? 'No completed jobs' :
+                        _selectedFilter == 3 ? 'No rejected jobs' : 'No jobs to show',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 6),
+                      Text('Choose another filter or check back when your job list updates.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                ),
+              ),
+            for (final doc in filteredDocs)
               Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 clipBehavior: Clip.antiAlias,
@@ -113,6 +167,16 @@ class MechanicJobsScreen extends StatelessWidget {
               ),
           ],
         );
+      },
+    );
+  }
+
+  Widget _jobFilterChip(String label, int value) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: _selectedFilter == value,
+      onSelected: (selected) {
+        if (selected) setState(() => _selectedFilter = value);
       },
     );
   }
