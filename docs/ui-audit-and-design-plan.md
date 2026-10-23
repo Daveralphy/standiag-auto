@@ -82,3 +82,10 @@ A screen is not considered complete merely because it renders. Its actions, back
 - [x] Notifications inbox UI and linked destinations added; backend persistence is source-only until Functions are deployed.
 - [x] Account settings includes password reset and privacy/terms/about destinations.
 - [ ] Validate Dart and Functions builds locally.
+
+
+## Latest customer and mechanic profile progress
+- [x] Add confirmed cancellation for open/pending customer repair requests.
+- [x] Fix vehicle add-form controller cleanup on cancel.
+- [x] Add mechanic profile details screen and connect it from the profile tab.
+- [ ] Add focused tests for the new flows and validate locally before the next batch.
