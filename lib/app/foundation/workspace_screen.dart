@@ -466,9 +466,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Vehicle ID: ${doc.data()['vehicleId'] ?? 'Not linked'}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                        Row(
+                          children: [
+                            Icon(Icons.schedule_rounded, size: 15,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 6),
+                            Text(
+                              _repairDateLabel(doc.data()['createdAt']),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Row(
@@ -496,6 +505,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         );
       },
     );
+  }
+
+  String _repairDateLabel(dynamic value) {
+    if (value is! Timestamp) return 'Submission date unavailable';
+    final date = value.toDate().toLocal();
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return 'Submitted ${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   Widget _repairFilterChip(String label, int value) {
