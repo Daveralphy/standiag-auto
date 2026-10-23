@@ -171,18 +171,14 @@ service cloud.firestore {
       allow update: if isSignedIn() &&
           resource.data.carOwnerId == request.auth.uid;
 
-      // Quotes: readable by any signed-in user (the car owner watches them
-      // live; a mechanic can see their own). Writable by the mechanic who
-      // owns that quote — or by the request's car owner, but only to flip
-      // its status (accepting one quote declines the rest).
+      // Quote selection and job creation are server-owned transactions.
+      // Mechanics can write only their own quote; customers cannot directly
+      // accept/decline quotes and bypass the single-acceptance invariant.
       match /quotes/{mechanicId} {
         allow read: if isSignedIn();
-        allow create, update: if isSignedIn() && (
-          request.auth.uid == mechanicId ||
-          (get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.carOwnerId
-              == request.auth.uid &&
-           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']))
-        );
+        allow create, update: if isSignedIn() &&
+          request.auth.uid == mechanicId &&
+          get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.status in ['open', 'pending'];
       }
     }
   }
