@@ -2,6 +2,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 
 import 'workspace_screen.dart';
+import 'mechanic_application_status_screen.dart';
 
 /// Verified account setup. Privileged profile changes are performed by
 /// callable backend functions, never by direct client writes.
@@ -301,7 +302,11 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
                         title: const Text('Already applied as a mechanic?'),
                         subtitle: const Text('Check your application status or review note.'),
                         trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: _isSaving ? null : _checkMechanicApplicationStatus,
+                        onTap: _isSaving ? null : () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const MechanicApplicationStatusScreen(),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 14),
