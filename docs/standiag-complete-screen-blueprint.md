@@ -180,7 +180,16 @@ Existing models or legacy collections alone do not prove these screens are produ
 - [x] Removed placeholder mechanic metrics that implied live zero values.
 - [ ] Add widget tests for the new detail/list screens and validate all changes locally.
 
-## 8. Current implementation checkpoint
+## 8. Shared screens implementation progress
+
+- [x] Notifications screen reads the signed-in user’s notification records, distinguishes unread items, supports marking records read, and opens linked repair/job details where a supported reference exists.
+- [x] Cloud Functions now persist in-app notification records alongside existing mechanic push notifications for direct service requests, nearby requests and direct calls. This source change is not deployed.
+- [x] Account settings includes a password reset email action and navigation to privacy, terms and about screens.
+- [x] Added clearly marked preliminary privacy/terms copy so draft legal text is not misrepresented as approved policy.
+- [x] Added widget coverage for the legal information screens and updated support page expectations for Firebase-unconfigured mode.
+- [ ] Validate Dart tests and TypeScript build locally before proceeding; notification persistence requires a future approved Functions deployment to be live.
+
+## 9. Current implementation checkpoint
 
 At commit `66bcb947f937d1bd3ecb0044ca7bce99fba5e00f`, the user confirmed:
 - `flutter analyze`: no issues.
