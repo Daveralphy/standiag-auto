@@ -176,9 +176,30 @@ service cloud.firestore {
       // accept/decline quotes and bypass the single-acceptance invariant.
       match /quotes/{mechanicId} {
         allow read: if isSignedIn();
-        allow create, update: if isSignedIn() &&
+        allow create: if isSignedIn() &&
           request.auth.uid == mechanicId &&
-          get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.status in ['open', 'pending'];
+          get(/databases/$(database)/documents/mechanics/$(mechanicId)).data.approvedAt != null &&
+          get(/databases/$(database)/documents/mechanics/$(mechanicId)).data.isVisible == true &&
+          get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.targetMechanicId == mechanicId &&
+          get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.status in ['open', 'pending'] &&
+          request.resource.data.keys().hasOnly(['price', 'note', 'status', 'createdAt', 'updatedAt']) &&
+          request.resource.data.keys().hasAll(['price', 'status', 'createdAt', 'updatedAt']) &&
+          request.resource.data.price is number &&
+          request.resource.data.price >= 0 &&
+          request.resource.data.price <= 1000000000 &&
+          request.resource.data.status == 'pending';
+        allow update: if isSignedIn() &&
+          request.auth.uid == mechanicId &&
+          get(/databases/$(database)/documents/mechanics/$(mechanicId)).data.approvedAt != null &&
+          get(/databases/$(database)/documents/mechanics/$(mechanicId)).data.isVisible == true &&
+          get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.targetMechanicId == mechanicId &&
+          get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.status in ['open', 'pending'] &&
+          resource.data.status in ['pending', 'submitted', 'open'] &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['price', 'note', 'status', 'updatedAt']) &&
+          request.resource.data.price is number &&
+          request.resource.data.price >= 0 &&
+          request.resource.data.price <= 1000000000 &&
+          request.resource.data.status == 'pending';
       }
     }
   }
