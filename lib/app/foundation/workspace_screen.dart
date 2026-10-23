@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'vehicles_screen.dart';
+import 'mechanic_discovery_screen.dart';
 
 /// First pass of the role-specific workspace shell. Data remains clearly
 /// illustrative until each screen is connected to its verified data contract.
@@ -147,18 +148,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
-  Widget _explore(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(20),
-    children: [
-      Text('Find a mechanic', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-      const SizedBox(height: 8),
-      const Text('Search for help by service, vehicle problem or location.'),
-      const SizedBox(height: 18),
-      const TextField(decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Try “engine diagnostics”')),
-      const SizedBox(height: 18),
-      const _EmptyState(icon: Icons.travel_explore_rounded, title: 'Mechanics will show up here', message: 'Only approved, visible mechanics will be listed when discovery is connected.'),
-    ],
-  );
+  Widget _explore(BuildContext context) => const MechanicDiscoveryScreen();
 
   Widget _repairs(BuildContext context) => const _SectionPage(
     title: 'My repairs',
