@@ -16,8 +16,8 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('You are all caught up'), findsOneWidget);
-      expect(find.textContaining('account or repair updates'), findsOneWidget);
+      expect(find.text('Notifications need a connection'), findsOneWidget);
+      expect(find.textContaining('Connect Firebase to load notifications'), findsOneWidget);
     });
   });
 
@@ -41,7 +41,36 @@ void main() {
       );
       expect(find.text('driver@example.com'), findsOneWidget);
       expect(find.text('Customer'), findsOneWidget);
-      expect(find.text('Profile editing, password and security controls will be added here when their account workflows are connected. Your account details are not editable from this preview.'), findsOneWidget);
+      expect(find.text('Reset password'), findsOneWidget);
+      expect(find.text('Privacy policy'), findsOneWidget);
+      expect(find.text('Terms of service'), findsOneWidget);
+    });
+  });
+
+  group('LegalInfoScreen', () {
+    testWidgets('marks preliminary legal copy as a draft', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LegalInfoScreen(kind: LegalInfoKind.privacy),
+        ),
+      );
+
+      expect(find.text('Privacy policy'), findsWidgets);
+      expect(find.textContaining('DRAFT'), findsOneWidget);
+      expect(find.text('Account information'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('shows the about screen', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LegalInfoScreen(kind: LegalInfoKind.about),
+        ),
+      );
+
+      expect(find.text('About Standiag Auto'), findsWidgets);
+      expect(find.textContaining('Some workflows are still under development'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 
