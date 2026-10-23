@@ -44,7 +44,6 @@
 // including registering the webhook URL after first deploy.
 
 import * as crypto from "crypto";
-import { initializeApp } from "firebase-admin/app";
 import { getFirestore, GeoPoint, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
@@ -58,7 +57,6 @@ export {
   reviewMechanicApplication,
 } from "./onboarding";
 
-initializeApp();
 const db = getFirestore();
 
 // ─── Signup email OTP ───────────────────────────────────────────────────
