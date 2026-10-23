@@ -799,7 +799,8 @@ export const acceptServiceQuote = onCall(async (request) => {
     if (quote.status && !["pending", "submitted", "open"].includes(quote.status)) {
       throw new HttpsError("failed-precondition", "This quote is no longer available.");
     }
-    if (typeof quote.price !== "number" || !Number.isFinite(quote.price) || quote.price < 0) {
+    if (typeof quote.price !== "number" || !Number.isFinite(quote.price) ||
+        quote.price < 0 || quote.price > 1_000_000_000) {
       throw new HttpsError("failed-precondition", "This quote does not have a valid price.");
     }
 
