@@ -140,7 +140,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
         stream: FirebaseFirestore.instance.collection('vehicles').where('ownerId', isEqualTo: uid).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return _VehicleMessage(icon: Icons.cloud_off_outlined, title: 'Could not load vehicles', message: 'Check your connection and try again.');
+            return const _VehicleMessage(icon: Icons.cloud_off_outlined, title: 'Could not load vehicles', message: 'Check your connection and try again.');
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
