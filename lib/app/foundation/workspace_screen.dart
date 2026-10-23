@@ -35,6 +35,7 @@ enum WorkspaceRole { customer, mechanic }
 
 class _WorkspaceScreenState extends State<WorkspaceScreen> {
   int _selectedIndex = 0;
+  int _repairFilter = 0;
   bool _isSigningOut = false;
 
   bool get _isCustomer => widget.role == WorkspaceRole.customer;
@@ -350,6 +351,27 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 'When you request a repair, its updates will appear here.',
           );
         }
+        final activeCount = docs.where((doc) {
+          final status = (doc.data()['status'] as String? ?? 'open').toLowerCase();
+          return status != 'completed' && status != 'cancelled' && status != 'rejected';
+        }).length;
+        final completedCount = docs.where((doc) =>
+          (doc.data()['status'] as String? ?? '').toLowerCase() == 'completed'
+        ).length;
+        final filteredDocs = docs.where((doc) {
+          final status = (doc.data()['status'] as String? ?? 'open').toLowerCase();
+          switch (_repairFilter) {
+            case 1:
+              return status != 'completed' && status != 'cancelled' && status != 'rejected';
+            case 2:
+              return status == 'completed';
+            case 3:
+              return status == 'cancelled' || status == 'rejected';
+            default:
+              return true;
+          }
+        }).toList();
+
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
           children: [
@@ -360,9 +382,58 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 6),
-            const Text('Follow your requests and mechanic responses.'),
+            Text('Follow your requests and mechanic responses.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 18),
-            for (final doc in docs)
+            Row(
+              children: [
+                Expanded(child: _RepairSummaryCard(label: 'Total requests', value: '${docs.length}', icon: Icons.car_repair_rounded)),
+                const SizedBox(width: 10),
+                Expanded(child: _RepairSummaryCard(label: 'Active', value: '$activeCount', icon: Icons.pending_actions_rounded)),
+                const SizedBox(width: 10),
+                Expanded(child: _RepairSummaryCard(label: 'Completed', value: '$completedCount', icon: Icons.task_alt_rounded)),
+              ],
+            ),
+            const SizedBox(height: 18),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _repairFilterChip('All', 0),
+                  const SizedBox(width: 8),
+                  _repairFilterChip('Active', 1),
+                  const SizedBox(width: 8),
+                  _repairFilterChip('Completed', 2),
+                  const SizedBox(width: 8),
+                  _repairFilterChip('Cancelled', 3),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (filteredDocs.isEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Icon(Icons.filter_list_off_rounded, size: 34,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 10),
+                      Text('No ${['matching', 'active', 'completed', 'cancelled'][_repairFilter]} repairs',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 6),
+                      Text('Try another filter to see your repair requests.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                ),
+              ),
+            for (final doc in filteredDocs)
               Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 clipBehavior: Clip.antiAlias,
@@ -423,6 +494,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
           ],
         );
+      },
+    );
+  }
+
+  Widget _repairFilterChip(String label, int value) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: _repairFilter == value,
+      onSelected: (selected) {
+        if (selected) setState(() => _repairFilter = value);
       },
     );
   }
@@ -546,6 +627,40 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     ],
   );
 
+}
+
+class _RepairSummaryCard extends StatelessWidget {
+  const _RepairSummaryCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 20, color: theme.colorScheme.primary),
+            const SizedBox(height: 10),
+            Text(value, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 2),
+            Text(label, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _StatusPill extends StatelessWidget {
