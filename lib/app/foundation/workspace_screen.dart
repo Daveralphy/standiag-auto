@@ -484,16 +484,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Request ID: ${doc.id}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                'View request details and mechanic responses',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(Icons.chevron_right_rounded, size: 20),
+                            Icon(Icons.chevron_right_rounded,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.primary),
                           ],
                         ),
                       ],
