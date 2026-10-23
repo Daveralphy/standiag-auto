@@ -51,6 +51,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 34,
@@ -62,7 +63,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               child: const Icon(Icons.build_rounded, color: Colors.white, size: 19),
             ),
             const SizedBox(width: 10),
-            const Text('Standiag Auto', style: TextStyle(fontWeight: FontWeight.w800)),
+            const Flexible(
+              child: Text(
+                'Standiag Auto',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
           ],
         ),
         actions: [
