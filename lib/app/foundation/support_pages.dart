@@ -72,13 +72,25 @@ class NotificationsScreen extends StatelessWidget {
               child: _EmptyNotifications(),
             );
           }
+          final unreadDocs = docs.where((doc) => doc.data()['isRead'] != true).toList();
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             children: [
               Text('Your updates', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               Text('Updates sent to your account appear here.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              const SizedBox(height: 16),
+              if (unreadDocs.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => _markAllAsRead(context, unreadDocs),
+                    icon: const Icon(Icons.done_all_rounded),
+                    label: Text('Mark all as read (${unreadDocs.length})'),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
               for (final doc in docs)
                 Card(
                   margin: const EdgeInsets.only(bottom: 10),
@@ -109,6 +121,38 @@ class NotificationsScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  static Future<void> _markAllAsRead(
+    BuildContext context,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> unreadDocs,
+  ) async {
+    try {
+      // Firestore batches support at most 500 writes. Chunk to keep this safe
+      // even for accounts with a long notification history.
+      for (var start = 0; start < unreadDocs.length; start += 450) {
+        final batch = FirebaseFirestore.instance.batch();
+        final end = (start + 450 < unreadDocs.length) ? start + 450 : unreadDocs.length;
+        for (final doc in unreadDocs.sublist(start, end)) {
+          batch.update(doc.reference, {
+            'isRead': true,
+            'readAt': FieldValue.serverTimestamp(),
+          });
+        }
+        await batch.commit();
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All notifications marked as read.')),
+        );
+      }
+    } on FirebaseException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not mark all notifications as read. Please try again.')),
+        );
+      }
+    }
   }
 
   static IconData _notificationIcon(String? type) {
