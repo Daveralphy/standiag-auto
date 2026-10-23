@@ -29,10 +29,8 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
   @override
   Widget build(BuildContext context) {
     final uid = _uid;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Find a mechanic')),
-      body: SafeArea(
-        child: Column(
+    return SafeArea(
+      child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
