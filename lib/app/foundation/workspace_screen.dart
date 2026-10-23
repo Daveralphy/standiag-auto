@@ -227,8 +227,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             onTap: () => setState(() => _selectedIndex = 2),
           ),
         ] else ...[
-          _MetricRow(
-            items: const [
+          const _MetricRow(
+            items: [
               ('0', 'New requests'),
               ('0', 'Active jobs'),
               ('₦0', 'This week'),
