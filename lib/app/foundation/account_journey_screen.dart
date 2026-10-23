@@ -49,6 +49,41 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
     super.dispose();
   }
 
+  Future<void> _checkMechanicApplicationStatus() async {
+    if (_isSaving) return;
+    setState(() {
+      _isSaving = true;
+      _message = null;
+    });
+    try {
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('getMyMechanicApplication')
+          .call();
+      if (!mounted) return;
+      final data = result.data;
+      if (data is! Map || data['exists'] != true) {
+        _showMessage('You have not submitted a mechanic application yet.');
+        return;
+      }
+      final status = data['status'] as String? ?? 'pending';
+      final reason = data['decisionReason'] as String?;
+      final readable = switch (status) {
+        'pending' => 'Your mechanic application is awaiting administrator review.',
+        'approved' => 'Your mechanic application is approved.',
+        'rejected' => 'Your mechanic application was not approved.',
+        'more_information' => 'The administrator needs more information before reviewing your application.',
+        _ => 'Your application status is $status.',
+      };
+      _showMessage(reason == null || reason.isEmpty ? readable : '$readable Review note: $reason');
+    } on FirebaseFunctionsException catch (error) {
+      if (mounted) _showMessage(_friendlyFunctionError(error), error: true);
+    } catch (_) {
+      if (mounted) _showMessage('We could not check your application status. Please try again.', error: true);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   Future<void> _saveCustomerProfile() async {
     if (_isSaving) return;
     if (_firstName.text.trim().isEmpty ||
@@ -249,6 +284,16 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
                       description: 'Find mechanics, manage your vehicles, and track repairs.',
                       actionLabel: 'Continue as a customer',
                       onPressed: () => _goTo(_JourneyStep.customer),
+                    ),
+                    const SizedBox(height: 14),
+                    Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.fact_check_outlined),
+                        title: const Text('Already applied as a mechanic?'),
+                        subtitle: const Text('Check your application status or review note.'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: _isSaving ? null : _checkMechanicApplicationStatus,
+                      ),
                     ),
                     const SizedBox(height: 14),
                     _JourneyCard(
