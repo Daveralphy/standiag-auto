@@ -137,17 +137,26 @@ service cloud.firestore {
     }
 
     // ─── Jobs ───────────────────────────────────────────────────────────
-    // Visible and writable by the two parties on it — the car owner who
-    // created it and the mechanic assigned to it.
+    // Job status and lifecycle timestamps are changed only by trusted
+    // callable functions. Clients may still write their narrowly scoped
+    // non-lifecycle fields; neither party can promote a job by editing status.
     match /jobs/{jobId} {
       allow read: if isSignedIn() &&
           (resource.data.carOwnerId == request.auth.uid ||
            resource.data.mechanicId == request.auth.uid);
       allow create: if isSignedIn() &&
           request.resource.data.carOwnerId == request.auth.uid;
-      allow update: if isSignedIn() &&
-          (resource.data.carOwnerId == request.auth.uid ||
-           resource.data.mechanicId == request.auth.uid);
+      allow update: if isSignedIn() && (
+        (resource.data.carOwnerId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+           'rating', 'ratingComment', 'reviewedAt'
+         ])) ||
+        (resource.data.mechanicId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+           'callAnsweredAt', 'mechanicLocation'
+         ]))
+      );
+      allow delete: if false;
     }
 
     // ─── Service Requests + Quotes ──────────────────────────────────────
