@@ -112,6 +112,18 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                             )).toList(),
                           ),
                         ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                        child: Text(
+                          docs.isEmpty
+                              ? '0 mechanics found'
+                              : '${docs.length} ${docs.length == 1 ? 'mechanic' : 'mechanics'} found',
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
                       Expanded(
                         child: docs.isEmpty
                             ? _DiscoveryState(
