@@ -180,7 +180,7 @@ service cloud.firestore {
           request.auth.uid == mechanicId &&
           get(/databases/$(database)/documents/mechanics/$(mechanicId)).data.approvedAt != null &&
           get(/databases/$(database)/documents/mechanics/$(mechanicId)).data.isVisible == true &&
-          get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.targetMechanicId == mechanicId &&
+          (!('targetMechanicId' in get(/databases/$(database)/documents/serviceRequests/$(requestId)).data) || get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.targetMechanicId == mechanicId) &&
           get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.status in ['open', 'pending'] &&
           request.resource.data.keys().hasOnly(['price', 'note', 'status', 'createdAt', 'updatedAt']) &&
           request.resource.data.keys().hasAll(['price', 'status', 'createdAt', 'updatedAt']) &&
@@ -192,7 +192,7 @@ service cloud.firestore {
           request.auth.uid == mechanicId &&
           get(/databases/$(database)/documents/mechanics/$(mechanicId)).data.approvedAt != null &&
           get(/databases/$(database)/documents/mechanics/$(mechanicId)).data.isVisible == true &&
-          get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.targetMechanicId == mechanicId &&
+          (!('targetMechanicId' in get(/databases/$(database)/documents/serviceRequests/$(requestId)).data) || get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.targetMechanicId == mechanicId) &&
           get(/databases/$(database)/documents/serviceRequests/$(requestId)).data.status in ['open', 'pending'] &&
           resource.data.status in ['pending', 'submitted', 'open'] &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['price', 'note', 'status', 'updatedAt']) &&
