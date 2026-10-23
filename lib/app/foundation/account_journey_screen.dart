@@ -1,6 +1,8 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 
+import 'workspace_screen.dart';
+
 /// Verified account setup. Privileged profile changes are performed by
 /// callable backend functions, never by direct client writes.
 class AccountJourneyScreen extends StatefulWidget {
@@ -67,7 +69,15 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
         'phone': _phone.text.trim(),
       });
       if (!mounted) return;
-      _showMessage('Your customer profile has been saved.');
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => WorkspaceScreen(
+            email: widget.email,
+            role: WorkspaceRole.customer,
+            onSignOut: widget.onSignOut,
+          ),
+        ),
+      );
     } on FirebaseFunctionsException catch (error) {
       if (mounted) _showMessage(_friendlyFunctionError(error), error: true);
     } catch (_) {
