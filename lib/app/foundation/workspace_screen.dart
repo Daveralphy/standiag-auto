@@ -8,11 +8,13 @@ class WorkspaceScreen extends StatefulWidget {
     required this.email,
     required this.role,
     required this.onSignOut,
+    this.onApplyMechanic,
   });
 
   final String email;
   final WorkspaceRole role;
   final Future<void> Function() onSignOut;
+  final VoidCallback? onApplyMechanic;
 
   @override
   State<WorkspaceScreen> createState() => _WorkspaceScreenState();
@@ -191,6 +193,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       )),
       const SizedBox(height: 12),
       const _ActionTile(icon: Icons.settings_outlined, title: 'Account settings', subtitle: 'Profile details and preferences'),
+      if (_isCustomer && widget.onApplyMechanic != null)
+        _ActionTile(icon: Icons.handyman_outlined, title: 'Apply as a mechanic', subtitle: 'Submit an application for review', onTap: widget.onApplyMechanic),
       const _ActionTile(icon: Icons.help_outline_rounded, title: 'Help and support', subtitle: 'Get help with your account'),
       const SizedBox(height: 18),
       OutlinedButton.icon(
