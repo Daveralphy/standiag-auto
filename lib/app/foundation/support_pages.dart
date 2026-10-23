@@ -149,13 +149,22 @@ class NotificationsScreen extends StatelessWidget {
     if (!context.mounted) return;
     final requestId = data['requestId'] as String?;
     final jobId = data['jobId'] as String?;
-    if (requestId != null && requestId.isNotEmpty) {
-      Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => RepairDetailScreen(requestId: requestId),
-      ));
-    } else if (jobId != null && jobId.isNotEmpty) {
+    final type = data['type'] as String? ?? '';
+    // Mechanic job notifications can include both IDs (for example, an
+    // accepted quote). Route those to the assigned job, not the customer
+    // repair-request view. Service-request notifications remain request-led.
+    final isJobUpdate = {
+      'quote_accepted',
+      'direct_call',
+      'job_status',
+    }.contains(type);
+    if (jobId != null && jobId.isNotEmpty && (isJobUpdate || requestId == null || requestId.isEmpty)) {
       Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => MechanicJobDetailScreen(jobId: jobId),
+      ));
+    } else if (requestId != null && requestId.isNotEmpty) {
+      Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => RepairDetailScreen(requestId: requestId),
       ));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
