@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'vehicles_screen.dart';
 import 'mechanic_discovery_screen.dart';
 import 'support_pages.dart';
+import 'repair_detail_screen.dart';
 
 /// First pass of the role-specific workspace shell. Data remains clearly
 /// illustrative until each screen is connected to its verified data contract.
@@ -340,41 +341,59 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             for (final doc in docs)
               Card(
                 margin: const EdgeInsets.only(bottom: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              (doc.data()['issue'] as String? ??
-                                  'Repair request'),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RepairDetailScreen(requestId: doc.id),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                (doc.data()['issue'] as String? ??
+                                    'Repair request'),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          _StatusPill(
-                            status: doc.data()['status'] as String? ?? 'open',
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Vehicle ID: ${doc.data()['vehicleId'] ?? 'Not linked'}',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Request ID: ${doc.id}',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            const SizedBox(width: 8),
+                            _StatusPill(
+                              status: doc.data()['status'] as String? ?? 'open',
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          'Vehicle ID: ${doc.data()['vehicleId'] ?? 'Not linked'}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Request ID: ${doc.id}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.chevron_right_rounded, size: 20),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
