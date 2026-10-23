@@ -72,7 +72,7 @@ class RepairDetailScreen extends StatelessWidget {
               Text('Request information', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 10),
               _DetailRow(label: 'Submitted', value: createdLabel),
-              _DetailRow(label: 'Vehicle reference', value: vehicleId.isEmpty ? 'Not linked' : vehicleId),
+              _VehicleReference(vehicleId: vehicleId),
               _DetailRow(label: 'Request reference', value: snapshot.data!.id),
               if (jobId != null && jobId.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -306,6 +306,47 @@ class RepairDetailScreen extends StatelessWidget {
     final month = local.month.toString().padLeft(2, '0');
     final day = local.day.toString().padLeft(2, '0');
     return '${local.year}-$month-$day at ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _VehicleReference extends StatelessWidget {
+  const _VehicleReference({required this.vehicleId});
+
+  final String vehicleId;
+
+  @override
+  Widget build(BuildContext context) {
+    if (vehicleId.isEmpty) {
+      return const _DetailRow(label: 'Vehicle', value: 'Not linked');
+    }
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('vehicles').doc(vehicleId).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError || (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData)) {
+          return const _DetailRow(label: 'Vehicle', value: 'Vehicle details unavailable');
+        }
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return const _DetailRow(label: 'Vehicle', value: 'Saved vehicle not found');
+        }
+        final data = snapshot.data!.data()!;
+        final year = (data['year'] ?? '').toString().trim();
+        final make = (data['make'] ?? '').toString().trim();
+        final model = (data['model'] ?? '').toString().trim();
+        final name = [year, make, model].where((part) => part.isNotEmpty).join(' ');
+        final details = [
+          data['type'],
+          data['colour'],
+          data['plateNumber'],
+        ].whereType<String>().map((part) => part.trim()).where((part) => part.isNotEmpty).join(' • ');
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _DetailRow(label: 'Vehicle', value: name.isEmpty ? 'Saved vehicle' : name),
+            if (details.isNotEmpty) _DetailRow(label: 'Vehicle details', value: details),
+          ],
+        );
+      },
+    );
   }
 }
 
