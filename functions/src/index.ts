@@ -54,6 +54,7 @@ import { db } from "./shared";
 export {
   saveCustomerProfile,
   submitMechanicApplication,
+  getMyMechanicApplication,
   listMechanicApplications,
   reviewMechanicApplication,
 } from "./onboarding";
