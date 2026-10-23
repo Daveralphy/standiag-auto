@@ -933,7 +933,7 @@ export const transitionMechanicJob = onCall(async (request) => {
   // a successfully committed job transition appear to have failed to the app.
   try {
     const jobSnap = await jobRef.get();
-    const job = jobSnap.data() as { carOwnerId?: string; issue?: string } | undefined;
+    const job = jobSnap.data() as { carOwnerId?: string; issue?: string; serviceRequestId?: string } | undefined;
     if (job?.carOwnerId) {
       await persistNotification({
         userId: job.carOwnerId,
@@ -942,6 +942,7 @@ export const transitionMechanicJob = onCall(async (request) => {
           ? `Your repair job "${job.issue}" is now ${nextStatus.replace(/_/g, " ")}.`
           : `Your repair job is now ${nextStatus.replace(/_/g, " ")}.`,
         type: "job_status",
+        ...(job.serviceRequestId ? { requestId: job.serviceRequestId } : {}),
         jobId,
       });
     }
