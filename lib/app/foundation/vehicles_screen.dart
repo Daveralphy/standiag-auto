@@ -12,6 +12,14 @@ class VehiclesScreen extends StatefulWidget {
 
 class _VehiclesScreenState extends State<VehiclesScreen> {
   bool _isAdding = false;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
 
@@ -128,6 +136,50 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
     year.dispose();
     colour.dispose();
     plate.dispose();
+  }
+
+  Widget _vehicleCard(
+    BuildContext context,
+    QueryDocumentSnapshot<Map<String, dynamic>> document,
+  ) {
+    final data = document.data();
+    final name = '${data['year'] ?? ''} ${data['make'] ?? ''} ${data['model'] ?? ''}'.trim();
+    final detail = [data['type'], data['colour'], data['fuelType']]
+        .whereType<String>()
+        .where((value) => value.trim().isNotEmpty)
+        .join(' • ');
+    final plate = data['plateNumber'] as String? ?? '';
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        contentPadding: const EdgeInsets.fromLTRB(14, 8, 4, 8),
+        leading: Container(
+          width: 52, height: 52,
+          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(15)),
+          child: Icon(Icons.directions_car_filled_rounded, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 28),
+        ),
+        title: Text(name.isEmpty ? 'Vehicle' : name, style: const TextStyle(fontWeight: FontWeight.w800)),
+        subtitle: Text([detail, plate].where((v) => v.trim().isNotEmpty).join('\n')),
+        isThreeLine: detail.isNotEmpty && plate.trim().isNotEmpty,
+        trailing: PopupMenuButton<String>(
+          tooltip: 'Vehicle actions',
+          onSelected: (action) {
+            if (action == 'details') {
+              _showVehicleDetails(data);
+            } else if (action == 'edit') {
+              _editVehicle(document.id, data);
+            } else if (action == 'delete') {
+              _deleteVehicle(document.id, name.isEmpty ? 'this vehicle' : name);
+            }
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(value: 'details', child: ListTile(leading: Icon(Icons.info_outline_rounded), title: Text('View details'), contentPadding: EdgeInsets.zero, dense: true)),
+            PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit_outlined), title: Text('Edit'), contentPadding: EdgeInsets.zero, dense: true)),
+            PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete_outline_rounded), title: Text('Remove'), contentPadding: EdgeInsets.zero, dense: true)),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _showVehicleDetails(Map<String, dynamic> vehicle) async {
@@ -336,20 +388,61 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final docs = snapshot.data?.docs ?? [];
-          if (docs.isEmpty) {
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(24, 48, 24, 112),
-              children: const [
-                _VehicleMessage(icon: Icons.directions_car_outlined, title: 'No vehicles yet', message: 'Add your car or motorcycle so repair requests can be linked to the right vehicle.'),
+          final filteredDocs = docs.where((doc) {
+            final data = doc.data();
+            final searchable = [
+              data['make'], data['model'], data['year'], data['type'],
+              data['colour'], data['fuelType'], data['plateNumber'],
+            ].whereType<Object>().join(' ').toLowerCase();
+            return searchable.contains(_searchQuery.trim().toLowerCase());
+          }).toList();
+
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 112),
+            children: [
+              Text('Your garage', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 6),
+              Text(
+                docs.isEmpty
+                    ? 'Add your vehicles to link them to repair requests.'
+                    : '${docs.length} ${docs.length == 1 ? 'vehicle' : 'vehicles'} saved to your account.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _searchQuery = value),
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Search make, model, plate or type',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _searchQuery.isEmpty ? null : IconButton(
+                    tooltip: 'Clear search',
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (docs.isEmpty)
+                const _VehicleMessage(icon: Icons.directions_car_outlined, title: 'No vehicles yet', message: 'Add your car or motorcycle so repair requests can be linked to the right vehicle.')
+              else if (filteredDocs.isEmpty)
+                const _VehicleMessage(icon: Icons.search_off_rounded, title: 'No matching vehicles', message: 'Try a different make, model, plate number or vehicle type.')
+              else ...[
+                Text('Saved vehicles', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 10),
+                for (final doc in filteredDocs)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _vehicleCard(context, doc),
+                  ),
               ],
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 112),
-            itemCount: docs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              final data = docs[index].data();
+            ],
+          );
               final name = '${data['year'] ?? ''} ${data['make'] ?? ''} ${data['model'] ?? ''}'.trim();
               final detail = [data['type'], data['colour'], data['fuelType']]
                   .whereType<String>()
