@@ -75,7 +75,10 @@ void main() {
     await tester.tap(find.text('Apply as a mechanic'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('does not automatically approve'), findsOneWidget);
+    expect(
+      find.textContaining('does not automatically approve'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 }
