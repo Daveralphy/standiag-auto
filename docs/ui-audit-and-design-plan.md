@@ -13,6 +13,7 @@ Do not merge this work into `main` or deploy until the local Flutter checks and 
 - [x] Verified-account router and missing-profile onboarding exist
 - [ ] Add dedicated widget tests for sign-in, sign-up, verification, and router states
 - [ ] Review visual hierarchy, keyboard handling, accessibility, and small-screen behaviour
+- [x] Cache account-routing reads and retry in place after a load error
 - [ ] Test auth flows against Firebase Auth in a configured local environment
 
 ### 2. Customer experience
@@ -21,7 +22,7 @@ Do not merge this work into `main` or deploy until the local Flutter checks and 
 - [x] Mechanic discovery reads visible mechanic profiles
 - [x] Repair requests can be started from mechanic discovery
 - [x] Repair request list reads the customer's requests
-- [ ] Add complete vehicle details, edit, and delete flows
+- [x] Add vehicle details, edit, and delete actions to the vehicle list
 - [ ] Add repair-request detail and status history screens
 - [ ] Ensure vehicle selection is explicit when a customer has multiple vehicles
 - [ ] Verify cancellation and repeat-request rules with the backend
