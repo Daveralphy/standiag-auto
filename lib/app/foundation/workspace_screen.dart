@@ -26,10 +26,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   bool get _isCustomer => widget.role == WorkspaceRole.customer;
 
-  List<String> get _titles => _isCustomer
-      ? const ['Home', 'Find a mechanic', 'My repairs', 'Profile']
-      : const ['Home', 'Jobs', 'Earnings', 'Profile'];
-
   Future<void> _signOut() async {
     if (_isSigningOut) return;
     setState(() => _isSigningOut = true);
@@ -43,7 +39,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = _titles[_selectedIndex];
 
     return Scaffold(
       appBar: AppBar(
