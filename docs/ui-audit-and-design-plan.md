@@ -4,6 +4,10 @@ Working branch: `refactor/redesign-foundation`
 
 Do not merge this work into `main` or deploy until the local Flutter checks and end-to-end journeys have been reviewed.
 
+## Design-first workflow
+
+The complete screen inventory, visual direction, navigation map, shared component plan, and backend/data contract guardrails are documented in [`standiag-complete-screen-blueprint.md`](standiag-complete-screen-blueprint.md). Follow that blueprint before adding isolated features: design screen shells and states as a coherent set, then wire them to verified backend contracts.
+
 ## Product journeys
 
 ### 1. Access and onboarding
