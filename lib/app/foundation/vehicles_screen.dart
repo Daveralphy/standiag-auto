@@ -443,44 +443,6 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
               ],
             ],
           );
-              final name = '${data['year'] ?? ''} ${data['make'] ?? ''} ${data['model'] ?? ''}'.trim();
-              final detail = [data['type'], data['colour'], data['fuelType']]
-                  .whereType<String>()
-                  .where((value) => value.trim().isNotEmpty)
-                  .join(' • ');
-              return Card(
-                clipBehavior: Clip.antiAlias,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.fromLTRB(14, 8, 4, 8),
-                  leading: Container(
-                    width: 52, height: 52,
-                    decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(15)),
-                    child: Icon(Icons.directions_car_filled_rounded, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 28),
-                  ),
-                  title: Text(name.isEmpty ? 'Vehicle' : name, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  subtitle: Text([detail, data['plateNumber'] as String? ?? ''].where((v) => v.trim().isNotEmpty).join('\n')),
-                  isThreeLine: detail.isNotEmpty && (data['plateNumber'] as String? ?? '').isNotEmpty,
-                  trailing: PopupMenuButton<String>(
-                    tooltip: 'Vehicle actions',
-                    onSelected: (action) {
-                      if (action == 'details') {
-                        _showVehicleDetails(data);
-                      } else if (action == 'edit') {
-                        _editVehicle(docs[index].id, data);
-                      } else if (action == 'delete') {
-                        _deleteVehicle(docs[index].id, name.isEmpty ? 'this vehicle' : name);
-                      }
-                    },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'details', child: ListTile(leading: Icon(Icons.info_outline_rounded), title: Text('View details'), contentPadding: EdgeInsets.zero, dense: true)),
-                      PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit_outlined), title: Text('Edit'), contentPadding: EdgeInsets.zero, dense: true)),
-                      PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete_outline_rounded), title: Text('Remove'), contentPadding: EdgeInsets.zero, dense: true)),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
         },
       ),
     );
