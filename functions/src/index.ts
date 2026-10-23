@@ -251,7 +251,7 @@ export const notifyNearbyMechanics = onDocumentCreated(
         .doc(request.targetMechanicId)
         .get();
       const target = targetDoc.data() as MechanicData | undefined;
-      if (!target?.fcmToken) return;
+      if (!target) return;
 
       await persistNotification({
         userId: request.targetMechanicId,
@@ -263,6 +263,7 @@ export const notifyNearbyMechanics = onDocumentCreated(
         requestId: event.params.requestId,
       });
 
+      if (!target.fcmToken) return;
       await getMessaging().send({
         token: target.fcmToken,
         notification: {
@@ -290,12 +291,10 @@ export const notifyNearbyMechanics = onDocumentCreated(
     const tokens: string[] = [];
     for (const doc of mechanicsSnap.docs) {
       const mechanic = doc.data() as MechanicData;
-      if (!mechanic.fcmToken) continue;
       if (carOwnerLocation && mechanic.location) {
         const km = distanceKm(carOwnerLocation, mechanic.location);
         if (km > radiusKm) continue;
       }
-      tokens.push(mechanic.fcmToken);
       await persistNotification({
         userId: doc.id,
         title: "New service request nearby",
@@ -305,6 +304,7 @@ export const notifyNearbyMechanics = onDocumentCreated(
         type: "service_request",
         requestId: event.params.requestId,
       });
+      if (mechanic.fcmToken) tokens.push(mechanic.fcmToken);
     }
 
     if (tokens.length === 0) return;
@@ -354,7 +354,7 @@ export const notifyMechanicOfDirectCall = onDocumentCreated(
       .doc(job.mechanicId)
       .get();
     const mechanic = mechanicDoc.data() as MechanicData | undefined;
-    if (!mechanic?.fcmToken) return;
+    if (!mechanic) return;
 
     await persistNotification({
       userId: job.mechanicId,
@@ -366,6 +366,7 @@ export const notifyMechanicOfDirectCall = onDocumentCreated(
       jobId: event.params.jobId,
     });
 
+    if (!mechanic.fcmToken) return;
     await getMessaging().send({
       token: mechanic.fcmToken,
       notification: {
