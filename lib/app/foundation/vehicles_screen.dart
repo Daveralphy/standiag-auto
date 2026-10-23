@@ -90,7 +90,14 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
       ),
     );
 
-    if (submitted != true || !mounted) return;
+    if (submitted != true || !mounted) {
+      make.dispose();
+      model.dispose();
+      year.dispose();
+      colour.dispose();
+      plate.dispose();
+      return;
+    }
     setState(() => _isAdding = true);
     try {
       await FirebaseFirestore.instance.collection('vehicles').add({
