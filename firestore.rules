@@ -181,12 +181,17 @@ service cloud.firestore {
           request.resource.data.issue.size() <= 1000 &&
           request.resource.data.vehicleId is string &&
           request.resource.data.vehicleId.size() > 0 &&
+          exists(/databases/$(database)/documents/vehicles/$(request.resource.data.vehicleId)) &&
+          get(/databases/$(database)/documents/vehicles/$(request.resource.data.vehicleId)).data.ownerId == request.auth.uid &&
           request.resource.data.radiusKm is number &&
           request.resource.data.radiusKm > 0 &&
           request.resource.data.radiusKm <= 100 &&
           (!('targetMechanicId' in request.resource.data) ||
             (request.resource.data.targetMechanicId is string &&
-             request.resource.data.targetMechanicId.size() > 0));
+             request.resource.data.targetMechanicId.size() > 0 &&
+             exists(/databases/$(database)/documents/mechanics/$(request.resource.data.targetMechanicId)) &&
+             get(/databases/$(database)/documents/mechanics/$(request.resource.data.targetMechanicId)).data.approvedAt != null &&
+             get(/databases/$(database)/documents/mechanics/$(request.resource.data.targetMechanicId)).data.isVisible == true));
       // Customers may only cancel an unresolved request from the client.
       // Matching, job links, and reopening a request are server-owned state.
       allow update: if isSignedIn() &&
