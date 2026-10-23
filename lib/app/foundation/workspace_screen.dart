@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'vehicles_screen.dart';
 import 'mechanic_discovery_screen.dart';
+import 'support_pages.dart';
 
 /// First pass of the role-specific workspace shell. Data remains clearly
 /// illustrative until each screen is connected to its verified data contract.
@@ -80,8 +81,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         actions: [
           IconButton(
             tooltip: 'Notifications',
-            onPressed: () =>
-                _showNotice(context, 'Notifications will appear here.'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const NotificationsScreen(),
+              ),
+            ),
             icon: const Icon(Icons.notifications_none_rounded),
           ),
           const SizedBox(width: 4),
@@ -424,10 +428,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         ),
       ),
       const SizedBox(height: 12),
-      const _ActionTile(
+      _ActionTile(
         icon: Icons.settings_outlined,
         title: 'Account settings',
-        subtitle: 'Profile details and preferences',
+        subtitle: 'Review your account details',
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => AccountSettingsScreen(
+              email: widget.email,
+              roleLabel: _isCustomer ? 'Customer' : 'Approved mechanic',
+            ),
+          ),
+        ),
       ),
       if (_isCustomer && widget.onApplyMechanic != null)
         _ActionTile(
@@ -436,10 +448,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           subtitle: 'Submit an application for review',
           onTap: widget.onApplyMechanic,
         ),
-      const _ActionTile(
+      _ActionTile(
         icon: Icons.help_outline_rounded,
         title: 'Help and support',
-        subtitle: 'Get help with your account',
+        subtitle: 'Browse common questions',
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const HelpSupportScreen(),
+          ),
+        ),
       ),
       const SizedBox(height: 18),
       OutlinedButton.icon(
