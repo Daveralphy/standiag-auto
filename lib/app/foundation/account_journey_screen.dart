@@ -263,32 +263,30 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
                                 value: _isWorkshop,
                                 onChanged: _isSaving ? null : (value) => setState(() => _isWorkshop = value),
                               ),
-                            _field(_firstName, 'First name', required: true),
+                            _field(_firstName, 'First name'),
                             const SizedBox(height: 12),
-                            _field(_lastName, 'Last name', required: true),
+                            _field(_lastName, 'Last name'),
                             const SizedBox(height: 12),
-                            _field(_phone, 'Phone number', keyboardType: TextInputType.phone, required: true),
+                            _field(_phone, 'Phone number', keyboardType: TextInputType.phone),
                             if (!isCustomer) ...[
                               const SizedBox(height: 12),
                               if (_isWorkshop) ...[
-                                _field(_workshopName, 'Workshop name', required: true),
+                                _field(_workshopName, 'Workshop name'),
                                 const SizedBox(height: 12),
                               ],
                               _field(
                                 _address,
                                 _isWorkshop ? 'Workshop address' : 'Base address or service area',
-                                required: true,
-                                maxLines: 2,
+                                                        maxLines: 2,
                               ),
                               const SizedBox(height: 12),
-                              _field(_experience, 'Years of experience', keyboardType: TextInputType.number, required: true),
+                              _field(_experience, 'Years of experience', keyboardType: TextInputType.number),
                               const SizedBox(height: 12),
                               _field(
                                 _expertise,
                                 'Areas of expertise',
                                 hint: 'Diagnostics, brakes, engine repair',
-                                required: true,
-                                maxLines: 3,
+                                                        maxLines: 3,
                               ),
                             ],
                             const SizedBox(height: 18),
@@ -322,7 +320,6 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
     String label, {
     String? hint,
     TextInputType? keyboardType,
-    bool required = false,
     int maxLines = 1,
   }) {
     return TextField(
