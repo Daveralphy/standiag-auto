@@ -1,11 +1,11 @@
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onCall, HttpsError, type CallableRequest } from "firebase-functions/v2/https";
 import { db } from "./shared";
 
 // All privileged changes live here, not in the Flutter or admin web clients.
 // Admins receive the custom claim through a trusted operator workflow.
-function requireVerifiedUser(request: Parameters<Parameters<typeof onCall>[0]>[0]): string {
+function requireVerifiedUser(request: CallableRequest<unknown>): string {
   const uid = request.auth?.uid;
   if (!uid) {
     throw new HttpsError("unauthenticated", "Sign in to continue.");
@@ -16,7 +16,7 @@ function requireVerifiedUser(request: Parameters<Parameters<typeof onCall>[0]>[0
   return uid;
 }
 
-function requireAdmin(request: Parameters<Parameters<typeof onCall>[0]>[0]): string {
+function requireAdmin(request: CallableRequest<unknown>): string {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError("unauthenticated", "Sign in to continue.");
   if (request.auth?.token.admin !== true) {
