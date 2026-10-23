@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'vehicles_screen.dart';
+
 /// First pass of the role-specific workspace shell. Data remains clearly
 /// illustrative until each screen is connected to its verified data contract.
 class WorkspaceScreen extends StatefulWidget {
@@ -130,7 +132,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         const SizedBox(height: 12),
         if (_isCustomer) ...[
           _ActionTile(icon: Icons.search_rounded, title: 'Explore mechanics', subtitle: 'Browse services and expertise', onTap: () => setState(() => _selectedIndex = 1)),
-          _ActionTile(icon: Icons.directions_car_outlined, title: 'My repairs', subtitle: 'Track requests and job progress', onTap: () => setState(() => _selectedIndex = 2)),
+          _ActionTile(icon: Icons.directions_car_outlined, title: 'My vehicles', subtitle: 'Add and manage your vehicles', onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const VehiclesScreen()))),
+          _ActionTile(icon: Icons.car_repair_rounded, title: 'My repairs', subtitle: 'Track requests and job progress', onTap: () => setState(() => _selectedIndex = 2)),
         ] else ...[
           _MetricRow(items: const [('0', 'New requests'), ('0', 'Active jobs'), ('₦0', 'This week')]),
           const SizedBox(height: 12),
