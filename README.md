@@ -59,6 +59,29 @@ This repository is in a fresh rebuild. The previous application is legacy refere
 
 Firebase client configuration identifies the project and is not equivalent to a server credential. Never put service-account keys, private keys, signing credentials, or privileged secrets into a Flutter app or source control. Missing configuration is reported by a setup screen rather than silently replaced with invented IDs.
 
+## Onboarding backend
+
+The verified Flutter onboarding screen calls these Firebase callable functions:
+
+- `saveCustomerProfile` — saves basic customer details without allowing the client to set role or approval fields.
+- `submitMechanicApplication` — submits or revises a mechanic/workshop application.
+- `listMechanicApplications` — returns the admin review queue only to users with the trusted Firebase Auth `admin: true` custom claim.
+- `reviewMechanicApplication` — records an admin decision and creates/enables a mechanic profile only after approval.
+
+These functions are source code only until deployed to the intended Firebase project. Deploying Cloud Functions may require the Firebase project to use the Blaze plan. Do not deploy new Firestore rules or functions to production until they have been reviewed and tested against the intended project and existing data.
+
+### Granting the first administrator
+
+Admin claims must be assigned from a trusted operator workstation, never through the public web app. Authenticate with Google Application Default Credentials that have permission to administer Firebase Authentication, then run from the `functions` directory:
+
+```sh
+npm install
+gcloud auth application-default login
+GCLOUD_PROJECT=YOUR_FIREBASE_PROJECT_ID npm run set-admin-claim -- FIREBASE_AUTH_UID
+```
+
+Replace both placeholders with the intended Firebase project ID and the administrator's Firebase Authentication UID. Do not use an email address in place of the UID. After the claim is assigned, the administrator must refresh their ID token or sign in again. Never commit service-account JSON or privileged credentials.
+
 ## Development rules
 
 - Work on a feature branch; do not push directly to `main`.
