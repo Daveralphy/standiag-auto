@@ -791,18 +791,24 @@ export const transitionMechanicJob = onCall(async (request) => {
     transaction.update(jobRef, update);
   });
 
-  const jobSnap = await jobRef.get();
-  const job = jobSnap.data() as { carOwnerId?: string; issue?: string } | undefined;
-  if (job?.carOwnerId) {
-    await persistNotification({
-      userId: job.carOwnerId,
-      title: nextStatus === "rejected" ? "Mechanic declined the job" : "Job status updated",
-      body: job.issue
-        ? `Your repair job "${job.issue}" is now ${nextStatus.replaceAll("_", " ")}.`
-        : `Your repair job is now ${nextStatus.replaceAll("_", " ")}.`,
-      type: "job_status",
-      jobId,
-    });
+  // Notifications are secondary: a notification write failure must not make
+  // a successfully committed job transition appear to have failed to the app.
+  try {
+    const jobSnap = await jobRef.get();
+    const job = jobSnap.data() as { carOwnerId?: string; issue?: string } | undefined;
+    if (job?.carOwnerId) {
+      await persistNotification({
+        userId: job.carOwnerId,
+        title: nextStatus === "rejected" ? "Mechanic declined the job" : "Job status updated",
+        body: job.issue
+          ? `Your repair job "${job.issue}" is now ${nextStatus.replaceAll("_", " ")}.`
+          : `Your repair job is now ${nextStatus.replaceAll("_", " ")}.`,
+        type: "job_status",
+        jobId,
+      });
+    }
+  } catch (error) {
+    console.error("Job transitioned but customer notification could not be saved.", error);
   }
 
   return { success: true, status: nextStatus };
