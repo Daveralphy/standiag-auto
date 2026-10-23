@@ -211,6 +211,9 @@ service cloud.firestore {
           request.resource.data.price is number &&
           request.resource.data.price >= 0 &&
           request.resource.data.price <= 1000000000 &&
+          (!('note' in request.resource.data) ||
+            (request.resource.data.note is string &&
+             request.resource.data.note.size() <= 500)) &&
           request.resource.data.status == 'pending';
         allow update: if isSignedIn() &&
           request.auth.uid == mechanicId &&
@@ -223,6 +226,9 @@ service cloud.firestore {
           request.resource.data.price is number &&
           request.resource.data.price >= 0 &&
           request.resource.data.price <= 1000000000 &&
+          (!('note' in request.resource.data) ||
+            (request.resource.data.note is string &&
+             request.resource.data.note.size() <= 500)) &&
           request.resource.data.status == 'pending';
       }
     }
