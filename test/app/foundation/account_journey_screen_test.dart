@@ -32,6 +32,11 @@ void main() {
   ) async {
     await tester.pumpWidget(buildScreen());
 
+    await tester.scrollUntilVisible(
+      find.text('Apply as a mechanic'),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Apply as a mechanic'));
     await tester.pumpAndSettle();
 
