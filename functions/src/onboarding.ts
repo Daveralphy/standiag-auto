@@ -36,6 +36,31 @@ function requiredText(value: unknown, field: string, maxLength = 160): string {
   return cleaned;
 }
 
+
+/**
+ * Returns the signed-in applicant's own application status without exposing
+ * other applicants or internal review metadata.
+ */
+export const getMyMechanicApplication = onCall(async (request) => {
+  const uid = requireVerifiedUser(request);
+  const snapshot = await db.collection("mechanicApplications").doc(uid).get();
+  if (!snapshot.exists) {
+    return { exists: false, status: "not_submitted" };
+  }
+  const data = snapshot.data() ?? {};
+  return {
+    exists: true,
+    status: typeof data.status === "string" ? data.status : "pending",
+    applicantType: typeof data.applicantType === "string" ? data.applicantType : "independent",
+    applicantName: typeof data.applicantName === "string" ? data.applicantName : "",
+    serviceArea: typeof data.serviceArea === "string" ? data.serviceArea : "",
+    expertise: Array.isArray(data.expertise) ? data.expertise : [],
+    yearsOfExperience: Number.isInteger(data.yearsOfExperience) ? data.yearsOfExperience : 0,
+    workshopName: typeof data.workshopName === "string" ? data.workshopName : null,
+    decisionReason: typeof data.decisionReason === "string" ? data.decisionReason : null,
+  };
+});
+
 /**
  * Creates or completes the customer profile without overwriting protected
  * fields, account roles, credits, or an existing mechanic profile.
