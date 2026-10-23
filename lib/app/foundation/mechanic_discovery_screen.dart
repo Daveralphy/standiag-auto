@@ -139,7 +139,6 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 
