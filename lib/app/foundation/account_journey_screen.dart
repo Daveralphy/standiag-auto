@@ -1,10 +1,8 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 
-/// First-run account journey for a verified Firebase user.
-///
-/// This screen intentionally does not write role or approval fields to
-/// Firestore. Persistence will be connected only after the profile write
-/// contract and Firestore rules are tightened together.
+/// Verified account setup. Privileged profile changes are performed by
+/// callable backend functions, never by direct client writes.
 class AccountJourneyScreen extends StatefulWidget {
   const AccountJourneyScreen({
     super.key,
@@ -26,13 +24,16 @@ class AccountJourneyScreen extends StatefulWidget {
 class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
   _JourneyStep _step = _JourneyStep.choose;
   bool _isWorkshop = false;
+  bool _isSaving = false;
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
   final _phone = TextEditingController();
   final _address = TextEditingController();
+  final _workshopName = TextEditingController();
   final _experience = TextEditingController();
   final _expertise = TextEditingController();
   String? _message;
+  bool _isError = false;
 
   @override
   void dispose() {
@@ -40,15 +41,129 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
     _lastName.dispose();
     _phone.dispose();
     _address.dispose();
+    _workshopName.dispose();
     _experience.dispose();
     _expertise.dispose();
     super.dispose();
   }
 
-  void _showComingSoon(String journey) {
+  Future<void> _saveCustomerProfile() async {
+    if (_isSaving) return;
+    if (_firstName.text.trim().isEmpty ||
+        _lastName.text.trim().isEmpty ||
+        _phone.text.trim().isEmpty) {
+      _showMessage('Enter your first name, last name, and phone number.', error: true);
+      return;
+    }
+
     setState(() {
-      _message = '$journey setup is being connected to secure profile storage. '
-          'Your account is safe, and no profile changes have been saved yet.';
+      _isSaving = true;
+      _message = null;
+    });
+    try {
+      await FirebaseFunctions.instance.httpsCallable('saveCustomerProfile').call({
+        'firstName': _firstName.text.trim(),
+        'lastName': _lastName.text.trim(),
+        'phone': _phone.text.trim(),
+      });
+      if (!mounted) return;
+      _showMessage('Your customer profile has been saved.');
+    } on FirebaseFunctionsException catch (error) {
+      if (mounted) _showMessage(_friendlyFunctionError(error), error: true);
+    } catch (_) {
+      if (mounted) _showMessage('We could not save your profile. Please try again.', error: true);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _submitMechanicApplication() async {
+    if (_isSaving) return;
+    final years = int.tryParse(_experience.text.trim());
+    final expertise = _expertise.text
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    final name = '${_firstName.text.trim()} ${_lastName.text.trim()}'.trim();
+
+    if (_firstName.text.trim().isEmpty ||
+        _lastName.text.trim().isEmpty ||
+        _phone.text.trim().isEmpty ||
+        _address.text.trim().isEmpty ||
+        years == null ||
+        years < 0 ||
+        expertise.isEmpty ||
+        (_isWorkshop && _workshopName.text.trim().isEmpty)) {
+      _showMessage(
+        'Complete all required fields. Enter years as a non-negative whole number and separate expertise areas with commas.',
+        error: true,
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+      _message = null;
+    });
+    try {
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('submitMechanicApplication')
+          .call({
+        'applicantName': name,
+        'phone': _phone.text.trim(),
+        'serviceArea': _address.text.trim(),
+        'yearsOfExperience': years,
+        'expertise': expertise,
+        'applicantType': _isWorkshop ? 'workshop' : 'independent',
+        if (_isWorkshop) 'workshopName': _workshopName.text.trim(),
+      });
+      if (!mounted) return;
+      final status = (result.data as Map?)?['status'] as String? ?? 'pending';
+      _showMessage(
+        status == 'pending'
+            ? 'Your application has been submitted for review. You will not receive mechanic access until an administrator approves it.'
+            : 'Your application status is $status.',
+      );
+    } on FirebaseFunctionsException catch (error) {
+      if (mounted) _showMessage(_friendlyFunctionError(error), error: true);
+    } catch (_) {
+      if (mounted) _showMessage('We could not submit your application. Please try again.', error: true);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  String _friendlyFunctionError(FirebaseFunctionsException error) {
+    switch (error.code) {
+      case 'unauthenticated':
+        return 'Your session has expired. Please sign in again.';
+      case 'failed-precondition':
+        return 'Verify your email before continuing, or check your application status.';
+      case 'permission-denied':
+        return 'You do not have permission to perform this action.';
+      case 'invalid-argument':
+        return error.message ?? 'Please check the details and try again.';
+      case 'unavailable':
+      case 'deadline-exceeded':
+        return 'The service is temporarily unavailable. Please try again.';
+      default:
+        return 'We could not complete this request. Please try again.';
+    }
+  }
+
+  void _showMessage(String message, {bool error = false}) {
+    setState(() {
+      _message = message;
+      _isError = error;
+    });
+  }
+
+  void _goTo(_JourneyStep step) {
+    setState(() {
+      _step = step;
+      _message = null;
+      _isError = false;
     });
   }
 
@@ -56,6 +171,8 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isChoosing = _step == _JourneyStep.choose;
+    final isCustomer = _step == _JourneyStep.customer;
 
     return Scaffold(
       appBar: AppBar(
@@ -63,13 +180,9 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
         actions: [
           IconButton(
             tooltip: 'Sign out',
-            onPressed: widget.isSigningOut ? null : widget.onSignOut,
+            onPressed: widget.isSigningOut || _isSaving ? null : widget.onSignOut,
             icon: widget.isSigningOut
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.logout_rounded),
           ),
           const SizedBox(width: 8),
@@ -92,26 +205,20 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
                       color: colors.primaryContainer,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Icon(
-                      Icons.directions_car_filled_rounded,
-                      size: 32,
-                      color: colors.onPrimaryContainer,
-                    ),
+                    child: Icon(Icons.directions_car_filled_rounded, size: 32, color: colors.onPrimaryContainer),
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    _step == _JourneyStep.choose
-                        ? 'Welcome to Standiag Auto'
-                        : 'Mechanic application',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    isChoosing ? 'Welcome to Standiag Auto' : isCustomer ? 'Customer profile' : 'Mechanic application',
+                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _step == _JourneyStep.choose
-                        ? 'Choose how you want to get started. You can use one account for car care and apply to offer repair services later.'
-                        : 'Tell us about your work. Applying does not automatically approve a mechanic account.',
+                    isChoosing
+                        ? 'Use one account for car care and apply to offer repair services whenever you are ready.'
+                        : isCustomer
+                            ? 'Complete your basic details to set up your customer profile.'
+                            : 'Tell us about your work. Applying does not automatically approve a mechanic account.',
                     style: theme.textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 8),
@@ -122,29 +229,24 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
                   ],
                   if (_message != null) ...[
                     const SizedBox(height: 16),
-                    _Notice(message: _message!, isError: false),
+                    _Notice(message: _message!, isError: _isError),
                   ],
                   const SizedBox(height: 24),
-                  if (_step == _JourneyStep.choose) ...[
+                  if (isChoosing) ...[
                     _JourneyCard(
                       icon: Icons.directions_car_outlined,
                       title: 'I need car care',
-                      description:
-                          'Find mechanics, manage your vehicles, and track repairs.',
+                      description: 'Find mechanics, manage your vehicles, and track repairs.',
                       actionLabel: 'Continue as a customer',
-                      onPressed: () => _showComingSoon('Customer'),
+                      onPressed: () => _goTo(_JourneyStep.customer),
                     ),
                     const SizedBox(height: 14),
                     _JourneyCard(
                       icon: Icons.handyman_outlined,
                       title: 'I repair vehicles',
-                      description:
-                          'Create a mechanic or workshop profile and submit it for review.',
+                      description: 'Create a mechanic or workshop profile and submit it for review.',
                       actionLabel: 'Apply as a mechanic',
-                      onPressed: () => setState(() {
-                        _step = _JourneyStep.mechanic;
-                        _message = null;
-                      }),
+                      onPressed: () => _goTo(_JourneyStep.mechanic),
                     ),
                   ] else ...[
                     Card(
@@ -153,74 +255,52 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            SwitchListTile.adaptive(
-                              contentPadding: EdgeInsets.zero,
-                              title: const Text('I represent a workshop'),
-                              subtitle: const Text(
-                                'Turn this on for a workshop or garage rather than an independent mechanic.',
+                            if (!isCustomer)
+                              SwitchListTile.adaptive(
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text('I represent a workshop'),
+                                subtitle: const Text('Turn this on for a workshop or garage rather than an independent mechanic.'),
+                                value: _isWorkshop,
+                                onChanged: _isSaving ? null : (value) => setState(() => _isWorkshop = value),
                               ),
-                              value: _isWorkshop,
-                              onChanged: (value) =>
-                                  setState(() => _isWorkshop = value),
-                            ),
-                            const SizedBox(height: 8),
                             _field(_firstName, 'First name', required: true),
                             const SizedBox(height: 12),
                             _field(_lastName, 'Last name', required: true),
                             const SizedBox(height: 12),
-                            _field(
-                              _phone,
-                              'Phone number',
-                              keyboardType: TextInputType.phone,
-                              required: true,
-                            ),
-                            const SizedBox(height: 12),
-                            _field(
-                              _address,
-                              _isWorkshop
-                                  ? 'Workshop address'
-                                  : 'Base address or service area',
-                              required: true,
-                            ),
-                            const SizedBox(height: 12),
-                            _field(
-                              _experience,
-                              'Years of experience',
-                              keyboardType: TextInputType.number,
-                              required: true,
-                            ),
-                            const SizedBox(height: 12),
-                            _field(
-                              _expertise,
-                              'Areas of expertise',
-                              hint: 'e.g. diagnostics, brakes, engine repair',
-                              required: true,
-                              maxLines: 3,
-                            ),
+                            _field(_phone, 'Phone number', keyboardType: TextInputType.phone, required: true),
+                            if (!isCustomer) ...[
+                              const SizedBox(height: 12),
+                              if (_isWorkshop) ...[
+                                _field(_workshopName, 'Workshop name', required: true),
+                                const SizedBox(height: 12),
+                              ],
+                              _field(
+                                _address,
+                                _isWorkshop ? 'Workshop address' : 'Base address or service area',
+                                required: true,
+                                maxLines: 2,
+                              ),
+                              const SizedBox(height: 12),
+                              _field(_experience, 'Years of experience', keyboardType: TextInputType.number, required: true),
+                              const SizedBox(height: 12),
+                              _field(
+                                _expertise,
+                                'Areas of expertise',
+                                hint: 'Diagnostics, brakes, engine repair',
+                                required: true,
+                                maxLines: 3,
+                              ),
+                            ],
                             const SizedBox(height: 18),
                             FilledButton(
-                              onPressed: () {
-                                final valid = _firstName.text.trim().isNotEmpty &&
-                                    _lastName.text.trim().isNotEmpty &&
-                                    _phone.text.trim().isNotEmpty &&
-                                    _address.text.trim().isNotEmpty &&
-                                    _expertise.text.trim().isNotEmpty &&
-                                    int.tryParse(_experience.text.trim()) != null &&
-                                    int.parse(_experience.text.trim()) >= 0;
-                                setState(() {
-                                  _message = valid
-                                      ? 'Your application form is ready. Secure saving, document checks, and approval status are not connected yet, so nothing has been submitted.'
-                                      : 'Complete all fields and enter a valid, non-negative number of years.';
-                                });
-                              },
-                              child: const Text('Review application details'),
+                              onPressed: _isSaving ? null : (isCustomer ? _saveCustomerProfile : _submitMechanicApplication),
+                              child: _isSaving
+                                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : Text(isCustomer ? 'Save customer profile' : 'Submit for review'),
                             ),
                             const SizedBox(height: 8),
                             TextButton(
-                              onPressed: () => setState(() {
-                                _step = _JourneyStep.choose;
-                                _message = null;
-                              }),
+                              onPressed: _isSaving ? null : () => _goTo(_JourneyStep.choose),
                               child: const Text('Back to account options'),
                             ),
                           ],
@@ -245,25 +325,22 @@ class _AccountJourneyScreenState extends State<AccountJourneyScreen> {
     bool required = false,
     int maxLines = 1,
   }) {
-    return TextFormField(
+    return TextField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
       textCapitalization: TextCapitalization.sentences,
+      enabled: !_isSaving,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         border: const OutlineInputBorder(),
       ),
-      validator: required
-          ? (value) =>
-              (value == null || value.trim().isEmpty) ? 'Required' : null
-          : null,
     );
   }
 }
 
-enum _JourneyStep { choose, mechanic }
+enum _JourneyStep { choose, customer, mechanic }
 
 class _JourneyCard extends StatelessWidget {
   const _JourneyCard({
@@ -292,19 +369,11 @@ class _JourneyCard extends StatelessWidget {
           children: [
             Icon(icon, size: 32, color: theme.colorScheme.primary),
             const SizedBox(height: 12),
-            Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
             Text(description),
             const SizedBox(height: 16),
-            FilledButton.tonal(
-              onPressed: onPressed,
-              child: Text(actionLabel),
-            ),
+            FilledButton.tonal(onPressed: onPressed, child: Text(actionLabel)),
           ],
         ),
       ),
@@ -329,10 +398,7 @@ class _Notice extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
-      child: Text(
-        message,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color),
-      ),
+      child: Text(message, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color)),
     );
   }
 }
