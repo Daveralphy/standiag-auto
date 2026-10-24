@@ -1,81 +1,121 @@
 import 'package:flutter/material.dart';
 
-/// New theme foundation. Keep all global component styling here; feature
-/// screens should consume Theme.of(context) instead of global mutable colors.
+/// Standiag Auto dark visual system: near-black foundations, readable white
+/// text, and crimson actions with deeper burgundy surfaces.
 abstract final class AppTheme {
-  static const Color _burgundy = Color(0xFF7A0E14);
-  static const Color _actionRed = Color(0xFFDC2626);
-  static const Color _gold = Color(0xFFF59E0B);
+  static const Color background = Color(0xFF090A0C);
+  static const Color surface = Color(0xFF151518);
+  static const Color elevatedSurface = Color(0xFF1D1D22);
+  static const Color burgundy = Color(0xFF4A0D18);
+  static const Color crimson = Color(0xFFD71935);
+  static const Color textPrimary = Color(0xFFFFFFFF);
+  static const Color textSecondary = Color(0xFFE1E1E5);
+  static const Color outline = Color(0xFF48484F);
 
-  static ThemeData get light => _build(Brightness.light);
-  static ThemeData get dark => _build(Brightness.dark);
-
-  static ThemeData _build(Brightness brightness) {
-    final isDark = brightness == Brightness.dark;
+  static ThemeData get dark {
     final scheme = ColorScheme.fromSeed(
-      seedColor: _burgundy,
-      brightness: brightness,
-      primary: _actionRed,
-      secondary: _gold,
-      surface: isDark ? const Color(0xFF171719) : Colors.white,
-      error: const Color(0xFFDC2626),
+      seedColor: crimson,
+      brightness: Brightness.dark,
+      primary: crimson,
+      onPrimary: Colors.white,
+      secondary: burgundy,
+      onSecondary: Colors.white,
+      surface: surface,
+      onSurface: textPrimary,
+      error: const Color(0xFFFF6B75),
+      onError: const Color(0xFF240006),
     );
-
-    final background = isDark ? const Color(0xFF101012) : const Color(0xFFF7F7F8);
-    final foreground = isDark ? const Color(0xFFF5F5F5) : const Color(0xFF171719);
-    final border = isDark ? const Color(0xFF343438) : const Color(0xFFE6E6E8);
 
     return ThemeData(
       useMaterial3: true,
-      brightness: brightness,
+      brightness: Brightness.dark,
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
-      appBarTheme: AppBarTheme(
+      canvasColor: background,
+      textTheme: ThemeData.dark().textTheme.apply(
+            bodyColor: textPrimary,
+            displayColor: textPrimary,
+          ),
+      appBarTheme: const AppBarTheme(
         backgroundColor: background,
-        foregroundColor: foreground,
+        foregroundColor: textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
-        color: scheme.surface,
+        color: surface,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: border),
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: outline),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surface,
+        fillColor: elevatedSurface,
+        labelStyle: const TextStyle(color: textSecondary),
+        hintStyle: const TextStyle(color: Color(0xFFB8B8C0)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: border),
+          borderSide: const BorderSide(color: outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: border),
+          borderSide: const BorderSide(color: outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: scheme.primary, width: 1.5),
+          borderSide: const BorderSide(color: crimson, width: 1.6),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          backgroundColor: crimson,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: const Color(0xFF4A2027),
+          disabledForegroundColor: const Color(0xFFD2C5C8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: crimson,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: const Color(0xFF4A2027),
+          disabledForegroundColor: const Color(0xFFD2C5C8),
+          minimumSize: const Size.fromHeight(52),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          side: BorderSide(color: border),
+          foregroundColor: textPrimary,
+          side: const BorderSide(color: outline),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
-      dividerTheme: DividerThemeData(color: border, space: 1),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: const Color(0xFFFF667A)),
+      ),
+      dividerTheme: const DividerThemeData(color: outline, space: 1),
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: elevatedSurface,
+        contentTextStyle: TextStyle(color: textPrimary),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: crimson,
+      ),
     );
   }
 }
