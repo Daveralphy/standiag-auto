@@ -72,8 +72,9 @@ void main() {
 
     await tester.tap(find.text('Profile').last);
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Sign out'));
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -700));
     await tester.pumpAndSettle();
+    expect(find.text('Sign out'), findsOneWidget);
     await tester.tap(find.text('Sign out'));
     await tester.pumpAndSettle();
 
