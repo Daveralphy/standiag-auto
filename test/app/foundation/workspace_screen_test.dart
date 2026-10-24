@@ -18,7 +18,7 @@ void main() {
   testWidgets('customer workspace exposes the four planned destinations', (tester) async {
     await tester.pumpWidget(buildScreen(WorkspaceRole.customer));
 
-    expect(find.text('Find reliable mechanics near you.'), findsOneWidget);
+    expect(find.text('Find Reliable Mechanics Near You'), findsOneWidget);
     expect(find.text('Explore'), findsOneWidget);
     expect(find.text('My repairs'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
@@ -59,7 +59,7 @@ void main() {
 
     await tester.pumpWidget(buildScreen(WorkspaceRole.customer));
 
-    expect(find.text('Find reliable mechanics near you.'), findsOneWidget);
+    expect(find.text('Find Reliable Mechanics Near You'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -74,8 +74,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.drag(find.byType(Scrollable).last, const Offset(0, -700));
     await tester.pumpAndSettle();
-    expect(find.text('Sign out'), findsOneWidget);
-    await tester.tap(find.text('Sign out'));
+    expect(find.text('Log Out'), findsOneWidget);
+    await tester.tap(find.text('Log Out'));
     await tester.pumpAndSettle();
 
     expect(signedOut, isTrue);
