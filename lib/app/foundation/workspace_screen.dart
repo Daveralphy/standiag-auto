@@ -304,10 +304,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
                 child: Text(
-                    'Mechanics could not be loaded right now. You can still search in Explore.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
+                  'Mechanics could not be loaded right now. You can still search in Explore.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
               );
             }
@@ -328,19 +328,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
                 child: Row(
-                    children: [
-                      Icon(Icons.handyman_outlined, color: colors.primary, size: 28),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Approved mechanics will appear here when available.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colors.onSurfaceVariant,
-                          ),
+                  children: [
+                    Icon(Icons.handyman_outlined, color: colors.primary, size: 24),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Approved workshops will appear here when available.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               );
             }
@@ -382,7 +381,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                                 .isNotEmpty ==
                                             true
                                         ? (mechanic.data()['workshopName'] as String).trim()
-                                        : 'Independent mechanic',
+                                        : 'Workshop',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.titleSmall?.copyWith(
