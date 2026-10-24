@@ -722,7 +722,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   Widget _profile(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final user = FirebaseAuth.instance.currentUser;
+    final user = Firebase.apps.isEmpty ? null : FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName?.trim();
     final name = displayName != null && displayName.isNotEmpty
         ? displayName
