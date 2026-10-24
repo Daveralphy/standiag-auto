@@ -161,7 +161,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
       children: [
         Row(
           children: [
@@ -184,11 +184,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         Container(
-          constraints: const BoxConstraints(minHeight: 164),
+          constraints: const BoxConstraints(minHeight: 148),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(14),
             gradient: const LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
@@ -205,15 +205,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   size: 178, color: colors.primary.withValues(alpha: 0.22)),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 17, 12, 14),
+                padding: const EdgeInsets.fromLTRB(13, 13, 10, 11),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
                       width: 230,
                       child: Text('Find Reliable Mechanics Near You',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800, height: 1.08, letterSpacing: -0.4)),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800, height: 1.08, letterSpacing: -0.3)),
                     ),
                     const SizedBox(height: 7),
                     SizedBox(
@@ -240,7 +240,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 19),
+        const SizedBox(height: 14),
         Text('Quick Actions', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 10),
         GridView.count(
@@ -249,7 +249,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
-          childAspectRatio: 1.32,
+          childAspectRatio: 1.58,
           children: [
             _CustomerQuickAction(icon: Icons.search_rounded, title: 'Find Mechanics',
               onTap: () => setState(() => _selectedIndex = 1)),
@@ -263,7 +263,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
         Row(
           children: [
             Expanded(child: Text('Nearby Mechanics',
@@ -539,7 +539,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         }).toList();
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
           children: [
             Text(
               'My repairs',
@@ -553,7 +553,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(child: _RepairSummaryCard(label: 'Total requests', value: '${docs.length}', icon: Icons.car_repair_rounded)),
@@ -610,7 +610,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(11),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -618,7 +618,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                (doc.data()['issue'] as String? ??
+                                (doc.data()['issue' as String? ??
                                     'Repair request'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
@@ -728,7 +728,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         ? displayName
         : (widget.email.split('@').first);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 30),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
       children: [
         Row(
           children: [
@@ -750,7 +750,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           child: Column(
             children: [
               CircleAvatar(
-                radius: 40,
+                radius: 34,
                 backgroundColor: colors.surfaceContainerHighest,
                 child: Icon(Icons.person_rounded, size: 42, color: colors.onSurfaceVariant),
               ),
@@ -761,7 +761,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
         if (_isCustomer) ...[
           _ProfileAction(icon: Icons.person_outline_rounded, title: 'Account Information',
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
