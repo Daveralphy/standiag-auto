@@ -5,16 +5,12 @@ import 'package:standiag_auto/app/theme/app_theme.dart';
 
 void main() {
   group('AppTheme', () {
-    test('provides Material 3 light and dark themes', () {
-      expect(AppTheme.light.useMaterial3, isTrue);
+    test('provides a Material 3 dark-only theme with readable contrast', () {
       expect(AppTheme.dark.useMaterial3, isTrue);
-      expect(AppTheme.light.brightness, Brightness.light);
       expect(AppTheme.dark.brightness, Brightness.dark);
-    });
-
-    test('uses the shared brand action color in both modes', () {
-      expect(AppTheme.light.colorScheme.primary, const Color(0xFFDC2626));
-      expect(AppTheme.dark.colorScheme.primary, const Color(0xFFDC2626));
+      expect(AppTheme.dark.scaffoldBackgroundColor, const Color(0xFF090A0C));
+      expect(AppTheme.dark.colorScheme.primary, const Color(0xFFD71935));
+      expect(AppTheme.dark.colorScheme.onSurface, Colors.white);
     });
   });
 
@@ -47,7 +43,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('setup guidance respects the system dark theme', (tester) async {
+  testWidgets('setup guidance stays dark regardless of system theme', (tester) async {
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
 
