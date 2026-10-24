@@ -34,20 +34,20 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
       child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Find your mechanic', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                  Text('Explore', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 6),
-                  Text('Search approved mechanics by workshop, expertise, or service area.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  Text('Find trusted mechanics and services.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _searchController,
                     onChanged: (value) => setState(() => _query = value.trim().toLowerCase()),
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.search_rounded),
-                      hintText: 'Search workshop, expertise, or area',
+                      hintText: 'Search by name or location...',
                       suffixIcon: _query.isEmpty ? null : IconButton(
                         tooltip: 'Clear search',
                         onPressed: () { _searchController.clear(); setState(() => _query = ''); },
@@ -95,7 +95,7 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                       if (expertiseOptions.isNotEmpty)
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                          padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
                           child: Row(
                             children: [
                               'All services',
@@ -113,7 +113,7 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                           ),
                         ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
                         child: Text(
                           docs.isEmpty
                               ? '0 mechanics found'
@@ -136,7 +136,7 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                                     : 'Try a different search or select another service filter.',
                               )
                             : ListView.separated(
-                                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                                padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
                                 itemCount: docs.length,
                                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
@@ -153,7 +153,7 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                       return Card(
                         clipBehavior: Clip.antiAlias,
                         child: Padding(
-                          padding: const EdgeInsets.all(18),
+                          padding: const EdgeInsets.all(12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -161,8 +161,8 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    width: 56, height: 56,
-                                    decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(16)),
+                                    width: 76, height: 88,
+                                    decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
                                     child: Icon(workshop != null && workshop.isNotEmpty ? Icons.garage_rounded : Icons.handyman_rounded, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 27),
                                   ),
                                   const SizedBox(width: 12),
