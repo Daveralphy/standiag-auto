@@ -215,25 +215,41 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         ),
         const SizedBox(height: 12),
         if (_isCustomer) ...[
-          _ActionTile(
-            icon: Icons.search_rounded,
-            title: 'Explore mechanics',
-            subtitle: 'Browse services and expertise',
-            onTap: () => setState(() => _selectedIndex = 1),
-          ),
-          _ActionTile(
-            icon: Icons.directions_car_outlined,
-            title: 'My vehicles',
-            subtitle: 'Add and manage your vehicles',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const VehiclesScreen()),
-            ),
-          ),
-          _ActionTile(
-            icon: Icons.car_repair_rounded,
-            title: 'My repairs',
-            subtitle: 'Track requests and job progress',
-            onTap: () => setState(() => _selectedIndex = 2),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.28,
+            children: [
+              _QuickActionCard(
+                icon: Icons.search_rounded,
+                title: 'Find mechanics',
+                subtitle: 'Browse approved mechanics',
+                onTap: () => setState(() => _selectedIndex = 1),
+              ),
+              _QuickActionCard(
+                icon: Icons.directions_car_outlined,
+                title: 'My vehicles',
+                subtitle: 'Manage your vehicles',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const VehiclesScreen()),
+                ),
+              ),
+              _QuickActionCard(
+                icon: Icons.car_repair_rounded,
+                title: 'My repairs',
+                subtitle: 'Track requests and progress',
+                onTap: () => setState(() => _selectedIndex = 2),
+              ),
+              _QuickActionCard(
+                icon: Icons.person_outline_rounded,
+                title: 'My profile',
+                subtitle: 'Account and preferences',
+                onTap: () => setState(() => _selectedIndex = 3),
+              ),
+            ],
           ),
         ] else ...[
           Card(
@@ -731,40 +747,138 @@ class _HeroPanel extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [colors.primary, colors.primary.withValues(alpha: 0.82)],
+          colors: [
+            colors.surfaceContainerHighest,
+            colors.surface,
+            colors.secondary.withValues(alpha: 0.72),
+          ],
         ),
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.7)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Icon(icon, color: Colors.white, size: 32),
-          const SizedBox(height: 18),
-          Text(
-            eyebrow,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.2,
-              fontSize: 11,
+          Positioned(
+            top: -24,
+            right: -20,
+            child: Icon(
+              icon,
+              size: 132,
+              color: colors.primary.withValues(alpha: 0.13),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Text(
+                  eyebrow,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 290),
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                    height: 1.12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 300),
+                child: Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: onPressed,
+                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                label: Text(actionLabel),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: const TextStyle(color: Colors.white, height: 1.45),
-          ),
-          const SizedBox(height: 18),
-          FilledButton.tonal(onPressed: onPressed, child: Text(actionLabel)),
         ],
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  const _QuickActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(icon, color: colors.primary, size: 23),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  height: 1.25,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
