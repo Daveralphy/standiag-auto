@@ -618,7 +618,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                (doc.data()['issue' as String? ??
+                                (doc.data()['issue'] as String? ??
                                     'Repair request'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
