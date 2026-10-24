@@ -34,14 +34,14 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
       child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text('Explore', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 6),
                   Text('Find trusted mechanics and services.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   TextField(
                     controller: _searchController,
                     onChanged: (value) => setState(() => _query = value.trim().toLowerCase()),
@@ -95,7 +95,7 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                       if (expertiseOptions.isNotEmpty)
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                           child: Row(
                             children: [
                               'All services',
@@ -113,7 +113,7 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                           ),
                         ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 7),
                         child: Text(
                           docs.isEmpty
                               ? '0 mechanics found'
@@ -136,9 +136,9 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                                     : 'Try a different search or select another service filter.',
                               )
                             : ListView.separated(
-                                padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
+                                padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
                                 itemCount: docs.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                separatorBuilder: (_, __) => const SizedBox(height: 8),
                                 itemBuilder: (context, index) {
                                   final doc = docs[index];
                       final data = doc.data();
@@ -153,21 +153,14 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                       return Card(
                         clipBehavior: Clip.antiAlias,
                         child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                          padding: const EdgeInsets.all(9),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 76, height: 88,
-                                    decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
-                                    child: Icon(workshop != null && workshop.isNotEmpty ? Icons.garage_rounded : Icons.handyman_rounded, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 27),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              _mechanicImage(data),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                       Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
                                       const SizedBox(height: 4),
                                       Text(area, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
@@ -185,17 +178,22 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                                 ],
                               ),
                               if (expertise.isNotEmpty) ...[
-                                const SizedBox(height: 14),
-                                Wrap(spacing: 6, runSpacing: 6, children: expertise.take(5).map((item) => Chip(label: Text(item), visualDensity: VisualDensity.compact, padding: EdgeInsets.zero)).toList()),
-                              ],
-                              const SizedBox(height: 14),
-                              FilledButton.icon(
-                                onPressed: uid == null || _submittingMechanicId != null ? null : () => _sendRequest(doc.id, title),
-                                icon: _submittingMechanicId == doc.id ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send_rounded),
-                                label: Text(_submittingMechanicId == doc.id ? 'Sending request…' : 'Request this mechanic'),
-                              ),
-                            ],
-                          ),
+                                if (expertise.isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  Wrap(spacing: 4, runSpacing: 2, children: expertise.take(3).map((item) => Chip(label: Text(item), visualDensity: VisualDensity.compact, padding: EdgeInsets.zero, labelStyle: Theme.of(context).textTheme.labelSmall)).toList()),
+                                ],
+                                const SizedBox(height: 7),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: TextButton(
+                                    style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: const Size(0, 32), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                                    onPressed: uid == null || _submittingMechanicId != null ? null : () => _sendRequest(doc.id, title),
+                                    child: Text(_submittingMechanicId == doc.id ? 'Sending…' : 'Request mechanic'),
+                                  ),
+                                ),
+                              ]),
+                            ),
+                          ],
                         ),
                       );
                                 },
@@ -208,6 +206,32 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
             ),
           ],
         ),
+    );
+  }
+
+  Widget _mechanicImage(Map<String, dynamic> data) {
+    final imageUrl = [
+      data['workshopImageUrl'],
+      data['profileImageUrl'],
+      data['imageUrl'],
+      data['photoUrl'],
+    ].whereType<String>().map((value) => value.trim()).firstWhere(
+      (value) => value.isNotEmpty,
+      orElse: () => '',
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(9),
+      child: SizedBox(
+        width: 76,
+        height: 84,
+        child: imageUrl.isEmpty
+            ? const SizedBox.shrink()
+            : Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+      ),
     );
   }
 
