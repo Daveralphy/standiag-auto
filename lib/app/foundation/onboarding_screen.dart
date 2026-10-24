@@ -271,8 +271,8 @@ class _WelcomeSlide extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 stops: [0, 0.46, 0.72, 1],
                 colors: [
-                  Color(0xFF050608),
-                  Color(0xFF050608),
+                  AppTheme.background,
+                  AppTheme.background,
                   Color(0xEE050608),
                   Color(0x22050608),
                 ],
@@ -329,7 +329,7 @@ class _WelcomeSlide extends StatelessWidget {
                     child: FilledButton(
                       onPressed: onCreateAccount,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF233C),
+                        backgroundColor: AppTheme.crimson,
                         foregroundColor: Colors.white,
                         textStyle: const TextStyle(
                           fontWeight: FontWeight.w700,
@@ -354,7 +354,7 @@ class _WelcomeSlide extends StatelessWidget {
                       onPressed: onSignIn,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFF929296)),
+                        side: const BorderSide(color: AppTheme.outline),
                         shape: const StadiumBorder(),
                         textStyle: const TextStyle(fontSize: 16),
                       ),
