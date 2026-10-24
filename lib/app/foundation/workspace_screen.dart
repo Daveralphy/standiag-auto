@@ -161,7 +161,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       children: [
         Text(
           _isCustomer
-              ? 'Your car care, simplified.'
+              ? 'Find reliable mechanics near you.'
               : 'Ready for your next job?',
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
@@ -171,7 +171,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         const SizedBox(height: 6),
         Text(
           _isCustomer
-              ? 'Find trusted help and keep your vehicle moving.'
+              ? 'Book trusted help, manage your vehicles, and keep track of repairs.'
               : 'Manage requests and keep your work organised.',
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
@@ -182,10 +182,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           icon: _isCustomer ? Icons.car_repair_rounded : Icons.handyman_rounded,
           eyebrow: _isCustomer ? 'NEED A REPAIR?' : 'YOUR WORKSPACE',
           title: _isCustomer
-              ? 'Get back on the road.'
+              ? 'Get your car back on the road.'
               : 'Your next opportunity starts here.',
           subtitle: _isCustomer
-              ? 'Describe what is wrong and find mechanics who can help.'
+              ? 'Explore approved mechanics and send a repair request for your vehicle.'
               : 'New job requests and customer updates will be organised here.',
           actionLabel: _isCustomer ? 'Find a mechanic' : 'View jobs',
           onPressed: () => setState(() => _selectedIndex = 1),
@@ -221,18 +221,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.28,
+            childAspectRatio: 1.12,
             children: [
               _QuickActionCard(
                 icon: Icons.search_rounded,
                 title: 'Find mechanics',
-                subtitle: 'Browse approved mechanics',
+                subtitle: 'Search mechanics and services',
                 onTap: () => setState(() => _selectedIndex = 1),
               ),
               _QuickActionCard(
                 icon: Icons.directions_car_outlined,
                 title: 'My vehicles',
-                subtitle: 'Manage your vehicles',
+                subtitle: 'Your saved vehicles',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(builder: (_) => const VehiclesScreen()),
                 ),
@@ -240,13 +240,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               _QuickActionCard(
                 icon: Icons.car_repair_rounded,
                 title: 'My repairs',
-                subtitle: 'Track requests and progress',
+                subtitle: 'Follow repair requests',
                 onTap: () => setState(() => _selectedIndex = 2),
               ),
               _QuickActionCard(
                 icon: Icons.person_outline_rounded,
                 title: 'My profile',
-                subtitle: 'Account and preferences',
+                subtitle: 'Your account details',
                 onTap: () => setState(() => _selectedIndex = 3),
               ),
             ],
@@ -291,7 +291,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         const SizedBox(height: 12),
         _InfoBanner(
           text: _isCustomer
-              ? 'Your vehicles and repair requests are linked to your account. Use the shortcuts above to manage your garage and follow repair updates.'
+              ? 'Your vehicles and repair requests stay linked to your account. Use Explore to find approved mechanics and My repairs to follow updates.'
               : 'Your job list and completed work are loaded from your assigned job records. Payment totals appear only when a verified payment record is available.',
         ),
       ],
