@@ -34,20 +34,20 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
       child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Trusted help for your vehicle', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                  Text('Find your mechanic', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 6),
-                  Text('Browse approved mechanics and send a repair request.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  Text('Search approved mechanics by workshop, expertise, or service area.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _searchController,
                     onChanged: (value) => setState(() => _query = value.trim().toLowerCase()),
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.search_rounded),
-                      hintText: 'Search expertise or service area',
+                      hintText: 'Search workshop, expertise, or area',
                       suffixIcon: _query.isEmpty ? null : IconButton(
                         tooltip: 'Clear search',
                         onPressed: () { _searchController.clear(); setState(() => _query = ''); },
@@ -133,7 +133,7 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                                     : 'No matching mechanics',
                                 message: allDocs.isEmpty
                                     ? 'Approved mechanics will appear here when they join Standiag Auto.'
-                                    : 'Try another service, clear the service filter, or search a different location keyword.',
+                                    : 'Try a different search or select another service filter.',
                               )
                             : ListView.separated(
                                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -153,7 +153,7 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                       return Card(
                         clipBehavior: Clip.antiAlias,
                         child: Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(18),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -161,8 +161,8 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    width: 52, height: 52,
-                                    decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(15)),
+                                    width: 56, height: 56,
+                                    decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(16)),
                                     child: Icon(workshop != null && workshop.isNotEmpty ? Icons.garage_rounded : Icons.handyman_rounded, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 27),
                                   ),
                                   const SizedBox(width: 12),
