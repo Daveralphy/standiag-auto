@@ -52,6 +52,42 @@ abstract final class AppTheme {
           side: const BorderSide(color: outline),
         ),
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: background,
+        indicatorColor: burgundy,
+        elevation: 0,
+        height: 72,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? crimson : textSecondary,
+            size: selected ? 23 : 21,
+          );
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          final selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            color: selected ? crimson : textSecondary,
+            fontSize: 11,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          );
+        }),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: elevatedSurface,
+        selectedColor: burgundy,
+        disabledColor: surface,
+        secondarySelectedColor: burgundy,
+        side: const BorderSide(color: outline),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        labelStyle: const TextStyle(color: textSecondary),
+        secondaryLabelStyle: const TextStyle(color: textPrimary),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: elevatedSurface,
