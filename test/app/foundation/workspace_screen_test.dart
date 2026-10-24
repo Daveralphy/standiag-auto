@@ -6,8 +6,7 @@ import 'package:standiag_auto/app/theme/app_theme.dart';
 void main() {
   Widget buildScreen(WorkspaceRole role, {Future<void> Function()? onSignOut}) {
     return MaterialApp(
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: AppTheme.dark,
       home: WorkspaceScreen(
         email: 'driver@example.com',
         role: role,
