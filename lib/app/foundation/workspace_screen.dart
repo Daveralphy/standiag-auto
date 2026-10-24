@@ -902,6 +902,37 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
 }
 
+class _CustomerQuickAction extends StatelessWidget {
+  const _CustomerQuickAction({required this.icon, required this.title, required this.onTap});
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      color: const Color(0xFF111619),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(13),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(icon, color: colors.primary, size: 27),
+              Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _RepairSummaryCard extends StatelessWidget {
   const _RepairSummaryCard({
     required this.label,
