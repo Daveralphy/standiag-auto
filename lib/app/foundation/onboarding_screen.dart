@@ -340,9 +340,14 @@ class _WelcomeSlide extends StatelessWidget {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Create account'),
-                          SizedBox(width: 12),
-                          Icon(Icons.arrow_forward_rounded),
+                          const Flexible(
+                            child: Text(
+                              'Create account',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_rounded),
                         ],
                       ),
                     ),
@@ -361,9 +366,15 @@ class _WelcomeSlide extends StatelessWidget {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('I already have an account'),
-                          SizedBox(width: 12),
-                          Icon(Icons.arrow_forward_rounded),
+                          const Flexible(
+                            child: Text(
+                              'I already have an account',
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_rounded),
                         ],
                       ),
                     ),
