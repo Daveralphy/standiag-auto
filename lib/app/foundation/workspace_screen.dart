@@ -156,148 +156,154 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Widget _home(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    if (!_isCustomer) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+        children: [
+          Text('Ready for your next job?',
+              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          Text('Manage requests and keep your work organised.',
+              style: theme.textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant)),
+          const SizedBox(height: 20),
+          _HeroPanel(
+            icon: Icons.handyman_rounded,
+            eyebrow: 'YOUR WORKSPACE',
+            title: 'Your next opportunity starts here.',
+            subtitle: 'New job requests and customer updates will be organised here.',
+            actionLabel: 'View jobs',
+            onPressed: () => setState(() => _selectedIndex = 1),
+          ),
+          const SizedBox(height: 24),
+          Text('Work overview', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 12),
+          _ActionTile(icon: Icons.assignment_outlined, title: 'Review job requests',
+            subtitle: 'See and respond to customer requests',
+            onTap: () => setState(() => _selectedIndex = 1)),
+          const SizedBox(height: 10),
+          _ActionTile(icon: Icons.inbox_outlined, title: 'Incoming direct requests',
+            subtitle: 'Review requests sent specifically to you',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const MechanicIncomingRequestsScreen()))),
+        ],
+      );
+    }
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
       children: [
-        Text(
-          _isCustomer
-              ? 'Find reliable mechanics near you.'
-              : 'Ready for your next job?',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          _isCustomer
-              ? 'Book trusted help, manage your vehicles, and keep track of repairs.'
-              : 'Manage requests and keep your work organised.',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 22),
-        _HeroPanel(
-          icon: _isCustomer ? Icons.car_repair_rounded : Icons.handyman_rounded,
-          eyebrow: _isCustomer ? 'NEED A REPAIR?' : 'YOUR WORKSPACE',
-          title: _isCustomer
-              ? 'Get your car back on the road.'
-              : 'Your next opportunity starts here.',
-          subtitle: _isCustomer
-              ? 'Explore approved mechanics and send a repair request for your vehicle.'
-              : 'New job requests and customer updates will be organised here.',
-          actionLabel: _isCustomer ? 'Find a mechanic' : 'View jobs',
-          onPressed: () => setState(() => _selectedIndex = 1),
-        ),
-        const SizedBox(height: 24),
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 12,
-          runSpacing: 6,
+        Row(
           children: [
-            Text(
-              _isCustomer ? 'Quick actions' : 'Work overview',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  children: [
+                    const TextSpan(text: 'Standiag '),
+                    TextSpan(text: 'Auto', style: TextStyle(color: colors.primary)),
+                  ],
+                ),
               ),
             ),
-            Text(
-              _isCustomer ? 'GET STARTED' : 'YOUR WORK',
-              style: theme.textTheme.labelSmall?.copyWith(
-                letterSpacing: 1.1,
-                fontWeight: FontWeight.w800,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            IconButton(
+              tooltip: 'Notifications',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => const NotificationsScreen())),
+              icon: const Icon(Icons.notifications_none_rounded),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        if (_isCustomer) ...[
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.12,
+        const SizedBox(height: 10),
+        Container(
+          constraints: const BoxConstraints(minHeight: 164),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            gradient: const LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [Color(0xFF14232B), Color(0xFF11171B), Color(0xFF260C12)],
+            ),
+            border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.38)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
             children: [
-              _QuickActionCard(
-                icon: Icons.search_rounded,
-                title: 'Find mechanics',
-                subtitle: 'Search mechanics and services',
-                onTap: () => setState(() => _selectedIndex = 1),
+              Positioned(
+                right: -24, top: 2, bottom: 0,
+                child: Icon(Icons.directions_car_filled_rounded,
+                  size: 178, color: colors.primary.withValues(alpha: 0.22)),
               ),
-              _QuickActionCard(
-                icon: Icons.directions_car_outlined,
-                title: 'My vehicles',
-                subtitle: 'Your saved vehicles',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const VehiclesScreen()),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 17, 12, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 230,
+                      child: Text('Find Reliable Mechanics Near You',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800, height: 1.08, letterSpacing: -0.4)),
+                    ),
+                    const SizedBox(height: 7),
+                    SizedBox(
+                      width: 205,
+                      child: Text('Quality car repairs from trusted mechanics.',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.3, color: colors.onSurfaceVariant)),
+                    ),
+                    const SizedBox(height: 13),
+                    FilledButton(
+                      onPressed: () => setState(() => _selectedIndex = 1),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 42),
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                      ),
+                      child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                        Text('Find Mechanics'), SizedBox(width: 8),
+                        Icon(Icons.chevron_right_rounded, size: 19),
+                      ]),
+                    ),
+                  ],
                 ),
-              ),
-              _QuickActionCard(
-                icon: Icons.car_repair_rounded,
-                title: 'My repairs',
-                subtitle: 'Follow repair requests',
-                onTap: () => setState(() => _selectedIndex = 2),
-              ),
-              _QuickActionCard(
-                icon: Icons.person_outline_rounded,
-                title: 'My profile',
-                subtitle: 'Your account details',
-                onTap: () => setState(() => _selectedIndex = 3),
               ),
             ],
           ),
-        ] else ...[
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline_rounded, color: theme.colorScheme.primary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Your assigned jobs and completed work are listed in the Jobs and Earnings tabs. Only saved job records are shown.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _ActionTile(
-            icon: Icons.assignment_outlined,
-            title: 'Review job requests',
-            subtitle: 'See and respond to customer requests',
-            onTap: () => setState(() => _selectedIndex = 1),
-          ),
-          _ActionTile(
-            icon: Icons.inbox_outlined,
-            title: 'Incoming direct requests',
-            subtitle: 'Review requests sent specifically to you',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const MechanicIncomingRequestsScreen(),
-              ),
-            ),
-          ),
-        ],
-        if (_isCustomer) ...[
-          const SizedBox(height: 24),
-          _homeMechanicsPreview(context),
-        ],
-        const SizedBox(height: 12),
-        _InfoBanner(
-          text: _isCustomer
-              ? 'Your vehicles and repair requests stay linked to your account. Use Explore to find approved mechanics and My repairs to follow updates.'
-              : 'Your job list and completed work are loaded from your assigned job records. Payment totals appear only when a verified payment record is available.',
         ),
+        const SizedBox(height: 19),
+        Text('Quick Actions', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 1.32,
+          children: [
+            _CustomerQuickAction(icon: Icons.search_rounded, title: 'Find Mechanics',
+              onTap: () => setState(() => _selectedIndex = 1)),
+            _CustomerQuickAction(icon: Icons.calendar_month_rounded, title: 'Book a Service',
+              onTap: () => setState(() => _selectedIndex = 1)),
+            _CustomerQuickAction(icon: Icons.build_circle_outlined, title: 'My Repairs',
+              onTap: () => setState(() => _selectedIndex = 2)),
+            _CustomerQuickAction(icon: Icons.directions_car_filled_outlined, title: 'My Vehicles',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => const VehiclesScreen())),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(child: Text('Nearby Mechanics',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
+            TextButton(onPressed: () => setState(() => _selectedIndex = 1),
+              child: const Text('View All')),
+          ],
+        ),
+        const SizedBox(height: 8),
+        _homeMechanicsPreview(context),
       ],
     );
   }
