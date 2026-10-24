@@ -12,7 +12,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
-  int _page = 0;
 
   static const _pages = <_OnboardingPageData>[
     _OnboardingPageData(
@@ -67,7 +66,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: PageView(
           controller: _pageController,
-          onPageChanged: (page) => setState(() => _page = page),
           children: [
             for (var i = 0; i < _pages.length; i++)
               _OnboardingSlide(
