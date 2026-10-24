@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'app/foundation/entry_screen.dart';
+import 'app/foundation/onboarding_screen.dart';
 import 'app/theme/app_theme.dart';
 
 /// Fresh application root. Legacy routing, theme state and screen providers
@@ -17,11 +17,11 @@ class StanDiagApp extends StatelessWidget {
     return MaterialApp(
       title: 'Standiag Auto',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark,
       home: startupError == null
-          ? const EntryScreen()
+          ? const OnboardingScreen()
           : _StartupIssueScreen(
               isConfigurationIssue: startupError is StateError,
             ),
