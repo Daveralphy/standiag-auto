@@ -70,7 +70,7 @@ void main() {
       onSignOut: () async { signedOut = true; },
     ));
 
-    await tester.tap(find.text('Profile'));
+    await tester.tap(find.text('Profile').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sign out'));
     await tester.pumpAndSettle();
