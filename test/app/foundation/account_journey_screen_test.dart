@@ -7,7 +7,7 @@ import 'package:standiag_auto/app/theme/app_theme.dart';
 void main() {
   Widget buildScreen() {
     return MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
       darkTheme: AppTheme.dark,
       home: AccountJourneyScreen(
         email: 'verified@example.com',
