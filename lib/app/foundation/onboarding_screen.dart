@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
 import 'entry_screen.dart';
 
 /// First-launch introduction. Users can swipe, skip, or advance with the CTA.
@@ -62,7 +63,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: PageView(
           controller: _pageController,
@@ -116,7 +117,7 @@ class _OnboardingSlide extends StatelessWidget {
   Widget build(BuildContext context) {
     final titleParts = data.title.split(data.accent);
     final titleStyle = Theme.of(context).textTheme.headlineMedium?.copyWith(
-          color: Colors.white,
+          color: AppTheme.textPrimary,
           fontWeight: FontWeight.w800,
           height: 1.12,
           letterSpacing: -0.5,
@@ -138,7 +139,7 @@ class _OnboardingSlide extends StatelessWidget {
                     Color(0x44000000),
                     Color(0x08000000),
                     Color(0xCC050608),
-                    Color(0xFF050608),
+                    AppTheme.background,
                   ],
                 ),
               ),
@@ -175,7 +176,7 @@ class _OnboardingSlide extends StatelessWidget {
                           TextSpan(
                             text: data.accent,
                             style: titleStyle?.copyWith(
-                              color: const Color(0xFFEF233C),
+                              color: AppTheme.crimson,
                             ),
                           ),
                           if (titleParts.length > 1)
@@ -187,7 +188,7 @@ class _OnboardingSlide extends StatelessWidget {
                     Text(
                       data.description,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: const Color(0xFFF1F1F3),
+                            color: AppTheme.textSecondary,
                             height: 1.5,
                             fontSize: 16,
                           ),
@@ -202,8 +203,8 @@ class _OnboardingSlide extends StatelessWidget {
                             height: dot == page ? 11 : 8,
                             decoration: BoxDecoration(
                               color: dot == page
-                                  ? const Color(0xFFEF233C)
-                                  : const Color(0xFF9A9A9E),
+                                  ? AppTheme.crimson
+                                  : AppTheme.outline,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -216,7 +217,7 @@ class _OnboardingSlide extends StatelessWidget {
                           child: IconButton.filled(
                             onPressed: onNext,
                             style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xFFEF233C),
+                              backgroundColor: AppTheme.crimson,
                               foregroundColor: Colors.white,
                             ),
                             icon: const Icon(Icons.arrow_forward_rounded),
@@ -250,7 +251,7 @@ class _WelcomeSlide extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const ColoredBox(color: Color(0xFF050608)),
+        const ColoredBox(color: AppTheme.background),
         Positioned(
           left: 0,
           right: 0,
@@ -296,7 +297,7 @@ class _WelcomeSlide extends StatelessWidget {
                       'Standiag Auto',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.textPrimary,
                         fontSize: 34,
                         fontWeight: FontWeight.w800,
                       ),
@@ -317,7 +318,7 @@ class _WelcomeSlide extends StatelessWidget {
                     'Create an account to book services, track repairs and manage your vehicles.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Color(0xFFF1F1F3),
+                      color: AppTheme.textSecondary,
                       fontSize: 16,
                       height: 1.5,
                     ),
