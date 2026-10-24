@@ -293,8 +293,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           children: [
             Expanded(
               child: Text(
-                'Mechanics to explore',
-                style: theme.textTheme.titleLarge?.copyWith(
+                'Nearby workshops',
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3,
                 ),
@@ -311,7 +311,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           stream: FirebaseFirestore.instance
               .collection('mechanics')
               .where('isVisible', isEqualTo: true)
-              .limit(3)
+              .limit(30)
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
@@ -335,11 +335,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               );
             }
 
-            final mechanics = snapshot.data?.docs ?? [];
+            final mechanics = (snapshot.data?.docs ?? []).where((doc) {
+              final data = doc.data();
+              final workshopName = data['workshopName'];
+              return workshopName is String && workshopName.trim().isNotEmpty;
+            }).take(3).toList();
             if (mechanics.isEmpty) {
               return Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(18),
+                  padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
                       Icon(Icons.handyman_outlined, color: colors.primary, size: 28),
@@ -367,21 +371,21 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     child: InkWell(
                       onTap: () => setState(() => _selectedIndex = 1),
                       child: Padding(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(9),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              width: 54,
-                              height: 54,
+                              width: 68,
+                              height: 72,
                               decoration: BoxDecoration(
                                 color: colors.primary.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(15),
                               ),
-                              child: Icon(
-                                Icons.garage_rounded,
-                                color: colors.primary,
-                                size: 27,
+                              child: Image.asset(
+                                'assets/images/onboarding_2.png',
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                               ),
                             ),
                             const SizedBox(width: 13),
