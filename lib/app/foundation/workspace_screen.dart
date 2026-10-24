@@ -288,11 +288,185 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ),
           ),
         ],
+        if (_isCustomer) ...[
+          const SizedBox(height: 24),
+          _homeMechanicsPreview(context),
+        ],
         const SizedBox(height: 12),
         _InfoBanner(
           text: _isCustomer
               ? 'Your vehicles and repair requests stay linked to your account. Use Explore to find approved mechanics and My repairs to follow updates.'
               : 'Your job list and completed work are loaded from your assigned job records. Payment totals appear only when a verified payment record is available.',
+        ),
+      ],
+    );
+  }
+
+  Widget _homeMechanicsPreview(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    if (Firebase.apps.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Mechanics to explore',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _selectedIndex = 1),
+              child: const Text('View all'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('mechanics')
+              .where('isVisible', isEqualTo: true)
+              .limit(3)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Mechanics could not be loaded right now. You can still search in Explore.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final mechanics = snapshot.data?.docs ?? [];
+            if (mechanics.isEmpty) {
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Row(
+                    children: [
+                      Icon(Icons.handyman_outlined, color: colors.primary, size: 28),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Approved mechanics will appear here when available.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return Column(
+              children: [
+                for (final mechanic in mechanics) ...[
+                  Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedIndex = 1),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 54,
+                              height: 54,
+                              decoration: BoxDecoration(
+                                color: colors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Icon(
+                                Icons.garage_rounded,
+                                color: colors.primary,
+                                size: 27,
+                              ),
+                            ),
+                            const SizedBox(width: 13),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    (mechanic.data()['workshopName'] as String?)
+                                                ?.trim()
+                                                .isNotEmpty ==
+                                            true
+                                        ? (mechanic.data()['workshopName'] as String).trim()
+                                        : 'Independent mechanic',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    ((mechanic.data()['workshopAddress'] as String?)?.trim().isNotEmpty == true)
+                                        ? (mechanic.data()['workshopAddress'] as String).trim()
+                                        : 'Service area not provided',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  if ((mechanic.data()['expertise'] as List? ?? []).whereType<String>().isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 6,
+                                      children: (mechanic.data()['expertise'] as List? ?? [])
+                                          .whereType<String>()
+                                          .take(3)
+                                          .map((item) => Chip(
+                                                label: Text(item),
+                                                visualDensity: VisualDensity.compact,
+                                                padding: EdgeInsets.zero,
+                                              ))
+                                          .toList(),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.chevron_right_rounded, color: colors.onSurfaceVariant),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
         ),
       ],
     );
