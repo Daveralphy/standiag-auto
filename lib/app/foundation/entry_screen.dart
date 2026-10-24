@@ -337,18 +337,15 @@ class _EntryScreenState extends State<EntryScreen> {
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
+                    Image.asset(
+                      'assets/images/logo_icon.png',
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.car_repair_rounded,
+                        size: 48,
                         color: colors.primary,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Icon(
-                        Icons.build_rounded,
-                        color: Colors.white,
-                        size: 30,
                       ),
                     ),
                     const SizedBox(height: 28),
