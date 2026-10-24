@@ -62,7 +62,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isWelcome = _page == _pages.length;
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
       body: SafeArea(
