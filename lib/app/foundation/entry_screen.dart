@@ -9,7 +9,9 @@ import 'account_router_screen.dart';
 /// profiles and navigation are introduced only after their persisted contracts
 /// have been verified.
 class EntryScreen extends StatefulWidget {
-  const EntryScreen({super.key});
+  const EntryScreen({super.key, this.initialIsCreatingAccount = false});
+
+  final bool initialIsCreatingAccount;
 
   @override
   State<EntryScreen> createState() => _EntryScreenState();
@@ -22,7 +24,7 @@ class _EntryScreenState extends State<EntryScreen> {
 
   late Stream<User?> _authStateChanges;
 
-  bool _isCreatingAccount = false;
+  late bool _isCreatingAccount;
   bool _isSubmitting = false;
   bool _isSendingReset = false;
   bool _obscurePassword = true;
@@ -33,6 +35,7 @@ class _EntryScreenState extends State<EntryScreen> {
   @override
   void initState() {
     super.initState();
+    _isCreatingAccount = widget.initialIsCreatingAccount;
     // Reuse one stream for the lifetime of this screen. Recreating it in
     // build() would resubscribe whenever any form state changes.
     _authStateChanges = FirebaseAuth.instance.userChanges();
