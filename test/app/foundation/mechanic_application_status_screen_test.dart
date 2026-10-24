@@ -6,7 +6,7 @@ import 'package:standiag_auto/app/theme/app_theme.dart';
 void main() {
   testWidgets('shows status guidance and lets applicant return to setup', (tester) async {
     await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
       home: const MechanicApplicationStatusScreen(),
     ));
 
