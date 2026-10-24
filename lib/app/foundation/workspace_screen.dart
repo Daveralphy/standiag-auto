@@ -186,7 +186,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         ),
         const SizedBox(height: 6),
         Container(
-          constraints: const BoxConstraints(minHeight: 148),
+          constraints: const BoxConstraints(minHeight: 132),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             gradient: const LinearGradient(
@@ -200,12 +200,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           child: Stack(
             children: [
               Positioned(
-                right: -24, top: 2, bottom: 0,
-                child: Icon(Icons.directions_car_filled_rounded,
-                  size: 178, color: colors.primary.withValues(alpha: 0.22)),
+                right: 0, top: 0, bottom: 0, width: 176,
+                child: Image.asset(
+                  'assets/images/onboarding_1.png',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(13, 13, 10, 11),
+                padding: const EdgeInsets.fromLTRB(12, 11, 10, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -221,11 +225,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       child: Text('Quality car repairs from trusted mechanics.',
                         style: theme.textTheme.bodySmall?.copyWith(height: 1.3, color: colors.onSurfaceVariant)),
                     ),
-                    const SizedBox(height: 13),
+                    const SizedBox(height: 10),
                     FilledButton(
                       onPressed: () => setState(() => _selectedIndex = 1),
                       style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, 42),
+                        minimumSize: const Size(0, 36),
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
                       ),
@@ -247,9 +251,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.58,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 1.95,
           children: [
             _CustomerQuickAction(icon: Icons.search_rounded, title: 'Find Mechanics',
               onTap: () => setState(() => _selectedIndex = 1)),
@@ -263,16 +267,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: Text('Nearby Mechanics',
+            Expanded(child: Text('Nearby Workshops',
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
             TextButton(onPressed: () => setState(() => _selectedIndex = 1),
               child: const Text('View All')),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         _homeMechanicsPreview(context),
       ],
     );
@@ -289,24 +293,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Nearby workshops',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () => setState(() => _selectedIndex = 1),
-              child: const Text('View all'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('mechanics')
@@ -859,14 +845,15 @@ class _CustomerQuickAction extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          child: Row(
             children: [
-              Icon(icon, color: colors.primary, size: 24),
-              Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.1)),
+              Icon(icon, color: colors.primary, size: 19),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.05)),
+              ),
             ],
           ),
         ),
