@@ -133,10 +133,10 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                 )
               : SafeArea(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(18),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(20),
@@ -153,9 +153,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Your personal details', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                                  Text('Your account', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                                   const SizedBox(height: 4),
-                                  Text('Keep your contact details up to date.', style: theme.textTheme.bodyMedium),
+                                  Text('Manage the details connected to your Standiag Auto account.', style: theme.textTheme.bodyMedium),
                                 ],
                               ),
                             ),
