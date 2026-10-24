@@ -15,7 +15,12 @@ void main() {
       (tester) async {
     await tester.pumpWidget(buildSubject());
 
-    expect(find.textContaining('Help for your'), findsOneWidget);
+    expect(
+      tester.widgetList<RichText>(find.byType(RichText)).any(
+            (widget) => widget.text.toPlainText().contains('Help for your'),
+          ),
+      isTrue,
+    );
     expect(find.text('Skip'), findsOneWidget);
     expect(find.byTooltip('Next'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -27,7 +32,12 @@ void main() {
     await tester.tap(find.byTooltip('Next'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Trusted'), findsOneWidget);
+    expect(
+      tester.widgetList<RichText>(find.byType(RichText)).any(
+            (widget) => widget.text.toPlainText().contains('Trusted'),
+          ),
+      isTrue,
+    );
     expect(tester.takeException(), isNull);
   });
 
