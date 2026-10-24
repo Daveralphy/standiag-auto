@@ -74,9 +74,11 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                     ..sort();
                   final docs = allDocs.where((doc) {
                     final data = doc.data();
+                    final workshopName = data['workshopName'];
+                    if (workshopName is! String || workshopName.trim().isEmpty) return false;
                     final expertiseList = (data['expertise'] as List? ?? []).whereType<String>().toList();
                     final expertise = expertiseList.join(' ');
-                    final name = data['workshopName'] as String? ?? '';
+                    final name = workshopName;
                     final area = data['workshopAddress'] as String? ?? '';
                     final matchesQuery = '$expertise $name $area'.toLowerCase().contains(_query);
                     final matchesExpertise = _selectedExpertise == 'All services' ||
@@ -129,10 +131,10 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                             ? _DiscoveryState(
                                 icon: Icons.travel_explore_rounded,
                                 title: allDocs.isEmpty
-                                    ? 'No approved mechanics yet'
+                                    ? 'No approved workshops yet'
                                     : 'No matching mechanics',
                                 message: allDocs.isEmpty
-                                    ? 'Approved mechanics will appear here when they join Standiag Auto.'
+                                    ? 'Approved workshops will appear here when they join Standiag Auto.'
                                     : 'Try a different search or select another service filter.',
                               )
                             : ListView.separated(
@@ -144,7 +146,7 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                       final data = doc.data();
                       final expertise = (data['expertise'] as List? ?? []).whereType<String>().toList();
                       final workshop = data['workshopName'] as String?;
-                      final title = workshop != null && workshop.trim().isNotEmpty ? workshop : 'Independent mechanic';
+                      final title = workshop?.trim() ?? '';
                       final area = data['workshopAddress'] as String? ?? 'Service area not provided';
                       final years = data['yearsOfExperience'] as num?;
                       final rating = data['rating'] as num?;
