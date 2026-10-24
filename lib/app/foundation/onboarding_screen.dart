@@ -366,15 +366,15 @@ class _WelcomeSlide extends StatelessWidget {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Flexible(
+                          Flexible(
                             child: Text(
                               'I already have an account',
                               textAlign: TextAlign.center,
                               maxLines: 2,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_rounded),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward_rounded),
                         ],
                       ),
                     ),
