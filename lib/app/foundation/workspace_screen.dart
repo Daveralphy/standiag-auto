@@ -253,7 +253,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 8,
           mainAxisSpacing: 8,
-          childAspectRatio: 1.95,
+          childAspectRatio: 2.35,
           children: [
             _CustomerQuickAction(icon: Icons.search_rounded, title: 'Find Mechanics',
               onTap: () => setState(() => _selectedIndex = 1)),
@@ -301,15 +301,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                child: Text(
                     'Mechanics could not be loaded right now. You can still search in Explore.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
-                  ),
                 ),
               );
             }
@@ -327,10 +325,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               return workshopName is String && workshopName.trim().isNotEmpty;
             }).take(3).toList();
             if (mechanics.isEmpty) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
+                child: Row(
                     children: [
                       Icon(Icons.handyman_outlined, color: colors.primary, size: 28),
                       const SizedBox(width: 12),
@@ -840,15 +837,15 @@ class _CustomerQuickAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Card(
-      color: const Color(0xFF111619),
+      color: const Color(0xFF20282D),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
           child: Row(
             children: [
-              Icon(icon, color: colors.primary, size: 19),
+              Icon(icon, color: colors.primary, size: 18),
               const SizedBox(width: 7),
               Expanded(
                 child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
