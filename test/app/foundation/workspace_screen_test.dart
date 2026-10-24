@@ -18,7 +18,7 @@ void main() {
   testWidgets('customer workspace exposes the four planned destinations', (tester) async {
     await tester.pumpWidget(buildScreen(WorkspaceRole.customer));
 
-    expect(find.text('Your car care, simplified.'), findsOneWidget);
+    expect(find.text('Find reliable mechanics near you.'), findsOneWidget);
     expect(find.text('Explore'), findsOneWidget);
     expect(find.text('My repairs'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
@@ -59,7 +59,7 @@ void main() {
 
     await tester.pumpWidget(buildScreen(WorkspaceRole.customer));
 
-    expect(find.text('Your car care, simplified.'), findsOneWidget);
+    expect(find.text('Find reliable mechanics near you.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
