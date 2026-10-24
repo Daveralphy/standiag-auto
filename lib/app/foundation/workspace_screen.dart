@@ -569,98 +569,156 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     return const MechanicEarningsScreen();
   }
 
-  Widget _profile(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(20),
-    children: [
-      Text(
-        'Your profile',
-        style: Theme.of(
-          context,
-        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-      ),
-      const SizedBox(height: 18),
-      Card(
-        child: ListTile(
-          leading: const CircleAvatar(
-            child: Icon(Icons.person_outline_rounded),
-          ),
-          title: Text(
-            widget.email,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Text(
-            _isCustomer ? 'Customer account' : 'Mechanic workspace preview',
+  Widget _profile(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+      children: [
+        Text(
+          'Profile',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
           ),
         ),
-      ),
-      if (_isCustomer)
+        const SizedBox(height: 18),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                colors.surfaceContainerHighest,
+                colors.surface,
+                colors.secondary.withValues(alpha: 0.62),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.65)),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: colors.primary.withValues(alpha: 0.16),
+                child: Icon(
+                  Icons.person_outline_rounded,
+                  size: 30,
+                  color: colors.primary,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.email,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      _isCustomer ? 'Customer account' : 'Mechanic workspace preview',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 26),
+        Text(
+          'Account',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (_isCustomer)
+          _ActionTile(
+            icon: Icons.manage_accounts_outlined,
+            title: 'Personal information',
+            subtitle: 'Update your name and phone number',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const CustomerProfileScreen(),
+              ),
+            ),
+          ),
+        if (!_isCustomer)
+          _ActionTile(
+            icon: Icons.handyman_outlined,
+            title: 'Mechanic profile',
+            subtitle: 'View your workshop details and expertise',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MechanicProfileScreen(),
+              ),
+            ),
+          ),
         _ActionTile(
-          icon: Icons.edit_outlined,
-          title: 'Edit personal profile',
-          subtitle: 'Update your name and phone number',
+          icon: Icons.settings_outlined,
+          title: 'Account settings',
+          subtitle: 'Review your account details',
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const CustomerProfileScreen(),
+              builder: (_) => AccountSettingsScreen(
+                email: widget.email,
+                roleLabel: _isCustomer ? 'Customer' : 'Approved mechanic',
+              ),
             ),
           ),
         ),
-      if (!_isCustomer)
+        if (_isCustomer && widget.onApplyMechanic != null)
+          _ActionTile(
+            icon: Icons.handyman_outlined,
+            title: 'Become a mechanic',
+            subtitle: 'Submit an application for review',
+            onTap: widget.onApplyMechanic,
+          ),
+        const SizedBox(height: 18),
+        Text(
+          'Support',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 10),
         _ActionTile(
-          icon: Icons.handyman_outlined,
-          title: 'Mechanic profile',
-          subtitle: 'View your workshop details and expertise',
+          icon: Icons.help_outline_rounded,
+          title: 'Help and support',
+          subtitle: 'Browse common questions',
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const MechanicProfileScreen(),
+              builder: (_) => const HelpSupportScreen(),
             ),
           ),
         ),
-      const SizedBox(height: 12),
-      _ActionTile(
-        icon: Icons.settings_outlined,
-        title: 'Account settings',
-        subtitle: 'Review your account details',
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => AccountSettingsScreen(
-              email: widget.email,
-              roleLabel: _isCustomer ? 'Customer' : 'Approved mechanic',
-            ),
-          ),
+        const SizedBox(height: 20),
+        OutlinedButton.icon(
+          onPressed: _isSigningOut ? null : _signOut,
+          icon: _isSigningOut
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.logout_rounded),
+          label: const Text('Sign out'),
         ),
-      ),
-      if (_isCustomer && widget.onApplyMechanic != null)
-        _ActionTile(
-          icon: Icons.handyman_outlined,
-          title: 'Apply as a mechanic',
-          subtitle: 'Submit an application for review',
-          onTap: widget.onApplyMechanic,
-        ),
-      _ActionTile(
-        icon: Icons.help_outline_rounded,
-        title: 'Help and support',
-        subtitle: 'Browse common questions',
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const HelpSupportScreen(),
-          ),
-        ),
-      ),
-      const SizedBox(height: 18),
-      OutlinedButton.icon(
-        onPressed: _isSigningOut ? null : _signOut,
-        icon: _isSigningOut
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.logout_rounded),
-        label: const Text('Sign out'),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 
 }
 
