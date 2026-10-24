@@ -55,42 +55,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.build_rounded,
-                color: Colors.white,
-                size: 19,
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Flexible(
-              child: Text(
-                'Standiag Auto',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontWeight: FontWeight.w800),
-              ),
-            ),
-          ],
-        ),
+      appBar: _isCustomer ? null : AppBar(
+        title: const Text('Standiag Auto', style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           IconButton(
             tooltip: 'Notifications',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const NotificationsScreen(),
-              ),
-            ),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const NotificationsScreen(),
+            )),
             icon: const Icon(Icons.notifications_none_rounded),
           ),
           const SizedBox(width: 4),
