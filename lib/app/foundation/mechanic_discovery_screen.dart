@@ -160,40 +160,48 @@ class _MechanicDiscoveryScreenState extends State<MechanicDiscoveryScreen> {
                               _mechanicImage(data),
                               const SizedBox(width: 10),
                               Expanded(
-                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                      Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                                    const SizedBox(height: 3),
+                                    Text(area, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                                    if (hasRating || hasExperience) ...[
                                       const SizedBox(height: 4),
-                                      Text(area, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                                      Text([
+                                        if (hasRating) '★ ${rating.toStringAsFixed(1)}',
+                                        if (hasExperience) '${years.toInt()} years experience',
+                                      ].join('  •  '), style: Theme.of(context).textTheme.labelSmall),
+                                    ],
+                                    if (expertise.isNotEmpty) ...[
                                       const SizedBox(height: 5),
-                                      if (hasRating || hasExperience)
-                                        Text(
-                                          [
-                                            if (hasRating) '★ ${rating.toStringAsFixed(1)}',
-                                            if (hasExperience) '${years.toInt()} years experience',
-                                          ].join('  •  '),
-                                          style: Theme.of(context).textTheme.labelMedium,
+                                      Wrap(spacing: 4, runSpacing: 1, children: expertise.take(3).map((item) => Chip(
+                                        label: Text(item, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        visualDensity: VisualDensity.compact,
+                                        padding: EdgeInsets.zero,
+                                        labelStyle: Theme.of(context).textTheme.labelSmall,
+                                      )).toList()),
+                                    ],
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: TextButton(
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          minimumSize: const Size(0, 30),
+                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                         ),
-                                    ]),
-                                  ),
-                                ],
-                              ),
-                              if (expertise.isNotEmpty) ...[
-                                if (expertise.isNotEmpty) ...[
-                                  const SizedBox(height: 6),
-                                  Wrap(spacing: 4, runSpacing: 2, children: expertise.take(3).map((item) => Chip(label: Text(item), visualDensity: VisualDensity.compact, padding: EdgeInsets.zero, labelStyle: Theme.of(context).textTheme.labelSmall)).toList()),
-                                ],
-                                const SizedBox(height: 7),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: TextButton(
-                                    style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: const Size(0, 32), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                    onPressed: uid == null || _submittingMechanicId != null ? null : () => _sendRequest(doc.id, title),
-                                    child: Text(_submittingMechanicId == doc.id ? 'Sending…' : 'Request mechanic'),
-                                  ),
+                                        onPressed: uid == null || _submittingMechanicId != null
+                                            ? null : () => _sendRequest(doc.id, title),
+                                        child: Text(_submittingMechanicId == doc.id ? 'Sending…' : 'Request mechanic'),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ]),
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
                       );
                                 },
