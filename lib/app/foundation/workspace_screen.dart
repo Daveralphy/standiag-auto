@@ -752,154 +752,122 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   Widget _profile(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName?.trim();
+    final name = displayName != null && displayName.isNotEmpty
+        ? displayName
+        : (widget.email.split('@').first);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 30),
       children: [
-        Text(
-          'Profile',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.4,
-          ),
-        ),
-        const SizedBox(height: 18),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                colors.surfaceContainerHighest,
-                colors.surface,
-                colors.secondary.withValues(alpha: 0.62),
-              ],
+        Row(
+          children: [
+            Expanded(child: Text('Profile',
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
+            IconButton(
+              tooltip: 'Account settings',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => AccountSettingsScreen(
+                  email: widget.email,
+                  roleLabel: _isCustomer ? 'Customer' : 'Approved mechanic',
+                ))),
+              icon: const Icon(Icons.settings_outlined),
             ),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.65)),
-          ),
-          child: Row(
+          ],
+        ),
+        const SizedBox(height: 10),
+        Center(
+          child: Column(
             children: [
               CircleAvatar(
-                radius: 30,
-                backgroundColor: colors.primary.withValues(alpha: 0.16),
-                child: Icon(
-                  Icons.person_outline_rounded,
-                  size: 30,
-                  color: colors.primary,
-                ),
+                radius: 40,
+                backgroundColor: colors.surfaceContainerHighest,
+                child: Icon(Icons.person_rounded, size: 42, color: colors.onSurfaceVariant),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.email,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      _isCustomer ? 'Customer account' : 'Mechanic workspace preview',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(height: 10),
+              Text(name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 4),
+              Text(widget.email, style: theme.textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
             ],
           ),
         ),
-        const SizedBox(height: 26),
-        Text(
-          'Account',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 10),
-        if (_isCustomer)
-          _ActionTile(
-            icon: Icons.manage_accounts_outlined,
-            title: 'Personal information',
-            subtitle: 'Update your name and phone number',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const CustomerProfileScreen(),
-              ),
-            ),
-          ),
-        if (!_isCustomer)
-          _ActionTile(
-            icon: Icons.handyman_outlined,
-            title: 'Mechanic profile',
-            subtitle: 'View your workshop details and expertise',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const MechanicProfileScreen(),
-              ),
-            ),
-          ),
-        _ActionTile(
-          icon: Icons.settings_outlined,
-          title: 'Account settings',
-          subtitle: 'Review your account details',
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => AccountSettingsScreen(
-                email: widget.email,
-                roleLabel: _isCustomer ? 'Customer' : 'Approved mechanic',
-              ),
-            ),
-          ),
-        ),
-        if (_isCustomer && widget.onApplyMechanic != null)
-          _ActionTile(
-            icon: Icons.handyman_outlined,
-            title: 'Become a mechanic',
-            subtitle: 'Submit an application for review',
-            onTap: widget.onApplyMechanic,
-          ),
-        const SizedBox(height: 18),
-        Text(
-          'Support',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 10),
-        _ActionTile(
-          icon: Icons.help_outline_rounded,
-          title: 'Help and support',
-          subtitle: 'Browse common questions',
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const HelpSupportScreen(),
-            ),
-          ),
-        ),
         const SizedBox(height: 20),
-        OutlinedButton.icon(
-          onPressed: _isSigningOut ? null : _signOut,
-          icon: _isSigningOut
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.logout_rounded),
-          label: const Text('Sign out'),
+        if (_isCustomer) ...[
+          _ProfileAction(icon: Icons.person_outline_rounded, title: 'Account Information',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const CustomerProfileScreen()))),
+          _ProfileAction(icon: Icons.directions_car_outlined, title: 'My Vehicles',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const VehiclesScreen()))),
+          _ProfileAction(icon: Icons.calendar_month_outlined, title: 'My Bookings',
+            onTap: () => setState(() => _selectedIndex = 2)),
+          _ProfileAction(icon: Icons.favorite_border_rounded, title: 'Saved Mechanics',
+            onTap: () => setState(() => _selectedIndex = 1)),
+          if (widget.onApplyMechanic != null)
+            _ProfileAction(icon: Icons.business_center_outlined, title: 'Become a Mechanic',
+              highlighted: true, onTap: widget.onApplyMechanic!),
+        ] else ...[
+          _ProfileAction(icon: Icons.handyman_outlined, title: 'Mechanic Profile',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const MechanicProfileScreen()))),
+          _ProfileAction(icon: Icons.account_balance_wallet_outlined, title: 'Earnings',
+            onTap: () => setState(() => _selectedIndex = 2)),
+        ],
+        _ProfileAction(icon: Icons.help_outline_rounded, title: 'Help & Support',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => const HelpSupportScreen()))),
+        const SizedBox(height: 8),
+        _ProfileAction(
+          icon: Icons.logout_rounded,
+          title: 'Log Out',
+          highlighted: true,
+          onTap: _isSigningOut ? null : _signOut,
+          trailing: _isSigningOut
+              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.chevron_right_rounded),
         ),
       ],
     );
   }
 
+}
+
+class _ProfileAction extends StatelessWidget {
+  const _ProfileAction({
+    required this.icon,
+    required this.title,
+    this.onTap,
+    this.highlighted = false,
+    this.trailing,
+  });
+  final IconData icon;
+  final String title;
+  final VoidCallback? onTap;
+  final bool highlighted;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final accent = highlighted;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Card(
+        color: accent ? colors.primary.withValues(alpha: .16) : const Color(0xFF111619),
+        child: ListTile(
+          onTap: onTap,
+          minVerticalPadding: 7,
+          leading: Icon(icon, color: accent ? colors.primary : colors.onSurface, size: 25),
+          title: Text(title, style: TextStyle(
+            color: accent ? colors.primary : colors.onSurface,
+            fontWeight: accent ? FontWeight.w700 : FontWeight.w500,
+          )),
+          trailing: trailing ?? const Icon(Icons.chevron_right_rounded),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
+    );
+  }
 }
 
 class _CustomerQuickAction extends StatelessWidget {
