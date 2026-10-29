@@ -1,95 +1,79 @@
 # Standiag Auto
 
-Standiag Auto is being rebuilt as an on-demand car-repair marketplace that helps customers find mechanics and workshops and helps providers manage repair work.
+**A redesigned car-repair experience built with Flutter.**
 
-## Project status
+Standiag Auto is an on-demand car-repair app concept focused on making it easier for customers to find suitable mechanics or workshops and manage their repair journey.
 
-This repository is in a fresh rebuild. The previous application is legacy reference material, not architecture that the new product must preserve. Features are being reintroduced only when they belong to the agreed product and their data contracts or integrations have been verified.
+> This repository showcases the current redesign and ongoing development. Features that depend on Firebase or external services may require project configuration and may not be available in a fresh install.
 
-## Product experiences
+## Preview and Android build
 
-### Customers
-- Home
-- Explore
-- My Repairs
-- Profile
+- **Repository:** https://github.com/Daveralphy/standiag-auto
+- **Download Android APK:** [Open the latest release](https://github.com/Daveralphy/standiag-auto/releases/latest)
+
+The APK link will work once an APK has been attached to a GitHub Release. No release or downloadable APK is currently present in the repository, so a build still needs to be published there.
+
+## Product experience
+
+### Customer app
+- **Home** — an at-a-glance dashboard and access to core tasks.
+- **Explore** — discover mechanics and repair options.
+- **My Repairs** — follow repair requests and repair activity.
+- **Profile** — manage account details and supported profile features.
 
 ### Mechanics and workshops
-- Home
-- Jobs
-- Earnings
-- Profile
+The app is being developed to support service providers and workshop workflows alongside the customer experience. Availability depends on the current implementation and configured backend.
 
 ## Technology
 
-- Flutter / Dart
+- Flutter and Dart
 - Firebase Authentication and Cloud Firestore
-- Material 3 with light and dark themes from the beginning
+- Shared Material theming for consistent styling
+- Responsive layouts and accessibility-aware interaction patterns
 
-## Local setup
+## Run locally
 
-1. Install Flutter with a Dart SDK compatible with `pubspec.yaml`.
-2. In Firebase Console, open **Project settings → General** and copy the client app configuration values for each platform you intend to run. The app expects these Dart defines:
+1. Install Flutter and a compatible Dart SDK.
+2. Configure Firebase for the platform you want to run. The app reads client configuration through Dart defines:
    - `FIREBASE_API_KEY`
    - `FIREBASE_PROJECT_ID`
    - `FIREBASE_MESSAGING_SENDER_ID`
-   - `FIREBASE_APP_ID_WEB` for Chrome/web
+   - `FIREBASE_APP_ID_WEB` for web
    - `FIREBASE_APP_ID_ANDROID` for Android
    - `FIREBASE_APP_ID_IOS` for iOS
    - `FIREBASE_APP_ID_MACOS` for macOS
-3. Fetch dependencies and run the web version, supplying the web app values:
+3. Fetch dependencies:
 
    ```sh
    flutter pub get
-   flutter run -d chrome \
-     --dart-define=FIREBASE_API_KEY=YOUR_CLIENT_API_KEY \
-     --dart-define=FIREBASE_PROJECT_ID=YOUR_PROJECT_ID \
-     --dart-define=FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID \
-     --dart-define=FIREBASE_APP_ID_WEB=YOUR_WEB_APP_ID
    ```
 
-   For Android or iOS, provide that platform's app ID instead of the web app ID. Enable **Email/Password** in Firebase Console → Authentication → Sign-in method before testing account creation or sign-in. New accounts must verify their email before entering the signed-in workspace. Configure authorized domains for web authentication as needed.
-4. Verify changes:
+4. Run on a configured device or emulator:
 
    ```sh
-   dart format lib test
-   flutter analyze
-   flutter test
+   flutter run
    ```
 
-Firebase client configuration identifies the project and is not equivalent to a server credential. Never put service-account keys, private keys, signing credentials, or privileged secrets into a Flutter app or source control. Missing configuration is reported by a setup screen rather than silently replaced with invented IDs.
+For web, pass the web Firebase values using `--dart-define` arguments. Enable the required Firebase Authentication providers in the Firebase Console before testing sign-in and registration.
 
-## Onboarding backend
-
-The verified Flutter onboarding screen calls these Firebase callable functions:
-
-- `saveCustomerProfile` — saves basic customer details without allowing the client to set role or approval fields.
-- `submitMechanicApplication` — submits or revises a mechanic/workshop application.
-- `listMechanicApplications` — returns the admin review queue only to users with the trusted Firebase Auth `admin: true` custom claim.
-- `reviewMechanicApplication` — records an admin decision and creates/enables a mechanic profile only after approval.
-
-These functions are source code only until deployed to the intended Firebase project. Deploying Cloud Functions may require the Firebase project to use the Blaze plan. Do not deploy new Firestore rules or functions to production until they have been reviewed and tested against the intended project and existing data.
-
-### Granting the first administrator
-
-Admin claims must be assigned from a trusted operator workstation, never through the public web app. Authenticate with Google Application Default Credentials that have permission to administer Firebase Authentication, then run from the `functions` directory:
+## Verify changes
 
 ```sh
-npm install
-gcloud auth application-default login
-GCLOUD_PROJECT=YOUR_FIREBASE_PROJECT_ID npm run set-admin-claim -- FIREBASE_AUTH_UID
+dart format lib test
+flutter analyze
+flutter test
 ```
 
-Replace both placeholders with the intended Firebase project ID and the administrator's Firebase Authentication UID. Do not use an email address in place of the UID. After the claim is assigned, the administrator must refresh their ID token or sign in again. Never commit service-account JSON or privileged credentials.
+Run these checks in your environment before relying on a build. This README does not claim the current branch has been freshly built or tested.
 
-## Development rules
+## Security notes
 
-- Work on a feature branch; do not push directly to `main`.
-- Follow [CONTRIBUTING.md](CONTRIBUTING.md).
-- Verify whether persisted Firestore data, security rules, or deployed Cloud Functions depend on a field before changing it.
-- Do not retain features merely because legacy code exists, and do not remove data-contract models before their production dependencies have been audited.
-- Keep styling in the shared theme and use `Theme.of(context)` in widgets.
-- Implement and verify light and dark appearances together.
-- Design for narrow phones first, then adapt to larger phones, tablets, and desktop. Avoid fixed widths where content should wrap or constrain itself.
-- Account for keyboard insets, safe areas, long text, and accessibility text scaling.
-- Do not claim a feature, test, or build works unless it has actually been verified.
+Firebase client configuration identifies the project; it is not a substitute for server credentials. Never commit service-account keys, private keys, signing credentials, or privileged secrets. Review Firestore rules and Cloud Functions before deploying changes to a production Firebase project.
+
+## Development
+
+- Use feature branches for future changes.
+- Keep app colors and shared styling in the shared theme.
+- Verify both light and dark appearances when changing UI.
+- Test narrow-screen layouts, safe areas, keyboard insets, and accessibility text scaling.
+- Do not claim a feature is complete until its implementation and dependencies have been verified.
